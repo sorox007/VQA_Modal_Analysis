@@ -1,0 +1,19 @@
+{
+  "ansatz.py": 1775465521.7863708,
+  "fea.py": 1775464396.9482982,
+  "main.py": 1775491044.663869,
+  "novel_study.py": 1775475761.9803674,
+  "optimizer_comparison.py": 1775490559.8978505,
+  "quantum_setup.py": 1775473118.717044,
+  "validate_fea.py": 1775466496.410312,
+  "visualize.py": 1775490937.3042073,
+  "vqe_runner.py": 1775489618.6890593,
+  "VQA_Modal_Analysis.md": 1773551076.8212843,
+  "results\\beam_geometry.png": 1775491329.5418055,
+  "results\\convergence.png": 1775491199.279443,
+  "results\\damage_detection.png": 1775491325.325423,
+  "results\\frequency_comparison.png": 1775491318.7851422,
+  "results\\ill_conditioning_study.png": 1775491322.147653,
+  "results\\mode_shapes_continuous.png": 1775491339.1037765,
+  "results\\optimizer_comparison.png": 1775491294.0482974
+}

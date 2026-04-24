@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(pip install *)",
+      "Bash(pngcheck \"C:/Users/somro/Documents/coep_DA/sem_VI_QC/project/results/beam_geometry.png\")",
+      "Bash(identify \"C:/Users/somro/Documents/coep_DA/sem_VI_QC/project/results/beam_geometry.png\")",
+      "Bash(file \"C:/Users/somro/Documents/coep_DA/sem_VI_QC/project/results\"/*.png)",
+      "Bash(python3 *)"
+    ]
+  }
+}
