@@ -1,0 +1,1094 @@
+============================================================
+STEP 1: CLASSICAL FEA BASELINE (BEAM)
+============================================================
+Classical natural frequencies (rad/s): [ 1443.48793154  6383.41800901 16045.24603269 29252.49621882]
+Analytical:                            [ 1437.81303172  5751.25212687 12940.31728545 23005.00850746]
+
+============================================================
+STEP 2: QUANTUM HAMILTONIAN CONSTRUCTION (BEAM)
+============================================================
+Pauli op eigenvalues (reconstructed): [0.00243501 0.04761905 0.30086169 1.        ]
+Matrix size: (4, 4) (padded from (4, 4))
+Number of Pauli terms: 10
+Condition number of H: 410.68
+H_scale (spectral norm): 8.5571e+08
+Unnormalized eigenvalue range: [2.0837e+06, 8.5571e+08]
+Normalized eigenvalue range: [0.002435, 1.000000]
+
+=== PAULI DECOMPOSITION ===
+Pauli String    Coefficient    
+------------------------------
+II              0.337729       
+IX              0.144287       
+IZ              0.108594       
+XI              0.188414       
+XX              0.077487       
+XZ              0.144287       
+YY              -0.077487      
+ZI              -0.108594      
+ZX              -0.188414      
+ZZ              0.104430       
+
+============================================================
+STEP 3: VQE ON QISKIT AER SIMULATOR (BEAM)
+============================================================
+HEA: 2 qubits, 2 reps, 12 parameters
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 0.006058
+  Iteration 100: cost = 0.004115
+  Iteration 150: cost = 0.002947
+  Iteration 200: cost = 0.002532
+  Iteration 250: cost = 0.002478
+  Iteration 300: cost = 0.002461
+  Iteration 350: cost = 0.002449
+  Iteration 400: cost = 0.002444
+  Iteration 450: cost = 0.002443
+  Iteration 500: cost = 0.002442
+  Iteration 550: cost = 0.002441
+  Iteration 600: cost = 0.002441
+  Iteration 650: cost = 0.002440
+  Iteration 700: cost = 0.002440
+  Iteration 750: cost = 0.002440
+  Iteration 800: cost = 0.002440
+  Iteration 850: cost = 0.002439
+  Iteration 900: cost = 0.002439
+  Iteration 950: cost = 0.002439
+  Iteration 1000: cost = 0.002439
+  Iteration 1050: cost = 0.002438
+  Iteration 1100: cost = 0.002438
+  Iteration 1150: cost = 0.002438
+  Iteration 1200: cost = 0.002438
+  Iteration 1250: cost = 0.002438
+  Iteration 1300: cost = 0.002438
+  Iteration 1350: cost = 0.002437
+  Iteration 1400: cost = 0.002437
+  Iteration 1450: cost = 0.002437
+  Iteration 1500: cost = 0.002437
+  Iteration 1550: cost = 0.002437
+  Iteration 1600: cost = 0.002437
+  Iteration 1650: cost = 0.002437
+  Iteration 1700: cost = 0.002437
+  Iteration 1750: cost = 0.002437
+  Iteration 1800: cost = 0.002436
+  Iteration 1850: cost = 0.002436
+  Iteration 1900: cost = 0.002436
+  Iteration 1950: cost = 0.002436
+  Iteration 2000: cost = 0.002436
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00243610
+  lambda_physical = 2084592.323054
+  omega_fundamental = 1443.8117 rad/s
+  Iterations: 2000
+  Time: 22.64 s
+Running VQE with L_BFGS_B, maxiter=2000
+  Iteration 50: cost = 0.014163
+  Iteration 100: cost = 0.003748
+  Iteration 150: cost = 0.002547
+  Iteration 200: cost = 0.002490
+  Iteration 250: cost = 0.002451
+  Iteration 300: cost = 0.002435
+  Iteration 350: cost = 0.002435
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00243501
+  lambda_physical = 2083657.636450
+  omega_fundamental = 1443.4880 rad/s
+  Iterations: 351
+  Time: 2.62 s
+
+--- Optimizer Comparison (same initial point) ---
+  COBYLA:  freq = 1443.8117 rad/s  (error = 0.022%, iters = 2000)
+  L-BFGS-B:  freq = 1443.4880 rad/s  (error = 0.000%, iters = 351)
+
+============================================================
+STEP 4: FINDING HIGHER MODES (DEFLATION) - BEAM
+============================================================
+
+=== Finding Mode 1 ===
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 0.006058
+  Iteration 100: cost = 0.004115
+  Iteration 150: cost = 0.002947
+  Iteration 200: cost = 0.002532
+  Iteration 250: cost = 0.002478
+  Iteration 300: cost = 0.002461
+  Iteration 350: cost = 0.002449
+  Iteration 400: cost = 0.002444
+  Iteration 450: cost = 0.002443
+  Iteration 500: cost = 0.002442
+  Iteration 550: cost = 0.002441
+  Iteration 600: cost = 0.002441
+  Iteration 650: cost = 0.002440
+  Iteration 700: cost = 0.002440
+  Iteration 750: cost = 0.002440
+  Iteration 800: cost = 0.002440
+  Iteration 850: cost = 0.002439
+  Iteration 900: cost = 0.002439
+  Iteration 950: cost = 0.002439
+  Iteration 1000: cost = 0.002439
+  Iteration 1050: cost = 0.002438
+  Iteration 1100: cost = 0.002438
+  Iteration 1150: cost = 0.002438
+  Iteration 1200: cost = 0.002438
+  Iteration 1250: cost = 0.002438
+  Iteration 1300: cost = 0.002438
+  Iteration 1350: cost = 0.002437
+  Iteration 1400: cost = 0.002437
+  Iteration 1450: cost = 0.002437
+  Iteration 1500: cost = 0.002437
+  Iteration 1550: cost = 0.002437
+  Iteration 1600: cost = 0.002437
+  Iteration 1650: cost = 0.002437
+  Iteration 1700: cost = 0.002437
+  Iteration 1750: cost = 0.002437
+  Iteration 1800: cost = 0.002436
+  Iteration 1850: cost = 0.002436
+  Iteration 1900: cost = 0.002436
+  Iteration 1950: cost = 0.002436
+  Iteration 2000: cost = 0.002436
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00243610
+  lambda_physical = 2084592.323054
+  omega_fundamental = 1443.8117 rad/s
+  Iterations: 2000
+  Time: 19.71 s
+
+=== Finding Mode 2 ===
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 0.063209
+  Iteration 100: cost = 0.047827
+  Iteration 150: cost = 0.047644
+  Iteration 200: cost = 0.047641
+
+VQE Result:
+  lambda_vqe (normalized) = 0.04764066
+  lambda_physical = 40766517.041486
+  omega_fundamental = 6384.8663 rad/s
+  Iterations: 236
+  Time: 2.21 s
+
+=== Finding Mode 3 ===
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 0.345270
+  Iteration 100: cost = 0.302245
+  Iteration 150: cost = 0.300865
+  Iteration 200: cost = 0.300862
+
+VQE Result:
+  lambda_vqe (normalized) = 0.30086175
+  lambda_physical = 257449970.033239
+  omega_fundamental = 16045.2476 rad/s
+  Iterations: 228
+  Time: 2.06 s
+
+All VQE frequencies: [np.float64(1443.8117339370554), np.float64(6384.866250869035), np.float64(16045.247584043054)]
+All Classical:       [np.float64(1443.4879315395458), np.float64(6383.418009006393), np.float64(16045.24603268864)]
+
+============================================================
+TRUSS ANALYSIS PIPELINE
+============================================================
+
+--- Truss Classical FEA ---
+Truss natural frequencies (rad/s): [16267.38521672 34970.41515775 56828.3178575 ]
+Analytical:                         [15857.32919504 31714.65839007 47571.98758511]
+Number of elements: 4, DOF after BC: 3
+
+--- Truss Quantum Hamiltonian ---
+Pauli op eigenvalues (reconstructed): [ 0.08194188  0.37867966  1.         10.        ]
+Matrix size: (4, 4) (padded from (3, 3))
+Number of Pauli terms: 10
+Condition number of H: 12.20
+H_scale (spectral norm): 3.2295e+09
+Unnormalized eigenvalue range: [2.6463e+08, 3.2295e+09]
+Normalized eigenvalue range: [0.081942, 1.000000]
+
+=== PAULI DECOMPOSITION ===
+Pauli String    Coefficient    
+------------------------------
+II              2.865155       
+IX              -0.162291      
+IZ              -2.405330      
+XI              0.040573       
+XX              -0.162291      
+XZ              0.040573       
+YY              -0.162291      
+ZI              -2.364757      
+ZX              -0.162291      
+ZZ              2.364757       
+
+--- Truss VQE ---
+HEA: 2 qubits, 3 reps, 16 parameters
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 0.142907
+  Iteration 100: cost = 0.117815
+  Iteration 150: cost = 0.092232
+  Iteration 200: cost = 0.085893
+  Iteration 250: cost = 0.083037
+  Iteration 300: cost = 0.082675
+  Iteration 350: cost = 0.082085
+  Iteration 400: cost = 0.081985
+  Iteration 450: cost = 0.081959
+  Iteration 500: cost = 0.081950
+  Iteration 550: cost = 0.081946
+  Iteration 600: cost = 0.081943
+  Iteration 650: cost = 0.081943
+  Iteration 700: cost = 0.081942
+  Iteration 750: cost = 0.081942
+
+VQE Result:
+  lambda_vqe (normalized) = 0.08194191
+  lambda_physical = 264627944.741246
+  omega_fundamental = 16267.3890 rad/s
+  Iterations: 799
+  Time: 7.79 s
+Running VQE with L_BFGS_B, maxiter=2000
+  Iteration 50: cost = 0.365473
+  Iteration 100: cost = 0.194515
+  Iteration 150: cost = 0.104511
+  Iteration 200: cost = 0.084174
+  Iteration 250: cost = 0.082062
+  Iteration 300: cost = 0.081949
+  Iteration 350: cost = 0.081942
+
+VQE Result:
+  lambda_vqe (normalized) = 0.08194188
+  lambda_physical = 264627821.795563
+  omega_fundamental = 16267.3852 rad/s
+  Iterations: 374
+  Time: 2.54 s
+
+--- Truss Optimizer Comparison ---
+  COBYLA:  freq = 16267.3890 rad/s  (error = 0.000%, iters = 799)
+  L-BFGS-B:  freq = 16267.3852 rad/s  (error = 0.000%, iters = 374)
+
+--- Truss Higher Modes (Deflation) ---
+
+=== Finding Mode 1 ===
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 0.142907
+  Iteration 100: cost = 0.117815
+  Iteration 150: cost = 0.092232
+  Iteration 200: cost = 0.085893
+  Iteration 250: cost = 0.083037
+  Iteration 300: cost = 0.082675
+  Iteration 350: cost = 0.082085
+  Iteration 400: cost = 0.081985
+  Iteration 450: cost = 0.081959
+  Iteration 500: cost = 0.081950
+  Iteration 550: cost = 0.081946
+  Iteration 600: cost = 0.081943
+  Iteration 650: cost = 0.081943
+  Iteration 700: cost = 0.081942
+  Iteration 750: cost = 0.081942
+
+VQE Result:
+  lambda_vqe (normalized) = 0.08194191
+  lambda_physical = 264627944.741246
+  omega_fundamental = 16267.3890 rad/s
+  Iterations: 799
+  Time: 7.92 s
+
+=== Finding Mode 2 ===
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 0.400171
+  Iteration 100: cost = 0.388478
+  Iteration 150: cost = 0.383318
+  Iteration 200: cost = 0.382042
+  Iteration 250: cost = 0.381060
+  Iteration 300: cost = 0.380320
+  Iteration 350: cost = 0.379682
+  Iteration 400: cost = 0.379190
+  Iteration 450: cost = 0.378938
+  Iteration 500: cost = 0.378805
+  Iteration 550: cost = 0.378747
+  Iteration 600: cost = 0.378713
+  Iteration 650: cost = 0.378691
+  Iteration 700: cost = 0.378687
+  Iteration 750: cost = 0.378683
+  Iteration 800: cost = 0.378681
+  Iteration 850: cost = 0.378680
+  Iteration 900: cost = 0.378680
+  Iteration 950: cost = 0.378680
+  Iteration 1000: cost = 0.378680
+
+VQE Result:
+  lambda_vqe (normalized) = 0.37867974
+  lambda_physical = 1222930215.109243
+  omega_fundamental = 34970.4191 rad/s
+  Iterations: 1025
+  Time: 14.91 s
+
+=== Finding Mode 3 ===
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 1.266796
+  Iteration 100: cost = 1.001485
+  Iteration 150: cost = 1.000023
+  Iteration 200: cost = 1.000000
+  Iteration 250: cost = 1.000000
+
+VQE Result:
+  lambda_vqe (normalized) = 1.00000004
+  lambda_physical = 3229457829.514891
+  omega_fundamental = 56828.3189 rad/s
+  Iterations: 254
+  Time: 2.57 s
+All Truss VQE frequencies: [np.float64(16267.388995817546), np.float64(34970.419144031475), np.float64(56828.31890452938)]
+All Truss Classical:       [np.float64(16267.385216717399), np.float64(34970.415157754884), np.float64(56828.31785749967)]
+
+============================================================
+COMPARISON: BEAM vs TRUSS
+============================================================
+
+Metric                         Beam            Truss          
+------------------------------------------------------------
+Elements                       2               4              
+Qubits (after BC)              2               2              
+DOF (after BC)                 4               3              
+Cond number (K)                102.16          5.83           
+Mode 1 (classical)             1443.4879       16267.3852     
+Mode 1 error (COBYLA)          0.022          % 0.000          %
+COBYLA iterations              2000            799            
+
+============================================================
+STEP 5: NOVEL STUDY - ILL-CONDITIONING (BEAM)
+============================================================
+Pauli op eigenvalues (reconstructed): [0.00243501 0.04761905 0.30086169 1.        ]
+Matrix size: (4, 4) (padded from (4, 4))
+Number of Pauli terms: 10
+Condition number of H: 410.68
+H_scale (spectral norm): 8.5571e+08
+Unnormalized eigenvalue range: [2.0837e+06, 8.5571e+08]
+Normalized eigenvalue range: [0.002435, 1.000000]
+HEA: 2 qubits, 2 reps, 12 parameters
+
+  --- COBYLA (derivative-free) ---
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 0.006058
+  Iteration 100: cost = 0.004115
+  Iteration 150: cost = 0.002947
+  Iteration 200: cost = 0.002532
+  Iteration 250: cost = 0.002478
+  Iteration 300: cost = 0.002461
+  Iteration 350: cost = 0.002449
+  Iteration 400: cost = 0.002444
+  Iteration 450: cost = 0.002443
+  Iteration 500: cost = 0.002442
+  Iteration 550: cost = 0.002441
+  Iteration 600: cost = 0.002441
+  Iteration 650: cost = 0.002440
+  Iteration 700: cost = 0.002440
+  Iteration 750: cost = 0.002440
+  Iteration 800: cost = 0.002440
+  Iteration 850: cost = 0.002439
+  Iteration 900: cost = 0.002439
+  Iteration 950: cost = 0.002439
+  Iteration 1000: cost = 0.002439
+  Iteration 1050: cost = 0.002438
+  Iteration 1100: cost = 0.002438
+  Iteration 1150: cost = 0.002438
+  Iteration 1200: cost = 0.002438
+  Iteration 1250: cost = 0.002438
+  Iteration 1300: cost = 0.002438
+  Iteration 1350: cost = 0.002437
+  Iteration 1400: cost = 0.002437
+  Iteration 1450: cost = 0.002437
+  Iteration 1500: cost = 0.002437
+  Iteration 1550: cost = 0.002437
+  Iteration 1600: cost = 0.002437
+  Iteration 1650: cost = 0.002437
+  Iteration 1700: cost = 0.002437
+  Iteration 1750: cost = 0.002437
+  Iteration 1800: cost = 0.002436
+  Iteration 1850: cost = 0.002436
+  Iteration 1900: cost = 0.002436
+  Iteration 1950: cost = 0.002436
+  Iteration 2000: cost = 0.002436
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00243610
+  lambda_physical = 2084592.323054
+  omega_fundamental = 1443.8117 rad/s
+  Iterations: 2000
+  Time: 18.48 s
+
+  --- L-BFGS-B (gradient-based) ---
+Running VQE with L_BFGS_B, maxiter=2000
+  Iteration 50: cost = 0.014163
+  Iteration 100: cost = 0.003748
+  Iteration 150: cost = 0.002547
+  Iteration 200: cost = 0.002490
+  Iteration 250: cost = 0.002451
+  Iteration 300: cost = 0.002435
+  Iteration 350: cost = 0.002435
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00243501
+  lambda_physical = 2083657.636450
+  omega_fundamental = 1443.4880 rad/s
+  Iterations: 351
+  Time: 2.30 s
+
+  taper=1.00 | Cond=410.7
+    Classical: 1443.487932 rad/s
+    Exact:     1443.487932 (error=2.30e-12%)
+    COBYLA:    1443.811734 (error=0.0224%, iters=2000)
+    L-BFGS-B:  1443.488010 (error=0.0000%, iters=351)
+Pauli op eigenvalues (reconstructed): [0.00236835 0.04731316 0.29350805 1.        ]
+Matrix size: (4, 4) (padded from (4, 4))
+Number of Pauli terms: 10
+Condition number of H: 422.23
+H_scale (spectral norm): 7.0111e+08
+Unnormalized eigenvalue range: [1.6605e+06, 7.0111e+08]
+Normalized eigenvalue range: [0.002368, 1.000000]
+HEA: 2 qubits, 2 reps, 12 parameters
+
+  --- COBYLA (derivative-free) ---
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 0.014242
+  Iteration 100: cost = 0.008755
+  Iteration 150: cost = 0.006361
+  Iteration 200: cost = 0.003159
+  Iteration 250: cost = 0.002615
+  Iteration 300: cost = 0.002447
+  Iteration 350: cost = 0.002425
+  Iteration 400: cost = 0.002413
+  Iteration 450: cost = 0.002407
+  Iteration 500: cost = 0.002403
+  Iteration 550: cost = 0.002401
+  Iteration 600: cost = 0.002399
+  Iteration 650: cost = 0.002399
+  Iteration 700: cost = 0.002397
+  Iteration 750: cost = 0.002396
+  Iteration 800: cost = 0.002395
+  Iteration 850: cost = 0.002394
+  Iteration 900: cost = 0.002393
+  Iteration 950: cost = 0.002392
+  Iteration 1000: cost = 0.002391
+  Iteration 1050: cost = 0.002390
+  Iteration 1100: cost = 0.002388
+  Iteration 1150: cost = 0.002388
+  Iteration 1200: cost = 0.002387
+  Iteration 1250: cost = 0.002386
+  Iteration 1300: cost = 0.002385
+  Iteration 1350: cost = 0.002384
+  Iteration 1400: cost = 0.002384
+  Iteration 1450: cost = 0.002382
+  Iteration 1500: cost = 0.002382
+  Iteration 1550: cost = 0.002381
+  Iteration 1600: cost = 0.002380
+  Iteration 1650: cost = 0.002379
+  Iteration 1700: cost = 0.002379
+  Iteration 1750: cost = 0.002378
+  Iteration 1800: cost = 0.002377
+  Iteration 1850: cost = 0.002377
+  Iteration 1900: cost = 0.002376
+  Iteration 1950: cost = 0.002376
+  Iteration 2000: cost = 0.002376
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00237561
+  lambda_physical = 1665565.221658
+  omega_fundamental = 1290.5678 rad/s
+  Iterations: 2000
+  Time: 19.07 s
+
+  --- L-BFGS-B (gradient-based) ---
+Running VQE with L_BFGS_B, maxiter=2000
+  Iteration 50: cost = 0.014841
+  Iteration 100: cost = 0.003743
+  Iteration 150: cost = 0.002551
+  Iteration 200: cost = 0.002477
+  Iteration 250: cost = 0.002376
+  Iteration 300: cost = 0.002368
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00236835
+  lambda_physical = 1660473.775986
+  omega_fundamental = 1288.5937 rad/s
+  Iterations: 325
+  Time: 2.25 s
+
+  taper=0.80 | Cond=422.2
+    Classical: 1288.593675 rad/s
+    Exact:     1288.593675 (error=1.32e-12%)
+    COBYLA:    1290.567790 (error=0.1532%, iters=2000)
+    L-BFGS-B:  1288.593720 (error=0.0000%, iters=325)
+Pauli op eigenvalues (reconstructed): [0.00212178 0.04612456 0.26692221 1.        ]
+Matrix size: (4, 4) (padded from (4, 4))
+Number of Pauli terms: 10
+Condition number of H: 471.30
+H_scale (spectral norm): 5.7896e+08
+Unnormalized eigenvalue range: [1.2284e+06, 5.7896e+08]
+Normalized eigenvalue range: [0.002122, 1.000000]
+HEA: 2 qubits, 2 reps, 12 parameters
+
+  --- COBYLA (derivative-free) ---
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 0.011179
+  Iteration 100: cost = 0.003020
+  Iteration 150: cost = 0.002335
+  Iteration 200: cost = 0.002214
+  Iteration 250: cost = 0.002157
+  Iteration 300: cost = 0.002140
+  Iteration 350: cost = 0.002131
+  Iteration 400: cost = 0.002127
+  Iteration 450: cost = 0.002126
+  Iteration 500: cost = 0.002124
+  Iteration 550: cost = 0.002124
+  Iteration 600: cost = 0.002123
+  Iteration 650: cost = 0.002123
+  Iteration 700: cost = 0.002122
+  Iteration 750: cost = 0.002122
+  Iteration 800: cost = 0.002122
+  Iteration 850: cost = 0.002122
+  Iteration 900: cost = 0.002122
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00212179
+  lambda_physical = 1228436.254896
+  omega_fundamental = 1108.3484 rad/s
+  Iterations: 946
+  Time: 8.98 s
+
+  --- L-BFGS-B (gradient-based) ---
+Running VQE with L_BFGS_B, maxiter=2000
+  Iteration 50: cost = 0.016662
+  Iteration 100: cost = 0.003716
+  Iteration 150: cost = 0.002417
+  Iteration 200: cost = 0.002314
+  Iteration 250: cost = 0.002126
+  Iteration 300: cost = 0.002122
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00212178
+  lambda_physical = 1228430.761696
+  omega_fundamental = 1108.3460 rad/s
+  Iterations: 325
+  Time: 1.91 s
+
+  taper=0.60 | Cond=471.3
+    Classical: 1108.345891 rad/s
+    Exact:     1108.345891 (error=3.18e-12%)
+    COBYLA:    1108.348436 (error=0.0002%, iters=946)
+    L-BFGS-B:  1108.345958 (error=0.0000%, iters=325)
+Pauli op eigenvalues (reconstructed): [0.00165048 0.04341999 0.21870592 1.        ]
+Matrix size: (4, 4) (padded from (4, 4))
+Number of Pauli terms: 10
+Condition number of H: 605.88
+H_scale (spectral norm): 4.8719e+08
+Unnormalized eigenvalue range: [8.0410e+05, 4.8719e+08]
+Normalized eigenvalue range: [0.001650, 1.000000]
+HEA: 2 qubits, 2 reps, 12 parameters
+
+  --- COBYLA (derivative-free) ---
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 0.013360
+  Iteration 100: cost = 0.003451
+  Iteration 150: cost = 0.002108
+  Iteration 200: cost = 0.001885
+  Iteration 250: cost = 0.001830
+  Iteration 300: cost = 0.001749
+  Iteration 350: cost = 0.001708
+  Iteration 400: cost = 0.001686
+  Iteration 450: cost = 0.001667
+  Iteration 500: cost = 0.001661
+  Iteration 550: cost = 0.001659
+  Iteration 600: cost = 0.001656
+  Iteration 650: cost = 0.001654
+  Iteration 700: cost = 0.001654
+  Iteration 750: cost = 0.001653
+  Iteration 800: cost = 0.001653
+  Iteration 850: cost = 0.001652
+  Iteration 900: cost = 0.001652
+  Iteration 950: cost = 0.001651
+  Iteration 1000: cost = 0.001651
+  Iteration 1050: cost = 0.001651
+  Iteration 1100: cost = 0.001651
+  Iteration 1150: cost = 0.001651
+  Iteration 1200: cost = 0.001651
+  Iteration 1250: cost = 0.001651
+  Iteration 1300: cost = 0.001651
+  Iteration 1350: cost = 0.001651
+  Iteration 1400: cost = 0.001651
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00165051
+  lambda_physical = 804117.187128
+  omega_fundamental = 896.7258 rad/s
+  Iterations: 1435
+  Time: 13.32 s
+
+  --- L-BFGS-B (gradient-based) ---
+Running VQE with L_BFGS_B, maxiter=2000
+  Iteration 50: cost = 0.018895
+  Iteration 100: cost = 0.003495
+  Iteration 150: cost = 0.002119
+  Iteration 200: cost = 0.001861
+  Iteration 250: cost = 0.001653
+  Iteration 300: cost = 0.001651
+  Iteration 350: cost = 0.001650
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00165048
+  lambda_physical = 804102.791376
+  omega_fundamental = 896.7178 rad/s
+  Iterations: 351
+  Time: 2.23 s
+
+  taper=0.40 | Cond=605.9
+    Classical: 896.717707 rad/s
+    Exact:     896.717707 (error=2.69e-12%)
+    COBYLA:    896.725815 (error=0.0009%, iters=1435)
+    L-BFGS-B:  896.717788 (error=0.0000%, iters=351)
+Pauli op eigenvalues (reconstructed): [0.00117289 0.03941266 0.17344248 1.        ]
+Matrix size: (4, 4) (padded from (4, 4))
+Number of Pauli terms: 10
+Condition number of H: 852.59
+H_scale (spectral norm): 4.3668e+08
+Unnormalized eigenvalue range: [5.1218e+05, 4.3668e+08]
+Normalized eigenvalue range: [0.001173, 1.000000]
+HEA: 2 qubits, 2 reps, 12 parameters
+
+  --- COBYLA (derivative-free) ---
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 0.005569
+  Iteration 100: cost = 0.001552
+  Iteration 150: cost = 0.001245
+  Iteration 200: cost = 0.001181
+  Iteration 250: cost = 0.001175
+  Iteration 300: cost = 0.001173
+  Iteration 350: cost = 0.001173
+  Iteration 400: cost = 0.001173
+  Iteration 450: cost = 0.001173
+  Iteration 500: cost = 0.001173
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00117289
+  lambda_physical = 512181.952202
+  omega_fundamental = 715.6689 rad/s
+  Iterations: 541
+  Time: 4.87 s
+
+  --- L-BFGS-B (gradient-based) ---
+Running VQE with L_BFGS_B, maxiter=2000
+  Iteration 50: cost = 0.019202
+  Iteration 100: cost = 0.003324
+  Iteration 150: cost = 0.002220
+  Iteration 200: cost = 0.001638
+  Iteration 250: cost = 0.001363
+  Iteration 300: cost = 0.001173
+  Iteration 350: cost = 0.001173
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00117289
+  lambda_physical = 512180.596546
+  omega_fundamental = 715.6679 rad/s
+  Iterations: 364
+  Time: 2.10 s
+
+  taper=0.25 | Cond=852.6
+    Classical: 715.667889 rad/s
+    Exact:     715.667889 (error=3.72e-12%)
+    COBYLA:    715.668884 (error=0.0001%, iters=541)
+    L-BFGS-B:  715.667937 (error=0.0000%, iters=364)
+Pauli op eigenvalues (reconstructed): [8.32370700e-04 3.47693937e-02 1.43974411e-01 1.00000000e+00]
+Matrix size: (4, 4) (padded from (4, 4))
+Number of Pauli terms: 10
+Condition number of H: 1201.39
+H_scale (spectral norm): 4.1158e+08
+Unnormalized eigenvalue range: [3.4258e+05, 4.1158e+08]
+Normalized eigenvalue range: [0.000832, 1.000000]
+HEA: 2 qubits, 2 reps, 12 parameters
+
+  --- COBYLA (derivative-free) ---
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 0.005211
+  Iteration 100: cost = 0.002031
+  Iteration 150: cost = 0.000986
+  Iteration 200: cost = 0.000849
+  Iteration 250: cost = 0.000835
+  Iteration 300: cost = 0.000833
+  Iteration 350: cost = 0.000833
+  Iteration 400: cost = 0.000832
+  Iteration 450: cost = 0.000832
+  Iteration 500: cost = 0.000832
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00083238
+  lambda_physical = 342585.943903
+  omega_fundamental = 585.3084 rad/s
+  Iterations: 515
+  Time: 4.54 s
+
+  --- L-BFGS-B (gradient-based) ---
+Running VQE with L_BFGS_B, maxiter=2000
+  Iteration 50: cost = 0.017926
+  Iteration 100: cost = 0.003352
+  Iteration 150: cost = 0.001970
+  Iteration 200: cost = 0.001379
+  Iteration 250: cost = 0.001026
+  Iteration 300: cost = 0.000834
+  Iteration 350: cost = 0.000832
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00083237
+  lambda_physical = 342583.573830
+  omega_fundamental = 585.3064 rad/s
+  Iterations: 351
+  Time: 2.16 s
+
+  taper=0.15 | Cond=1201.4
+    Classical: 585.306097 rad/s
+    Exact:     585.306097 (error=1.77e-11%)
+    COBYLA:    585.308418 (error=0.0004%, iters=515)
+    L-BFGS-B:  585.306393 (error=0.0001%, iters=351)
+   taper_ratio  condition_number       H_scale  omega_classical  omega_exact  exact_error_pct  omega_cobyla  cobyla_error_pct  cobyla_iterations  omega_lbfgs  lbfgs_error_pct  lbfgs_iterations
+0         1.00        410.676214  8.557085e+08      1443.487932  1443.487932     2.299746e-12   1443.811734          0.022432               2000  1443.488010         0.000005               351
+1         0.80        422.234405  7.011091e+08      1288.593675  1288.593675     1.323383e-12   1290.567790          0.153199               2000  1288.593720         0.000004               325
+2         0.60        471.303017  5.789631e+08      1108.345891  1108.345891     3.179776e-12   1108.348436          0.000230                946  1108.345958         0.000006               325
+3         0.40        605.883294  4.871924e+08       896.717707   896.717707     2.687759e-12    896.725815          0.000904               1435   896.717788         0.000009               351
+4         0.25        852.594499  4.366823e+08       715.667889   715.667889     3.717188e-12    715.668884          0.000139                541   715.667937         0.000007               364
+5         0.15       1201.387795  4.115753e+08       585.306097   585.306097     1.767537e-11    585.308418          0.000397                515   585.306393         0.000051               351
+Pauli op eigenvalues (reconstructed): [0.00243501 0.04761905 0.30086169 1.        ]
+Matrix size: (4, 4) (padded from (4, 4))
+Number of Pauli terms: 10
+Condition number of H: 410.68
+H_scale (spectral norm): 8.5571e+08
+Unnormalized eigenvalue range: [2.0837e+06, 8.5571e+08]
+Normalized eigenvalue range: [0.002435, 1.000000]
+HEA: 2 qubits, 2 reps, 12 parameters
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 0.006058
+  Iteration 100: cost = 0.004115
+  Iteration 150: cost = 0.002947
+  Iteration 200: cost = 0.002532
+  Iteration 250: cost = 0.002478
+  Iteration 300: cost = 0.002461
+  Iteration 350: cost = 0.002449
+  Iteration 400: cost = 0.002444
+  Iteration 450: cost = 0.002443
+  Iteration 500: cost = 0.002442
+  Iteration 550: cost = 0.002441
+  Iteration 600: cost = 0.002441
+  Iteration 650: cost = 0.002440
+  Iteration 700: cost = 0.002440
+  Iteration 750: cost = 0.002440
+  Iteration 800: cost = 0.002440
+  Iteration 850: cost = 0.002439
+  Iteration 900: cost = 0.002439
+  Iteration 950: cost = 0.002439
+  Iteration 1000: cost = 0.002439
+  Iteration 1050: cost = 0.002438
+  Iteration 1100: cost = 0.002438
+  Iteration 1150: cost = 0.002438
+  Iteration 1200: cost = 0.002438
+  Iteration 1250: cost = 0.002438
+  Iteration 1300: cost = 0.002438
+  Iteration 1350: cost = 0.002437
+  Iteration 1400: cost = 0.002437
+  Iteration 1450: cost = 0.002437
+  Iteration 1500: cost = 0.002437
+  Iteration 1550: cost = 0.002437
+  Iteration 1600: cost = 0.002437
+  Iteration 1650: cost = 0.002437
+  Iteration 1700: cost = 0.002437
+  Iteration 1750: cost = 0.002437
+  Iteration 1800: cost = 0.002436
+  Iteration 1850: cost = 0.002436
+  Iteration 1900: cost = 0.002436
+  Iteration 1950: cost = 0.002436
+  Iteration 2000: cost = 0.002436
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00243610
+  lambda_physical = 2084592.323054
+  omega_fundamental = 1443.8117 rad/s
+  Iterations: 2000
+  Time: 17.72 s
+Pauli op eigenvalues (reconstructed): [0.0024256  0.04754976 0.29962666 1.        ]
+Matrix size: (4, 4) (padded from (4, 4))
+Number of Pauli terms: 10
+Condition number of H: 412.27
+H_scale (spectral norm): 8.1371e+08
+Unnormalized eigenvalue range: [1.9737e+06, 8.1371e+08]
+Normalized eigenvalue range: [0.002426, 1.000000]
+HEA: 2 qubits, 2 reps, 12 parameters
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 0.007717
+  Iteration 100: cost = 0.005812
+  Iteration 150: cost = 0.004860
+  Iteration 200: cost = 0.004098
+  Iteration 250: cost = 0.003646
+  Iteration 300: cost = 0.003329
+  Iteration 350: cost = 0.003200
+  Iteration 400: cost = 0.003083
+  Iteration 450: cost = 0.002955
+  Iteration 500: cost = 0.002826
+  Iteration 550: cost = 0.002738
+  Iteration 600: cost = 0.002696
+  Iteration 650: cost = 0.002660
+  Iteration 700: cost = 0.002606
+  Iteration 750: cost = 0.002585
+  Iteration 800: cost = 0.002561
+  Iteration 850: cost = 0.002542
+  Iteration 900: cost = 0.002528
+  Iteration 950: cost = 0.002508
+  Iteration 1000: cost = 0.002486
+  Iteration 1050: cost = 0.002477
+  Iteration 1100: cost = 0.002472
+  Iteration 1150: cost = 0.002468
+  Iteration 1200: cost = 0.002464
+  Iteration 1250: cost = 0.002461
+  Iteration 1300: cost = 0.002458
+  Iteration 1350: cost = 0.002457
+  Iteration 1400: cost = 0.002454
+  Iteration 1450: cost = 0.002453
+  Iteration 1500: cost = 0.002452
+  Iteration 1550: cost = 0.002449
+  Iteration 1600: cost = 0.002448
+  Iteration 1650: cost = 0.002446
+  Iteration 1700: cost = 0.002445
+  Iteration 1750: cost = 0.002444
+  Iteration 1800: cost = 0.002443
+  Iteration 1850: cost = 0.002442
+  Iteration 1900: cost = 0.002441
+  Iteration 1950: cost = 0.002440
+  Iteration 2000: cost = 0.002439
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00243916
+  lambda_physical = 1984775.634684
+  omega_fundamental = 1408.8207 rad/s
+  Iterations: 2000
+  Time: 17.50 s
+Pauli op eigenvalues (reconstructed): [0.00239329 0.04731093 0.29540351 1.        ]
+Matrix size: (4, 4) (padded from (4, 4))
+Number of Pauli terms: 10
+Condition number of H: 417.83
+H_scale (spectral norm): 7.7346e+08
+Unnormalized eigenvalue range: [1.8511e+06, 7.7346e+08]
+Normalized eigenvalue range: [0.002393, 1.000000]
+HEA: 2 qubits, 2 reps, 12 parameters
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 0.024625
+  Iteration 100: cost = 0.012622
+  Iteration 150: cost = 0.006325
+  Iteration 200: cost = 0.004072
+  Iteration 250: cost = 0.003326
+  Iteration 300: cost = 0.002917
+  Iteration 350: cost = 0.002777
+  Iteration 400: cost = 0.002663
+  Iteration 450: cost = 0.002551
+  Iteration 500: cost = 0.002519
+  Iteration 550: cost = 0.002499
+  Iteration 600: cost = 0.002485
+  Iteration 650: cost = 0.002469
+  Iteration 700: cost = 0.002448
+  Iteration 750: cost = 0.002434
+  Iteration 800: cost = 0.002419
+  Iteration 850: cost = 0.002411
+  Iteration 900: cost = 0.002405
+  Iteration 950: cost = 0.002402
+  Iteration 1000: cost = 0.002399
+  Iteration 1050: cost = 0.002398
+  Iteration 1100: cost = 0.002397
+  Iteration 1150: cost = 0.002396
+  Iteration 1200: cost = 0.002396
+  Iteration 1250: cost = 0.002395
+  Iteration 1300: cost = 0.002395
+  Iteration 1350: cost = 0.002394
+  Iteration 1400: cost = 0.002394
+  Iteration 1450: cost = 0.002394
+  Iteration 1500: cost = 0.002394
+  Iteration 1550: cost = 0.002394
+  Iteration 1600: cost = 0.002394
+  Iteration 1650: cost = 0.002393
+  Iteration 1700: cost = 0.002393
+  Iteration 1750: cost = 0.002393
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00239334
+  lambda_physical = 1851158.597035
+  omega_fundamental = 1360.5729 rad/s
+  Iterations: 1765
+  Time: 15.61 s
+Pauli op eigenvalues (reconstructed): [0.00233076 0.04684492 0.28731496 1.        ]
+Matrix size: (4, 4) (padded from (4, 4))
+Number of Pauli terms: 10
+Condition number of H: 429.04
+H_scale (spectral norm): 7.3520e+08
+Unnormalized eigenvalue range: [1.7136e+06, 7.3520e+08]
+Normalized eigenvalue range: [0.002331, 1.000000]
+HEA: 2 qubits, 2 reps, 12 parameters
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 0.007030
+  Iteration 100: cost = 0.003502
+  Iteration 150: cost = 0.002956
+  Iteration 200: cost = 0.002547
+  Iteration 250: cost = 0.002434
+  Iteration 300: cost = 0.002410
+  Iteration 350: cost = 0.002396
+  Iteration 400: cost = 0.002385
+  Iteration 450: cost = 0.002372
+  Iteration 500: cost = 0.002368
+  Iteration 550: cost = 0.002361
+  Iteration 600: cost = 0.002359
+  Iteration 650: cost = 0.002356
+  Iteration 700: cost = 0.002353
+  Iteration 750: cost = 0.002352
+  Iteration 800: cost = 0.002351
+  Iteration 850: cost = 0.002349
+  Iteration 900: cost = 0.002347
+  Iteration 950: cost = 0.002346
+  Iteration 1000: cost = 0.002344
+  Iteration 1050: cost = 0.002344
+  Iteration 1100: cost = 0.002343
+  Iteration 1150: cost = 0.002342
+  Iteration 1200: cost = 0.002341
+  Iteration 1250: cost = 0.002341
+  Iteration 1300: cost = 0.002340
+  Iteration 1350: cost = 0.002339
+  Iteration 1400: cost = 0.002338
+  Iteration 1450: cost = 0.002338
+  Iteration 1500: cost = 0.002337
+  Iteration 1550: cost = 0.002337
+  Iteration 1600: cost = 0.002336
+  Iteration 1650: cost = 0.002336
+  Iteration 1700: cost = 0.002336
+  Iteration 1750: cost = 0.002335
+  Iteration 1800: cost = 0.002335
+  Iteration 1850: cost = 0.002334
+  Iteration 1900: cost = 0.002334
+  Iteration 1950: cost = 0.002334
+  Iteration 2000: cost = 0.002334
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00233388
+  lambda_physical = 1715876.889926
+  omega_fundamental = 1309.9148 rad/s
+  Iterations: 2000
+  Time: 17.54 s
+Pauli op eigenvalues (reconstructed): [0.00222893 0.04607347 0.27437845 1.        ]
+Matrix size: (4, 4) (padded from (4, 4))
+Number of Pauli terms: 10
+Condition number of H: 448.65
+H_scale (spectral norm): 6.9918e+08
+Unnormalized eigenvalue range: [1.5584e+06, 6.9918e+08]
+Normalized eigenvalue range: [0.002229, 1.000000]
+HEA: 2 qubits, 2 reps, 12 parameters
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 0.018890
+  Iteration 100: cost = 0.003780
+  Iteration 150: cost = 0.002907
+  Iteration 200: cost = 0.002479
+  Iteration 250: cost = 0.002431
+  Iteration 300: cost = 0.002367
+  Iteration 350: cost = 0.002339
+  Iteration 400: cost = 0.002316
+  Iteration 450: cost = 0.002304
+  Iteration 500: cost = 0.002295
+  Iteration 550: cost = 0.002286
+  Iteration 600: cost = 0.002280
+  Iteration 650: cost = 0.002274
+  Iteration 700: cost = 0.002269
+  Iteration 750: cost = 0.002264
+  Iteration 800: cost = 0.002256
+  Iteration 850: cost = 0.002252
+  Iteration 900: cost = 0.002251
+  Iteration 950: cost = 0.002250
+  Iteration 1000: cost = 0.002248
+  Iteration 1050: cost = 0.002246
+  Iteration 1100: cost = 0.002245
+  Iteration 1150: cost = 0.002243
+  Iteration 1200: cost = 0.002243
+  Iteration 1250: cost = 0.002241
+  Iteration 1300: cost = 0.002241
+  Iteration 1350: cost = 0.002240
+  Iteration 1400: cost = 0.002239
+  Iteration 1450: cost = 0.002238
+  Iteration 1500: cost = 0.002235
+  Iteration 1550: cost = 0.002234
+  Iteration 1600: cost = 0.002234
+  Iteration 1650: cost = 0.002233
+  Iteration 1700: cost = 0.002233
+  Iteration 1750: cost = 0.002232
+  Iteration 1800: cost = 0.002232
+  Iteration 1850: cost = 0.002232
+  Iteration 1900: cost = 0.002232
+  Iteration 1950: cost = 0.002231
+  Iteration 2000: cost = 0.002231
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00223124
+  lambda_physical = 1560039.949801
+  omega_fundamental = 1249.0156 rad/s
+  Iterations: 2000
+  Time: 17.45 s
+Pauli op eigenvalues (reconstructed): [0.00207673 0.0448837  0.25557647 1.        ]
+Matrix size: (4, 4) (padded from (4, 4))
+Number of Pauli terms: 10
+Condition number of H: 481.53
+H_scale (spectral norm): 6.6562e+08
+Unnormalized eigenvalue range: [1.3823e+06, 6.6562e+08]
+Normalized eigenvalue range: [0.002077, 1.000000]
+HEA: 2 qubits, 2 reps, 12 parameters
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 0.015232
+  Iteration 100: cost = 0.005467
+  Iteration 150: cost = 0.003929
+  Iteration 200: cost = 0.002984
+  Iteration 250: cost = 0.002521
+  Iteration 300: cost = 0.002298
+  Iteration 350: cost = 0.002223
+  Iteration 400: cost = 0.002191
+  Iteration 450: cost = 0.002156
+  Iteration 500: cost = 0.002139
+  Iteration 550: cost = 0.002127
+  Iteration 600: cost = 0.002114
+  Iteration 650: cost = 0.002109
+  Iteration 700: cost = 0.002104
+  Iteration 750: cost = 0.002097
+  Iteration 800: cost = 0.002090
+  Iteration 850: cost = 0.002088
+  Iteration 900: cost = 0.002084
+  Iteration 950: cost = 0.002083
+  Iteration 1000: cost = 0.002082
+  Iteration 1050: cost = 0.002081
+  Iteration 1100: cost = 0.002080
+  Iteration 1150: cost = 0.002080
+  Iteration 1200: cost = 0.002079
+  Iteration 1250: cost = 0.002078
+  Iteration 1300: cost = 0.002078
+  Iteration 1350: cost = 0.002078
+  Iteration 1400: cost = 0.002078
+  Iteration 1450: cost = 0.002078
+  Iteration 1500: cost = 0.002077
+  Iteration 1550: cost = 0.002077
+  Iteration 1600: cost = 0.002077
+  Iteration 1650: cost = 0.002077
+  Iteration 1700: cost = 0.002077
+  Iteration 1750: cost = 0.002077
+  Iteration 1800: cost = 0.002077
+  Iteration 1850: cost = 0.002077
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00207683
+  lambda_physical = 1382374.180557
+  omega_fundamental = 1175.7441 rad/s
+  Iterations: 1876
+  Time: 17.22 s
+   damage  damage_pct    omega_ref    omega_vqe  freq_shift_pct  vqe_detected_shift_pct  vqe_error_pct
+0     0.0         0.0  1443.487932  1443.811734        0.000000               -0.022432       0.022432
+1     0.1        10.0  1404.901485  1408.820654        2.673140                2.401633       0.278964
+2     0.2        20.0  1360.560350  1360.572893        5.744945                5.744076       0.000922
+3     0.3        30.0  1309.039374  1309.914841        9.314145                9.253496       0.066879
+4     0.4        40.0  1248.369039  1249.015592       13.517182               13.472391       0.051792
+5     0.5        50.0  1175.717474  1175.744097       18.550239               18.548394       0.002264
+
+============================================================
+STEP 6: GENERATING ALL PLOTS
+============================================================
+
+[SUCCESS] Full pipeline complete. Results saved to results/

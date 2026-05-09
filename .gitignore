@@ -1,0 +1,102 @@
+# ============================
+# Python Environment
+# ============================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.claude/
+
+# Virtual Environments
+venv/
+ENV/
+env/
+.venv/
+env.bak/
+venv.bak/
+
+# Conda
+anaconda3/
+miniconda3/
+conda/
+envs/
+
+# ============================
+# Jupyter Notebook
+# ============================
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# JupyterLab
+*.tar.gz
+
+# ============================
+# IDE
+# ============================
+# VS Code
+.vscode/
+.settings/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Spyder
+.spyderproject
+.spyproject
+
+# Rope
+.ropeproject
+
+# ============================
+# OS
+# ============================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ============================
+# Project Specific
+# ============================
+
+
+# Backup files
+*.bak
+*.swp
+*.swo
+*~
+
+# Log files
+*.log
+
+# Byte-compiled / optimized / DLL files (already covered above, but explicit)
+*.pyc
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/

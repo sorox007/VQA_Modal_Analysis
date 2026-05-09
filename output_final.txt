@@ -1,0 +1,730 @@
+============================================================
+STEP 1: CLASSICAL FEA BASELINE (BEAM)
+============================================================
+Classical natural frequencies (rad/s): [ 1443.48793154  6383.41800901 16045.24603269 29252.49621882]
+Analytical:                            [ 1437.81303172  5751.25212687 12940.31728545 23005.00850746]
+
+============================================================
+STEP 2: QUANTUM HAMILTONIAN CONSTRUCTION (BEAM)
+============================================================
+Pauli op eigenvalues (reconstructed): [0.00243501 0.04761905 0.30086169 1.        ]
+Matrix size: (4, 4) (padded from (4, 4))
+Number of Pauli terms: 10
+Condition number of H: 410.68
+H_scale (spectral norm): 8.5571e+08
+Unnormalized eigenvalue range: [2.0837e+06, 8.5571e+08]
+Normalized eigenvalue range: [0.002435, 1.000000]
+
+=== PAULI DECOMPOSITION ===
+Pauli String    Coefficient    
+------------------------------
+II              0.337729       
+IX              0.144287       
+IZ              0.108594       
+XI              0.188414       
+XX              0.077487       
+XZ              0.144287       
+YY              -0.077487      
+ZI              -0.108594      
+ZX              -0.188414      
+ZZ              0.104430       
+
+============================================================
+STEP 3: VQE ON QISKIT AER SIMULATOR (BEAM)
+============================================================
+HEA: 2 qubits, 2 reps, 12 parameters
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 0.006058
+  Iteration 100: cost = 0.004115
+  Iteration 150: cost = 0.002947
+  Iteration 200: cost = 0.002532
+  Iteration 250: cost = 0.002478
+  Iteration 300: cost = 0.002461
+  Iteration 350: cost = 0.002449
+  Iteration 400: cost = 0.002444
+  Iteration 450: cost = 0.002443
+  Iteration 500: cost = 0.002442
+  Iteration 550: cost = 0.002441
+  Iteration 600: cost = 0.002441
+  Iteration 650: cost = 0.002440
+  Iteration 700: cost = 0.002440
+  Iteration 750: cost = 0.002440
+  Iteration 800: cost = 0.002440
+  Iteration 850: cost = 0.002439
+  Iteration 900: cost = 0.002439
+  Iteration 950: cost = 0.002439
+  Iteration 1000: cost = 0.002439
+  Iteration 1050: cost = 0.002438
+  Iteration 1100: cost = 0.002438
+  Iteration 1150: cost = 0.002438
+  Iteration 1200: cost = 0.002438
+  Iteration 1250: cost = 0.002438
+  Iteration 1300: cost = 0.002438
+  Iteration 1350: cost = 0.002437
+  Iteration 1400: cost = 0.002437
+  Iteration 1450: cost = 0.002437
+  Iteration 1500: cost = 0.002437
+  Iteration 1550: cost = 0.002437
+  Iteration 1600: cost = 0.002437
+  Iteration 1650: cost = 0.002437
+  Iteration 1700: cost = 0.002437
+  Iteration 1750: cost = 0.002437
+  Iteration 1800: cost = 0.002436
+  Iteration 1850: cost = 0.002436
+  Iteration 1900: cost = 0.002436
+  Iteration 1950: cost = 0.002436
+  Iteration 2000: cost = 0.002436
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00243610
+  lambda_physical = 2084592.323054
+  omega_fundamental = 1443.8117 rad/s
+  Iterations: 2000
+  Time: 11.37 s
+Running VQE with L_BFGS_B, maxiter=2000
+  Iteration 50: cost = 0.014163
+  Iteration 100: cost = 0.003748
+  Iteration 150: cost = 0.002547
+  Iteration 200: cost = 0.002490
+  Iteration 250: cost = 0.002451
+  Iteration 300: cost = 0.002435
+  Iteration 350: cost = 0.002435
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00243501
+  lambda_physical = 2083657.636450
+  omega_fundamental = 1443.4880 rad/s
+  Iterations: 351
+  Time: 1.35 s
+
+--- Optimizer Comparison (same initial point) ---
+  COBYLA:  freq = 1443.8117 rad/s  (error = 0.022%, iters = 2000)
+  L-BFGS-B:  freq = 1443.4880 rad/s  (error = 0.000%, iters = 351)
+
+============================================================
+STEP 4: FINDING HIGHER MODES (DEFLATION) - BEAM
+============================================================
+
+=== Finding Mode 1 ===
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 0.006058
+  Iteration 100: cost = 0.004115
+  Iteration 150: cost = 0.002947
+  Iteration 200: cost = 0.002532
+  Iteration 250: cost = 0.002478
+  Iteration 300: cost = 0.002461
+  Iteration 350: cost = 0.002449
+  Iteration 400: cost = 0.002444
+  Iteration 450: cost = 0.002443
+  Iteration 500: cost = 0.002442
+  Iteration 550: cost = 0.002441
+  Iteration 600: cost = 0.002441
+  Iteration 650: cost = 0.002440
+  Iteration 700: cost = 0.002440
+  Iteration 750: cost = 0.002440
+  Iteration 800: cost = 0.002440
+  Iteration 850: cost = 0.002439
+  Iteration 900: cost = 0.002439
+  Iteration 950: cost = 0.002439
+  Iteration 1000: cost = 0.002439
+  Iteration 1050: cost = 0.002438
+  Iteration 1100: cost = 0.002438
+  Iteration 1150: cost = 0.002438
+  Iteration 1200: cost = 0.002438
+  Iteration 1250: cost = 0.002438
+  Iteration 1300: cost = 0.002438
+  Iteration 1350: cost = 0.002437
+  Iteration 1400: cost = 0.002437
+  Iteration 1450: cost = 0.002437
+  Iteration 1500: cost = 0.002437
+  Iteration 1550: cost = 0.002437
+  Iteration 1600: cost = 0.002437
+  Iteration 1650: cost = 0.002437
+  Iteration 1700: cost = 0.002437
+  Iteration 1750: cost = 0.002437
+  Iteration 1800: cost = 0.002436
+  Iteration 1850: cost = 0.002436
+  Iteration 1900: cost = 0.002436
+  Iteration 1950: cost = 0.002436
+  Iteration 2000: cost = 0.002436
+
+VQE Result:
+  lambda_vqe (normalized) = 0.00243610
+  lambda_physical = 2084592.323054
+  omega_fundamental = 1443.8117 rad/s
+  Iterations: 2000
+  Time: 13.88 s
+
+=== Finding Mode 2 ===
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 0.063209
+  Iteration 100: cost = 0.047827
+  Iteration 150: cost = 0.047644
+  Iteration 200: cost = 0.047641
+
+VQE Result:
+  lambda_vqe (normalized) = 0.04764066
+  lambda_physical = 40766517.041486
+  omega_fundamental = 6384.8663 rad/s
+  Iterations: 236
+  Time: 1.41 s
+
+=== Finding Mode 3 ===
+Running VQE with COBYLA, maxiter=2000
+  Iteration 50: cost = 0.345270
+  Iteration 100: cost = 0.302245
+  Iteration 150: cost = 0.300865
+  Iteration 200: cost = 0.300862
+
+VQE Result:
+  lambda_vqe (normalized) = 0.30086175
+  lambda_physical = 257449970.033239
+  omega_fundamental = 16045.2476 rad/s
+  Iterations: 228
+  Time: 1.34 s
+
+All VQE frequencies: [np.float64(1443.8117339370554), np.float64(6384.866250869035), np.float64(16045.247584043054)]
+All Classical:       [np.float64(1443.4879315395458), np.float64(6383.418009006393), np.float64(16045.24603268864)]
+
+============================================================
+2D WARREN TRUSS ANALYSIS PIPELINE
+============================================================
+
+--- 2D Warren Truss: Mesh Generation & Classical FEA ---
+============================================================
+2D WARREN TRUSS GEOMETRY
+============================================================
+Nodes: 10 (Bottom: 5, Top: 5)
+Members: 17 total
+  Bottom chord: 5
+  Top chord: 5
+  Verticals: 2 (end posts)
+  Web diagonals: 5
+Span: 2.0 m, Height: 0.4 m, Panels: 4
+Material: Steel (E=200 GPa, rho=7850.0 kg/m^3, A=10.0 cm^2)
+------------------------------------------------------------
+Node coordinates:
+  B0   (idx= 0): (0.00, 0.00)
+  B1   (idx= 1): (0.50, 0.00)
+  B2   (idx= 2): (1.00, 0.00)
+  B3   (idx= 3): (1.50, 0.00)
+  B4   (idx= 4): (2.00, 0.00)
+  T0   (idx= 5): (0.00, 0.40)
+  T1   (idx= 6): (0.50, 0.40)
+  T2   (idx= 7): (1.00, 0.40)
+  T3   (idx= 8): (1.50, 0.40)
+  T4   (idx= 9): (2.00, 0.40)
+============================================================
+
+Global K shape: (20, 20), M shape: (20, 20)
+After pinned-roller BCs:
+  Free DOFs: 17, Fixed DOFs: 3
+  K_red shape: (17, 17)
+  K_red condition: 171.89
+  K_red positive definite: True
+
+First 6 natural frequencies (rad/s):
+  Mode 1: omega =  1221.5683 rad/s,  f = 194.4186 Hz
+  Mode 2: omega =  1861.8198 rad/s,  f = 296.3178 Hz
+  Mode 3: omega =  3409.8001 rad/s,  f = 542.6865 Hz
+  Mode 4: omega =  5719.4501 rad/s,  f = 910.2788 Hz
+  Mode 5: omega =  6289.0901 rad/s,  f = 1000.9398 Hz
+  Mode 6: omega =  7486.2318 rad/s,  f = 1191.4708 Hz
+
+--- 2D Warren Truss: Quantum Hamiltonian ---
+Pauli op eigenvalues (reconstructed): [0.00292436 0.00680012 0.0228112  0.06417891 0.0775872  0.10995505
+ 0.22499688 0.26672883 0.29775538 0.34573381 0.44014247 0.48819943
+ 0.51700487 0.58101608 0.65966625 0.8225173  1.0000112  2.
+ 2.         2.         2.         2.         2.         2.
+ 2.         2.         2.         2.         2.         2.
+ 2.         2.        ]
+Matrix size: (32, 32) (padded from (17, 17))
+Number of Pauli terms: 372
+Condition number of H: 341.61
+H_scale (spectral norm): 5.0976e+08
+Unnormalized eigenvalue range: [1.4922e+06, 5.0976e+08]
+Normalized eigenvalue range: [0.002927, 1.000000]
+
+=== PAULI DECOMPOSITION ===
+Pauli String    Coefficient    
+------------------------------
+IIIII           1.122751       
+IIIIX           -0.037062      
+IIIIZ           -0.016269      
+IIIXI           -0.057824      
+IIIXX           0.003705       
+IIIXZ           -0.049323      
+IIIZI           -0.051175      
+IIIZZ           -0.051175      
+IIXII           0.005936       
+IIXIX           -0.000248      
+IIXIZ           0.006260       
+IIXXI           -0.027399      
+IIXXX           0.001509       
+IIXXZ           -0.023733      
+IIXZI           -0.000063      
+IIXZZ           -0.000063      
+IIYYI           -0.026862      
+IIYYX           0.001502       
+IIYYZ           -0.022956      
+IIZII           -0.051261      
+IIZIZ           -0.051261      
+IIZXI           0.000440       
+IIZXZ           0.000440       
+IIZZI           -0.051484      
+IIZZX           -0.003076      
+IIZZZ           -0.059680      
+IXIII           -0.050952      
+IXIIX           0.036833       
+IXIIZ           -0.013627      
+IXIXI           -0.015773      
+IXIXX           -0.003782      
+IXIXZ           0.030607       
+IXIZI           -0.001207      
+IXIZZ           -0.001207      
+IXXII           0.003672       
+IXXIX           0.000314       
+IXXIZ           -0.002368      
+IXXXI           -0.009280      
+IXXXX           -0.001518      
+IXXXZ           0.015184       
+IXXZI           -0.000085      
+IXXZZ           -0.000085      
+IXYYI           -0.008703      
+IXYYX           -0.001485      
+IXYYZ           0.015054       
+IXZII           -0.001290      
+IXZIZ           -0.001290      
+IXZXI           0.000541       
+IXZXZ           0.000541       
+IXZZI           -0.004423      
+IXZZX           0.002907       
+IXZZZ           0.002656       
+IYIYI           0.032637       
+IYIYX           -0.001816      
+IYIYZ           -0.021267      
+IYXYI           -0.015526      
+IYXYX           0.000761       
+IYXYZ           0.010891       
+IYYII           -0.006861      
+IYYIX           0.000405       
+IYYIZ           0.000215       
+IYYXI           0.016700       
+IYYXX           -0.000835      
+IYYXZ           -0.010582      
+IYYZI           0.000055       
+IYYZZ           0.000055       
+IYZYI           -0.000215      
+IYZYZ           -0.000215      
+IZIII           -0.051059      
+IZIIZ           -0.051059      
+IZIXI           0.000073       
+IZIXZ           0.000073       
+IZIZI           -0.048328      
+IZIZX           0.002615       
+IZIZZ           -0.040372      
+IZXII           0.000023       
+IZXIZ           0.000023       
+IZXXI           -0.000016      
+IZXXZ           -0.000016      
+IZXZI           -0.000397      
+IZXZX           0.000035       
+IZXZZ           -0.000505      
+IZZII           -0.048896      
+IZZIX           0.002659       
+IZZIZ           -0.040994      
+IZZXI           0.003354       
+IZZXX           -0.000498      
+IZZXZ           0.002720       
+IZZZI           -0.051097      
+IZZZZ           -0.051097      
+XIIII           0.000082       
+XIIIZ           0.000082       
+XIIXI           -0.000498      
+XIIXZ           -0.000498      
+XIIZI           0.000082       
+XIIZZ           0.000082       
+XIXII           0.002207       
+XIXIX           -0.000036      
+XIXIZ           0.002207       
+XIXXI           -0.001458      
+XIXXX           -0.000013      
+XIXXZ           -0.001458      
+XIXYY           0.000013       
+XIXZI           0.002207       
+XIXZX           -0.000036      
+XIXZZ           0.002207       
+XIYIY           0.000036       
+XIYXY           0.000013       
+XIYYI           0.001458       
+XIYYX           0.000013       
+XIYYZ           0.001458       
+XIYZY           0.000036       
+XIZII           0.000082       
+XIZIZ           0.000082       
+XIZXI           -0.000498      
+XIZXZ           -0.000498      
+XIZZI           0.000082       
+XIZZZ           0.000082       
+XXIII           0.000013       
+XXIIZ           0.000013       
+XXIXI           -0.000193      
+XXIXZ           -0.000193      
+XXIZI           0.000013       
+XXIZZ           0.000013       
+XXXII           0.002104       
+XXXIX           0.000035       
+XXXIZ           0.002104       
+XXXXI           -0.018236      
+XXXXX           0.000014       
+XXXXZ           -0.018236      
+XXXYY           -0.000014      
+XXXZI           0.002104       
+XXXZX           0.000035       
+XXXZZ           0.002104       
+XXYIY           -0.000035      
+XXYXY           -0.000014      
+XXYYI           0.018236       
+XXYYX           -0.000014      
+XXYYZ           0.018236       
+XXYZY           -0.000035      
+XXZII           0.000013       
+XXZIZ           0.000013       
+XXZXI           -0.000193      
+XXZXZ           -0.000193      
+XXZZI           0.000013       
+XXZZZ           0.000013       
+XYIYI           0.000193       
+XYIYZ           0.000193       
+XYXIY           -0.000035      
+XYXXY           -0.000014      
+XYXYI           0.018236       
+XYXYX           -0.000014      
+XYXYZ           0.018236       
+XYXZY           -0.000035      
+XYYII           -0.002104      
+XYYIX           -0.000035      
+XYYIZ           -0.002104      
+XYYXI           0.018236       
+XYYXX           -0.000014      
+XYYXZ           0.018236       
+XYYYY           0.000014       
+XYYZI           -0.002104      
+XYYZX           -0.000035      
+XYYZZ           -0.002104      
+XYZYI           0.000193       
+XYZYZ           0.000193       
+XZIII           0.000082       
+XZIIZ           0.000082       
+XZIXI           -0.000498      
+XZIXZ           -0.000498      
+XZIZI           0.000082       
+XZIZZ           0.000082       
+XZXII           0.002207       
+XZXIX           -0.000036      
+XZXIZ           0.002207       
+XZXXI           -0.001458      
+XZXXX           -0.000013      
+XZXXZ           -0.001458      
+XZXYY           0.000013       
+XZXZI           0.002207       
+XZXZX           -0.000036      
+XZXZZ           0.002207       
+XZYIY           0.000036       
+XZYXY           0.000013       
+XZYYI           0.001458       
+XZYYX           0.000013       
+XZYYZ           0.001458       
+XZYZY           0.000036       
+XZZII           0.000082       
+XZZIZ           0.000082       
+XZZXI           -0.000498      
+XZZXZ           -0.000498      
+XZZZI           0.000082       
+XZZZZ           0.000082       
+YIIYI           -0.000498      
+YIIYZ           -0.000498      
+YIXIY           -0.000036      
+YIXXY           -0.000013      
+YIXYI           -0.001458      
+YIXYX           -0.000013      
+YIXYZ           -0.001458      
+YIXZY           -0.000036      
+YIYII           0.002207       
+YIYIX           -0.000036      
+YIYIZ           0.002207       
+YIYXI           -0.001458      
+YIYXX           -0.000013      
+YIYXZ           -0.001458      
+YIYYY           0.000013       
+YIYZI           0.002207       
+YIYZX           -0.000036      
+YIYZZ           0.002207       
+YIZYI           -0.000498      
+YIZYZ           -0.000498      
+YXIYI           -0.000193      
+YXIYZ           -0.000193      
+YXXIY           0.000035       
+YXXXY           0.000014       
+YXXYI           -0.018236      
+YXXYX           0.000014       
+YXXYZ           -0.018236      
+YXXZY           0.000035       
+YXYII           0.002104       
+YXYIX           0.000035       
+YXYIZ           0.002104       
+YXYXI           -0.018236      
+YXYXX           0.000014       
+YXYXZ           -0.018236      
+YXYYY           -0.000014      
+YXYZI           0.002104       
+YXYZX           0.000035       
+YXYZZ           0.002104       
+YXZYI           -0.000193      
+YXZYZ           -0.000193      
+YYIII           0.000013       
+YYIIZ           0.000013       
+YYIXI           -0.000193      
+YYIXZ           -0.000193      
+YYIZI           0.000013       
+YYIZZ           0.000013       
+YYXII           0.002104       
+YYXIX           0.000035       
+YYXIZ           0.002104       
+YYXXI           -0.018236      
+YYXXX           0.000014       
+YYXXZ           -0.018236      
+YYXYY           -0.000014      
+YYXZI           0.002104       
+YYXZX           0.000035       
+YYXZZ           0.002104       
+YYYIY           -0.000035      
+YYYXY           -0.000014      
+YYYYI           0.018236       
+YYYYX           -0.000014      
+YYYYZ           0.018236       
+YYYZY           -0.000035      
+YYZII           0.000013       
+YYZIZ           0.000013       
+YYZXI           -0.000193      
+YYZXZ           -0.000193      
+YYZZI           0.000013       
+YYZZZ           0.000013       
+YZIYI           -0.000498      
+YZIYZ           -0.000498      
+YZXIY           -0.000036      
+YZXXY           -0.000013      
+YZXYI           -0.001458      
+YZXYX           -0.000013      
+YZXYZ           -0.001458      
+YZXZY           -0.000036      
+YZYII           0.002207       
+YZYIX           -0.000036      
+YZYIZ           0.002207       
+YZYXI           -0.001458      
+YZYXX           -0.000013      
+YZYXZ           -0.001458      
+YZYYY           0.000013       
+YZYZI           0.002207       
+YZYZX           -0.000036      
+YZYZZ           0.002207       
+YZZYI           -0.000498      
+YZZYZ           -0.000498      
+ZIIII           -0.777389      
+ZIIIX           -0.037062      
+ZIIIZ           0.083591       
+ZIIXI           -0.057824      
+ZIIXX           0.003705       
+ZIIXZ           -0.049323      
+ZIIZI           0.048684       
+ZIIZZ           0.048684       
+ZIXII           0.005936       
+ZIXIX           -0.000248      
+ZIXIZ           0.006260       
+ZIXXI           -0.027399      
+ZIXXX           0.001509       
+ZIXXZ           -0.023733      
+ZIXZI           -0.000063      
+ZIXZZ           -0.000063      
+ZIYYI           -0.026862      
+ZIYYX           0.001502       
+ZIYYZ           -0.022956      
+ZIZII           0.048599       
+ZIZIZ           0.048599       
+ZIZXI           0.000440       
+ZIZXZ           0.000440       
+ZIZZI           0.048376       
+ZIZZX           -0.003076      
+ZIZZZ           0.040180       
+ZXIII           -0.050952      
+ZXIIX           0.036833       
+ZXIIZ           -0.013627      
+ZXIXI           -0.015773      
+ZXIXX           -0.003782      
+ZXIXZ           0.030607       
+ZXIZI           -0.001207      
+ZXIZZ           -0.001207      
+ZXXII           0.003672       
+ZXXIX           0.000314       
+ZXXIZ           -0.002368      
+ZXXXI           -0.009280      
+ZXXXX           -0.001518      
+ZXXXZ           0.015184       
+ZXXZI           -0.000085      
+ZXXZZ           -0.000085      
+ZXYYI           -0.008703      
+ZXYYX           -0.001485      
+ZXYYZ           0.015054       
+ZXZII           -0.001290      
+ZXZIZ           -0.001290      
+ZXZXI           0.000541       
+ZXZXZ           0.000541       
+ZXZZI           -0.004423      
+ZXZZX           0.002907       
+ZXZZZ           0.002656       
+ZYIYI           0.032637       
+ZYIYX           -0.001816      
+ZYIYZ           -0.021267      
+ZYXYI           -0.015526      
+ZYXYX           0.000761       
+ZYXYZ           0.010891       
+ZYYII           -0.006861      
+ZYYIX           0.000405       
+ZYYIZ           0.000215       
+ZYYXI           0.016700       
+ZYYXX           -0.000835      
+ZYYXZ           -0.010582      
+ZYYZI           0.000055       
+ZYYZZ           0.000055       
+ZYZYI           -0.000215      
+ZYZYZ           -0.000215      
+ZZIII           0.048801       
+ZZIIZ           0.048801       
+ZZIXI           0.000073       
+ZZIXZ           0.000073       
+ZZIZI           0.051532       
+ZZIZX           0.002615       
+ZZIZZ           0.059488       
+ZZXII           0.000023       
+ZZXIZ           0.000023       
+ZZXXI           -0.000016      
+ZZXXZ           -0.000016      
+ZZXZI           -0.000397      
+ZZXZX           0.000035       
+ZZXZZ           -0.000505      
+ZZZII           0.050963       
+ZZZIX           0.002659       
+ZZZIZ           0.058866       
+ZZZXI           0.003354       
+ZZZXX           -0.000498      
+ZZZXZ           0.002720       
+ZZZZI           0.048763       
+ZZZZZ           0.048763       
+Hamiltonian matrix size: (32, 32) (padded to 32x32 for 5 qubits)
+Number of Pauli terms: 372
+
+--- 2D Warren Truss: VQE on Aer Simulator ---
+HEA: 5 qubits, 3 reps, 40 parameters
+Running VQE with L_BFGS_B, maxiter=3000
+  Iteration 50: cost = 0.546074
+  Iteration 100: cost = 0.402286
+  Iteration 150: cost = 0.201786
+  Iteration 200: cost = 0.140891
+  Iteration 250: cost = 0.103526
+  Iteration 300: cost = 0.078513
+  Iteration 350: cost = 0.074626
+  Iteration 400: cost = 0.061714
+  Iteration 450: cost = 0.056507
+  Iteration 500: cost = 0.050387
+  Iteration 550: cost = 0.048709
+  Iteration 600: cost = 0.047942
+  Iteration 650: cost = 0.047272
+  Iteration 700: cost = 0.044828
+  Iteration 750: cost = 0.043119
+  Iteration 800: cost = 0.041490
+  Iteration 850: cost = 0.039947
+  Iteration 900: cost = 0.037901
+  Iteration 950: cost = 0.035334
+  Iteration 1000: cost = 0.034077
+  Iteration 1050: cost = 0.032571
+  Iteration 1100: cost = 0.030690
+  Iteration 1150: cost = 0.024189
+  Iteration 1200: cost = 0.024056
+  Iteration 1250: cost = 0.021745
+  Iteration 1300: cost = 0.018883
+  Iteration 1350: cost = 0.020405
+  Iteration 1400: cost = 0.015496
+  Iteration 1450: cost = 0.014092
+  Iteration 1500: cost = 0.013292
+  Iteration 1550: cost = 0.012726
+  Iteration 1600: cost = 0.011836
+  Iteration 1650: cost = 0.011316
+  Iteration 1700: cost = 0.011119
+  Iteration 1750: cost = 0.010722
+  Iteration 1800: cost = 0.010178
+  Iteration 1850: cost = 0.009275
+  Iteration 1900: cost = 0.009112
+  Iteration 1950: cost = 0.009022
+  Iteration 2000: cost = 0.008919
+  Iteration 2050: cost = 0.008786
+  Iteration 2100: cost = 0.008225
+  Iteration 2150: cost = 0.008048
+  Iteration 2200: cost = 0.007477
+  Iteration 2250: cost = 0.007240
+  Iteration 2300: cost = 0.006816
+  Iteration 2350: cost = 0.006768
+  Iteration 2400: cost = 0.006674
+  Iteration 2450: cost = 0.006560
+  Iteration 2500: cost = 0.006462
+  Iteration 2550: cost = 0.006400
+  Iteration 2600: cost = 0.006381
+  Iteration 2650: cost = 0.006362
+  Iteration 2700: cost = 0.006340
+  Iteration 2750: cost = 0.006301
+  Iteration 2800: cost = 0.006283
+  Iteration 2850: cost = 0.006278
+  Iteration 2900: cost = 0.006261
+  Iteration 2950: cost = 0.006252
+  Iteration 3000: cost = 0.006228
+  Iteration 3050: cost = 0.006217
+  Iteration 3100: cost = 0.006215
+  Iteration 3150: cost = 0.006211
+  Iteration 3200: cost = 0.006208
+  Iteration 3250: cost = 0.006206
+  Iteration 3300: cost = 0.006202
+  Iteration 3350: cost = 0.006202
+  Iteration 3400: cost = 0.006199
+  Iteration 3450: cost = 0.006187
+  Iteration 3500: cost = 0.006184
+  Iteration 3550: cost = 0.006182
+  Iteration 3600: cost = 0.006180
+  Iteration 3650: cost = 0.006178
+  Iteration 3700: cost = 0.006178
+  Iteration 3750: cost = 0.006177
+  Iteration 3800: cost = 0.006176
+  Iteration 3850: cost = 0.006175
+  Iteration 3900: cost = 0.006173
+  Iteration 3950: cost = 0.006173
+  Iteration 4000: cost = 0.006171
+  Iteration 4050: cost = 0.006171
+  Iteration 4100: cost = 0.006170
+  Iteration 4150: cost = 0.006169
+  Iteration 4200: cost = 0.006169
+  Iteration 4250: cost = 0.006169
+  Iteration 4300: cost = 0.006168
+  Iteration 4350: cost = 0.006168
+  Iteration 4400: cost = 0.006168
+  Iteration 4450: cost = 0.006168
+  Iteration 4500: cost = 0.006168
+  Iteration 4550: cost = 0.006168
+  Iteration 4600: cost = 0.006167
+  Iteration 4650: cost = 0.006167
+  Iteration 4700: cost = 0.006167
+  Iteration 4750: cost = 0.006167
+  Iteration 4800: cost = 0.006166
+  Iteration 4850: cost = 0.006167
+  Iteration 4900: cost = 0.006166
+  Iteration 4950: cost = 0.006166
+  Iteration 5000: cost = 0.006165
+  Iteration 5050: cost = 0.006164
+  Iteration 5100: cost = 0.006164

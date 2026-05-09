@@ -1,0 +1,33 @@
+name: vqa-modal-analysis
+channels:
+  - defaults
+  - conda-forge
+  - ibm
+
+dependencies:
+  # Python
+  - python=3.9
+
+  # Core scientific computing (optimized builds)
+  - numpy>=1.24
+  - scipy>=1.10
+
+  # Visualization
+  - matplotlib>=3.7
+  - pandas>=1.5
+
+  # Jupyter for interactive analysis (optional but recommended)
+  - jupyter
+  - ipython
+
+  # Package manager
+  - pip
+
+  # Qiskit ecosystem (via pip for latest versions)
+  - pip:
+    - qiskit>=1.0.0
+    - qiskit-aer>=0.13.0
+    - qiskit-algorithms>=0.3.0
+    # Optional: Uncomment for IBM Quantum hardware access
+    # - qiskit-ibm-runtime
+    # - qiskit-ibm-provider

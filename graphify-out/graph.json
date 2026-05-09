@@ -1,0 +1,3011 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {
+    "hyperedges": [
+      {
+        "id": "vqe_pipeline_components",
+        "label": "VQE Pipeline for Modal Analysis",
+        "nodes": [
+          "vqe_algorithm",
+          "pauli_decomposition",
+          "hardware_efficient_ansatz_hea",
+          "symmetry_aware_ansatz",
+          "cobyla_optimizer",
+          "spsa_optimizer",
+          "vqe_deflation"
+        ],
+        "relation": "participate_in",
+        "confidence": "EXTRACTED",
+        "confidence_score": 0.85,
+        "source_file": "VQA_Modal_Analysis.md"
+      },
+      {
+        "id": "structural_systems_studied",
+        "label": "Structural Systems Studied",
+        "nodes": [
+          "euler_bernoulli_beam",
+          "portal_frame",
+          "composite_laminated_beam",
+          "buckling_analysis",
+          "damage_detection"
+        ],
+        "relation": "form",
+        "confidence": "EXTRACTED",
+        "confidence_score": 0.8,
+        "source_file": "VQA_Modal_Analysis.md"
+      },
+      {
+        "id": "novel_contribution_research_gap",
+        "label": "Novel Contribution Research Gaps",
+        "nodes": [
+          "structural_ill_conditioning",
+          "slenderness_ratio",
+          "symmetry_aware_ansatz",
+          "damage_detection",
+          "vqe_convergence",
+          "barren_plateaus"
+        ],
+        "relation": "participate_in",
+        "confidence": "EXTRACTED",
+        "confidence_score": 0.85,
+        "source_file": "VQA_Modal_Analysis.md"
+      },
+      {
+        "id": "damage_detection_workflow",
+        "label": "Damage Detection via VQE Frequency Shift",
+        "nodes": [
+          "stiffness_reduction_damage",
+          "natural_frequency_omega",
+          "vqe_frequency",
+          "classical_frequency",
+          "frequency_shift"
+        ],
+        "relation": "participate_in",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "results/damage_detection.png"
+      },
+      {
+        "id": "vqe_convergence_analysis",
+        "label": "VQE Convergence Analysis Components",
+        "nodes": [
+          "cost_function",
+          "frequency_error",
+          "classical_lambda_reference",
+          "vqe_convergence"
+        ],
+        "relation": "form",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "results/convergence.png"
+      },
+      {
+        "id": "vqe_optimizer_landscape",
+        "label": "VQE Optimizer Selection Landscape",
+        "nodes": [
+          "vqe_algorithm",
+          "cobyla_optimizer",
+          "spsa_optimizer",
+          "lbfgsb_optimizer"
+        ],
+        "relation": "participate_in",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "VQA_Modal_Analysis.md"
+      },
+      {
+        "id": "modal_analysis_output",
+        "label": "Modal Analysis Output Entities",
+        "nodes": [
+          "natural_frequencies",
+          "mode_shapes",
+          "omega_rad_s",
+          "eigenvector"
+        ],
+        "relation": "form",
+        "confidence": "EXTRACTED",
+        "confidence_score": 1.0,
+        "source_file": "VQA_Modal_Analysis.md"
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "label": "ansatz.py",
+      "file_type": "code",
+      "source_file": "ansatz.py",
+      "source_location": "L1",
+      "id": "ansatz_py",
+      "community": 6
+    },
+    {
+      "label": "hardware_efficient_ansatz()",
+      "file_type": "code",
+      "source_file": "ansatz.py",
+      "source_location": "L5",
+      "id": "ansatz_hardware_efficient_ansatz",
+      "community": 6
+    },
+    {
+      "label": "symmetric_ansatz()",
+      "file_type": "code",
+      "source_file": "ansatz.py",
+      "source_location": "L16",
+      "id": "ansatz_symmetric_ansatz",
+      "community": 6
+    },
+    {
+      "label": "minimal_ansatz()",
+      "file_type": "code",
+      "source_file": "ansatz.py",
+      "source_location": "L46",
+      "id": "ansatz_minimal_ansatz",
+      "community": 6
+    },
+    {
+      "label": "Standard Hardware-Efficient Ansatz (HEA).",
+      "file_type": "rationale",
+      "source_file": "ansatz.py",
+      "source_location": "L6",
+      "id": "ansatz_rationale_6",
+      "community": 6
+    },
+    {
+      "label": "Symmetry-aware ansatz for simply-supported beam.     Constrains parameters to e",
+      "file_type": "rationale",
+      "source_file": "ansatz.py",
+      "source_location": "L17",
+      "id": "ansatz_rationale_17",
+      "community": 6
+    },
+    {
+      "label": "Minimal 2-parameter ansatz for quick testing.",
+      "file_type": "rationale",
+      "source_file": "ansatz.py",
+      "source_location": "L47",
+      "id": "ansatz_rationale_47",
+      "community": 6
+    },
+    {
+      "label": "fea.py",
+      "file_type": "code",
+      "source_file": "fea.py",
+      "source_location": "L1",
+      "id": "fea_py",
+      "community": 4
+    },
+    {
+      "label": "beam_element_stiffness()",
+      "file_type": "code",
+      "source_file": "fea.py",
+      "source_location": "L4",
+      "id": "fea_beam_element_stiffness",
+      "community": 4
+    },
+    {
+      "label": "beam_element_mass()",
+      "file_type": "code",
+      "source_file": "fea.py",
+      "source_location": "L19",
+      "id": "fea_beam_element_mass",
+      "community": 4
+    },
+    {
+      "label": "assemble_beam()",
+      "file_type": "code",
+      "source_file": "fea.py",
+      "source_location": "L33",
+      "id": "fea_assemble_beam",
+      "community": 4
+    },
+    {
+      "label": "apply_simply_supported_bc()",
+      "file_type": "code",
+      "source_file": "fea.py",
+      "source_location": "L63",
+      "id": "fea_apply_simply_supported_bc",
+      "community": 4
+    },
+    {
+      "label": "apply_cantilever_bc()",
+      "file_type": "code",
+      "source_file": "fea.py",
+      "source_location": "L80",
+      "id": "fea_apply_cantilever_bc",
+      "community": 4
+    },
+    {
+      "label": "classical_modal_analysis()",
+      "file_type": "code",
+      "source_file": "fea.py",
+      "source_location": "L93",
+      "id": "fea_classical_modal_analysis",
+      "community": 4
+    },
+    {
+      "label": "analytical_simply_supported()",
+      "file_type": "code",
+      "source_file": "fea.py",
+      "source_location": "L102",
+      "id": "fea_analytical_simply_supported",
+      "community": 4
+    },
+    {
+      "label": "Returns 4x4 Euler-Bernoulli beam element stiffness matrix.     DOF order: [v_i,",
+      "file_type": "rationale",
+      "source_file": "fea.py",
+      "source_location": "L5",
+      "id": "fea_rationale_5",
+      "community": 4
+    },
+    {
+      "label": "Returns 4x4 consistent mass matrix for Euler-Bernoulli beam element.     rhoA:",
+      "file_type": "rationale",
+      "source_file": "fea.py",
+      "source_location": "L20",
+      "id": "fea_rationale_20",
+      "community": 4
+    },
+    {
+      "label": "Assemble global K and M matrices for a uniform beam.     Returns K_global (2n+2",
+      "file_type": "rationale",
+      "source_file": "fea.py",
+      "source_location": "L34",
+      "id": "fea_rationale_34",
+      "community": 4
+    },
+    {
+      "label": "Apply simply-supported BCs: remove transverse displacement DOF at both ends.",
+      "file_type": "rationale",
+      "source_file": "fea.py",
+      "source_location": "L64",
+      "id": "fea_rationale_64",
+      "community": 4
+    },
+    {
+      "label": "Apply cantilever BCs: remove all DOFs at node 0 (fixed end).",
+      "file_type": "rationale",
+      "source_file": "fea.py",
+      "source_location": "L81",
+      "id": "fea_rationale_81",
+      "community": 4
+    },
+    {
+      "label": "Solve generalized eigenvalue problem using scipy.     Returns natural frequenci",
+      "file_type": "rationale",
+      "source_file": "fea.py",
+      "source_location": "L94",
+      "id": "fea_rationale_94",
+      "community": 4
+    },
+    {
+      "label": "Analytical natural frequencies for simply-supported Euler-Bernoulli beam.",
+      "file_type": "rationale",
+      "source_file": "fea.py",
+      "source_location": "L103",
+      "id": "fea_rationale_103",
+      "community": 4
+    },
+    {
+      "label": "main.py",
+      "file_type": "code",
+      "source_file": "main.py",
+      "source_location": "L1",
+      "id": "main_py",
+      "community": 0
+    },
+    {
+      "label": "VQA Modal Analysis - Complete Pipeline Run this file to execute the full project",
+      "file_type": "rationale",
+      "source_file": "main.py",
+      "source_location": "L1",
+      "id": "main_rationale_1",
+      "community": 0
+    },
+    {
+      "label": "novel_study.py",
+      "file_type": "code",
+      "source_file": "novel_study.py",
+      "source_location": "L1",
+      "id": "novel_study_py",
+      "community": 0
+    },
+    {
+      "label": "tapered_beam_assemble_v2()",
+      "file_type": "code",
+      "source_file": "novel_study.py",
+      "source_location": "L11",
+      "id": "novel_study_tapered_beam_assemble_v2",
+      "community": 0
+    },
+    {
+      "label": "_linear_taper_elements()",
+      "file_type": "code",
+      "source_file": "novel_study.py",
+      "source_location": "L41",
+      "id": "novel_study_linear_taper_elements",
+      "community": 0
+    },
+    {
+      "label": "tapered_beam_study()",
+      "file_type": "code",
+      "source_file": "novel_study.py",
+      "source_location": "L54",
+      "id": "novel_study_tapered_beam_study",
+      "community": 0
+    },
+    {
+      "label": "damage_detection_study()",
+      "file_type": "code",
+      "source_file": "novel_study.py",
+      "source_location": "L138",
+      "id": "novel_study_damage_detection_study",
+      "community": 0
+    },
+    {
+      "label": "Assemble K and M for a tapered beam.      taper_ratios[i] gives the height ratio",
+      "file_type": "rationale",
+      "source_file": "novel_study.py",
+      "source_location": "L12",
+      "id": "novel_study_rationale_12",
+      "community": 0
+    },
+    {
+      "label": "For a linearly tapered beam from h=1.0 to h=end_ratio,     compute the height ra",
+      "file_type": "rationale",
+      "source_file": "novel_study.py",
+      "source_location": "L42",
+      "id": "novel_study_rationale_42",
+      "community": 0
+    },
+    {
+      "label": "Study how beam taper (geometric non-uniformity) affects Hamiltonian     conditio",
+      "file_type": "rationale",
+      "source_file": "novel_study.py",
+      "source_location": "L55",
+      "id": "novel_study_rationale_55",
+      "community": 0
+    },
+    {
+      "label": "Study how stiffness reduction (simulated crack) affects VQE-computed frequencies",
+      "file_type": "rationale",
+      "source_file": "novel_study.py",
+      "source_location": "L139",
+      "id": "novel_study_rationale_139",
+      "community": 0
+    },
+    {
+      "label": "optimizer_comparison.py",
+      "file_type": "code",
+      "source_file": "optimizer_comparison.py",
+      "source_location": "L1",
+      "id": "optimizer_comparison_py",
+      "community": 0
+    },
+    {
+      "label": "Optimizer Comparison: COBYLA vs L-BFGS-B =======================================",
+      "file_type": "rationale",
+      "source_file": "optimizer_comparison.py",
+      "source_location": "L1",
+      "id": "optimizer_comparison_rationale_1",
+      "community": 0
+    },
+    {
+      "label": "quantum_setup.py",
+      "file_type": "code",
+      "source_file": "quantum_setup.py",
+      "source_location": "L1",
+      "id": "quantum_setup_py",
+      "community": 8
+    },
+    {
+      "label": "build_structural_hamiltonian()",
+      "file_type": "code",
+      "source_file": "quantum_setup.py",
+      "source_location": "L6",
+      "id": "quantum_setup_build_structural_hamiltonian",
+      "community": 8
+    },
+    {
+      "label": "inspect_pauli_decomposition()",
+      "file_type": "code",
+      "source_file": "quantum_setup.py",
+      "source_location": "L55",
+      "id": "quantum_setup_inspect_pauli_decomposition",
+      "community": 8
+    },
+    {
+      "label": "Convert structural generalized eigenvalue problem to quantum Hamiltonian.      T",
+      "file_type": "rationale",
+      "source_file": "quantum_setup.py",
+      "source_location": "L7",
+      "id": "quantum_setup_rationale_7",
+      "community": 8
+    },
+    {
+      "label": "Print all Pauli terms and their coefficients.",
+      "file_type": "rationale",
+      "source_file": "quantum_setup.py",
+      "source_location": "L56",
+      "id": "quantum_setup_rationale_56",
+      "community": 8
+    },
+    {
+      "label": "validate_fea.py",
+      "file_type": "code",
+      "source_file": "validate_fea.py",
+      "source_location": "L1",
+      "id": "validate_fea_py",
+      "community": 10
+    },
+    {
+      "label": "visualize.py",
+      "file_type": "code",
+      "source_file": "visualize.py",
+      "source_location": "L1",
+      "id": "visualize_py",
+      "community": 1
+    },
+    {
+      "label": "plot_beam_geometry()",
+      "file_type": "code",
+      "source_file": "visualize.py",
+      "source_location": "L20",
+      "id": "visualize_plot_beam_geometry",
+      "community": 1
+    },
+    {
+      "label": "plot_mode_shapes_continuous()",
+      "file_type": "code",
+      "source_file": "visualize.py",
+      "source_location": "L74",
+      "id": "visualize_plot_mode_shapes_continuous",
+      "community": 1
+    },
+    {
+      "label": "plot_dual_convergence()",
+      "file_type": "code",
+      "source_file": "visualize.py",
+      "source_location": "L183",
+      "id": "visualize_plot_dual_convergence",
+      "community": 1
+    },
+    {
+      "label": "plot_optimizer_comparison()",
+      "file_type": "code",
+      "source_file": "visualize.py",
+      "source_location": "L252",
+      "id": "visualize_plot_optimizer_comparison",
+      "community": 1
+    },
+    {
+      "label": "plot_convergence()",
+      "file_type": "code",
+      "source_file": "visualize.py",
+      "source_location": "L330",
+      "id": "visualize_plot_convergence",
+      "community": 1
+    },
+    {
+      "label": "plot_mode_shapes()",
+      "file_type": "code",
+      "source_file": "visualize.py",
+      "source_location": "L361",
+      "id": "visualize_plot_mode_shapes",
+      "community": 1
+    },
+    {
+      "label": "plot_frequency_comparison()",
+      "file_type": "code",
+      "source_file": "visualize.py",
+      "source_location": "L394",
+      "id": "visualize_plot_frequency_comparison",
+      "community": 1
+    },
+    {
+      "label": "plot_ill_conditioning_study()",
+      "file_type": "code",
+      "source_file": "visualize.py",
+      "source_location": "L428",
+      "id": "visualize_plot_ill_conditioning_study",
+      "community": 1
+    },
+    {
+      "label": "plot_damage_detection()",
+      "file_type": "code",
+      "source_file": "visualize.py",
+      "source_location": "L508",
+      "id": "visualize_plot_damage_detection",
+      "community": 1
+    },
+    {
+      "label": "2D side-view of the beam with supports and optional taper.",
+      "file_type": "rationale",
+      "source_file": "visualize.py",
+      "source_location": "L21",
+      "id": "visualize_rationale_21",
+      "community": 1
+    },
+    {
+      "label": "Plot mode shapes as continuous deflection curves using Hermite     cubic interpo",
+      "file_type": "rationale",
+      "source_file": "visualize.py",
+      "source_location": "L76",
+      "id": "visualize_rationale_76",
+      "community": 1
+    },
+    {
+      "label": "Side-by-side convergence of COBYLA and L-BFGS-B.",
+      "file_type": "rationale",
+      "source_file": "visualize.py",
+      "source_location": "L184",
+      "id": "visualize_rationale_184",
+      "community": 1
+    },
+    {
+      "label": "Side-by-side comparison across geometries (taper ratios).",
+      "file_type": "rationale",
+      "source_file": "visualize.py",
+      "source_location": "L254",
+      "id": "visualize_rationale_254",
+      "community": 1
+    },
+    {
+      "label": "Plot VQE cost function convergence.",
+      "file_type": "rationale",
+      "source_file": "visualize.py",
+      "source_location": "L331",
+      "id": "visualize_rationale_331",
+      "community": 1
+    },
+    {
+      "label": "Compare VQE and classical mode shapes.",
+      "file_type": "rationale",
+      "source_file": "visualize.py",
+      "source_location": "L362",
+      "id": "visualize_rationale_362",
+      "community": 1
+    },
+    {
+      "label": "Bar chart comparing VQE vs classical natural frequencies.",
+      "file_type": "rationale",
+      "source_file": "visualize.py",
+      "source_location": "L395",
+      "id": "visualize_rationale_395",
+      "community": 1
+    },
+    {
+      "label": "COBYLA vs L-BFGS-B vs Exact across taper ratios.",
+      "file_type": "rationale",
+      "source_file": "visualize.py",
+      "source_location": "L429",
+      "id": "visualize_rationale_429",
+      "community": 1
+    },
+    {
+      "label": "Frequency shift vs damage severity.",
+      "file_type": "rationale",
+      "source_file": "visualize.py",
+      "source_location": "L509",
+      "id": "visualize_rationale_509",
+      "community": 1
+    },
+    {
+      "label": "vqe_runner.py",
+      "file_type": "code",
+      "source_file": "vqe_runner.py",
+      "source_location": "L1",
+      "id": "vqe_runner_py",
+      "community": 0
+    },
+    {
+      "label": "VQEStructuralSolver",
+      "file_type": "code",
+      "source_file": "vqe_runner.py",
+      "source_location": "L8",
+      "id": "vqe_runner_vqestructuralsolver",
+      "community": 0
+    },
+    {
+      "label": ".__init__()",
+      "file_type": "code",
+      "source_file": "vqe_runner.py",
+      "source_location": "L14",
+      "id": "vqe_runner_vqestructuralsolver_init",
+      "community": 0
+    },
+    {
+      "label": "._get_optimizer()",
+      "file_type": "code",
+      "source_file": "vqe_runner.py",
+      "source_location": "L24",
+      "id": "vqe_runner_vqestructuralsolver_get_optimizer",
+      "community": 0
+    },
+    {
+      "label": "._callback()",
+      "file_type": "code",
+      "source_file": "vqe_runner.py",
+      "source_location": "L32",
+      "id": "vqe_runner_vqestructuralsolver_callback",
+      "community": 0
+    },
+    {
+      "label": ".solve()",
+      "file_type": "code",
+      "source_file": "vqe_runner.py",
+      "source_location": "L39",
+      "id": "vqe_runner_vqestructuralsolver_solve",
+      "community": 0
+    },
+    {
+      "label": ".solve_excited_states()",
+      "file_type": "code",
+      "source_file": "vqe_runner.py",
+      "source_location": "L92",
+      "id": "vqe_runner_vqestructuralsolver_solve_excited_states",
+      "community": 0
+    },
+    {
+      "label": "classical_reference()",
+      "file_type": "code",
+      "source_file": "vqe_runner.py",
+      "source_location": "L131",
+      "id": "vqe_runner_classical_reference",
+      "community": 0
+    },
+    {
+      "label": "Complete VQE solver for structural eigenvalue problems.     Handles optimization",
+      "file_type": "rationale",
+      "source_file": "vqe_runner.py",
+      "source_location": "L9",
+      "id": "vqe_runner_rationale_9",
+      "community": 0
+    },
+    {
+      "label": "Called at each optimizer iteration. Records convergence.",
+      "file_type": "rationale",
+      "source_file": "vqe_runner.py",
+      "source_location": "L33",
+      "id": "vqe_runner_rationale_33",
+      "community": 0
+    },
+    {
+      "label": "Run VQE optimization. Returns physical eigenvalue and metadata.",
+      "file_type": "rationale",
+      "source_file": "vqe_runner.py",
+      "source_location": "L40",
+      "id": "vqe_runner_rationale_40",
+      "community": 0
+    },
+    {
+      "label": "Find multiple natural frequencies using VQE deflation.",
+      "file_type": "rationale",
+      "source_file": "vqe_runner.py",
+      "source_location": "L93",
+      "id": "vqe_runner_rationale_93",
+      "community": 0
+    },
+    {
+      "label": "Classical exact eigenvalue solution for comparison.",
+      "file_type": "rationale",
+      "source_file": "vqe_runner.py",
+      "source_location": "L132",
+      "id": "vqe_runner_rationale_132",
+      "community": 0
+    },
+    {
+      "label": "Variational Quantum Eigensolver (VQE)",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "vqe_algorithm",
+      "community": 2
+    },
+    {
+      "label": "Modal Analysis",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "modal_analysis",
+      "community": 3
+    },
+    {
+      "label": "Natural Frequencies",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "natural_frequencies",
+      "community": 2
+    },
+    {
+      "label": "Mode Shapes",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "mode_shapes",
+      "community": 3
+    },
+    {
+      "label": "Stiffness Matrix K",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "stiffness_matrix_k",
+      "community": 3
+    },
+    {
+      "label": "Mass Matrix M",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "mass_matrix_m",
+      "community": 3
+    },
+    {
+      "label": "Generalized Eigenvalue Problem K\u03c6=\u03c9\u00b2M\u03c6",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "generalized_eigenvalue_problem",
+      "community": 3
+    },
+    {
+      "label": "Finite Element Analysis (FEA)",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "finite_element_analysis_fea",
+      "community": 3
+    },
+    {
+      "label": "Quantum Hamiltonian",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "quantum_hamiltonian",
+      "community": 3
+    },
+    {
+      "label": "Pauli Decomposition",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "pauli_decomposition",
+      "community": 3
+    },
+    {
+      "label": "Hardware-Efficient Ansatz (HEA)",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "hardware_efficient_ansatz_hea",
+      "community": 2
+    },
+    {
+      "label": "Symmetry-Aware Ansatz",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "symmetry_aware_ansatz",
+      "community": 2
+    },
+    {
+      "label": "COBYLA Optimizer",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "cobyla_optimizer",
+      "community": 2
+    },
+    {
+      "label": "SPSA Optimizer",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "spsa_optimizer",
+      "community": 2
+    },
+    {
+      "label": "VQE Deflation for Higher Modes",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "vqe_deflation",
+      "community": 2
+    },
+    {
+      "label": "Structural Ill-Conditioning",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "structural_ill_conditioning",
+      "community": 5
+    },
+    {
+      "label": "Slenderness Ratio",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "slenderness_ratio",
+      "community": 5
+    },
+    {
+      "label": "Quantum Structural Health Monitoring via Damage Detection",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "damage_detection",
+      "community": 2
+    },
+    {
+      "label": "Euler-Bernoulli Beam Element",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "euler_bernoulli_beam",
+      "community": 3
+    },
+    {
+      "label": "Boundary Conditions",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "boundary_conditions",
+      "community": 3
+    },
+    {
+      "label": "Zero Noise Extrapolation (ZNE)",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "zero_noise_extrapolation_zne",
+      "community": 2
+    },
+    {
+      "label": "IBM Quantum Hardware",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "ibm_quantum_hardware",
+      "community": 2
+    },
+    {
+      "label": "Qiskit",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "qiskit",
+      "community": 2
+    },
+    {
+      "label": "Schrodinger Equation",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "schrodinger_equation",
+      "community": 3
+    },
+    {
+      "label": "Variational Principle",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "variational_principle",
+      "community": 2
+    },
+    {
+      "label": "Principle of Minimum Potential Energy",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "minimum_potential_energy",
+      "community": 2
+    },
+    {
+      "label": "Critical Buckling Load Analysis",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "buckling_analysis",
+      "community": 5
+    },
+    {
+      "label": "Qubit",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "qubit",
+      "community": 3
+    },
+    {
+      "label": "Standard Form Transformation",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "standard_form_transformation",
+      "community": 3
+    },
+    {
+      "label": "Hybrid Classical-Quantum Algorithm",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "hybrid_classical_quantum",
+      "community": 2
+    },
+    {
+      "label": "Resonance",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "resonance",
+      "community": 2
+    },
+    {
+      "label": "Natural Damping in Structures",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "natural_damping",
+      "community": 11
+    },
+    {
+      "label": "Condition Number",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "condition_number",
+      "community": 5
+    },
+    {
+      "label": "Barren Plateaus",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "barren_plateaus",
+      "community": 5
+    },
+    {
+      "label": "Portal Frame Structure",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "portal_frame",
+      "community": 3
+    },
+    {
+      "label": "Composite Laminated Beam",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "composite_laminated_beam",
+      "community": 3
+    },
+    {
+      "label": "VQE Convergence",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "vqe_convergence",
+      "community": 5
+    },
+    {
+      "label": "Novel Research Gap",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "research_gap",
+      "community": 2
+    },
+    {
+      "label": "Beam Geometry Diagram",
+      "file_type": "image",
+      "source_file": "results/beam_geometry.png",
+      "id": "beam_geometry",
+      "community": 12
+    },
+    {
+      "label": "VQE Convergence Plot",
+      "file_type": "image",
+      "source_file": "results/convergence.png",
+      "id": "convergence_plot",
+      "community": 13
+    },
+    {
+      "label": "Quantum Structural Health Monitoring via Frequency Shift",
+      "file_type": "image",
+      "source_file": "results/damage_detection.png",
+      "id": "damage_detection_plot",
+      "community": 14
+    },
+    {
+      "label": "Cost Function <psi(theta)|H|psi(theta)>",
+      "file_type": "document",
+      "source_file": "results/convergence.png",
+      "id": "cost_function",
+      "community": 5
+    },
+    {
+      "label": "Frequency Error (%)",
+      "file_type": "document",
+      "source_file": "results/convergence.png",
+      "id": "frequency_error",
+      "community": 5
+    },
+    {
+      "label": "Classical lambda Reference",
+      "file_type": "document",
+      "source_file": "results/convergence.png",
+      "id": "classical_lambda_reference",
+      "community": 5
+    },
+    {
+      "label": "Stiffness Reduction (% damage)",
+      "file_type": "document",
+      "source_file": "results/damage_detection.png",
+      "id": "stiffness_reduction_damage",
+      "community": 7
+    },
+    {
+      "label": "Fundamental Frequency (rad/s)",
+      "file_type": "document",
+      "source_file": "results/damage_detection.png",
+      "id": "natural_frequency_omega",
+      "community": 7
+    },
+    {
+      "label": "Frequency Shift from Intact (%)",
+      "file_type": "document",
+      "source_file": "results/damage_detection.png",
+      "id": "frequency_shift",
+      "community": 7
+    },
+    {
+      "label": "VQE-Detected Frequency",
+      "file_type": "document",
+      "source_file": "results/damage_detection.png",
+      "id": "vqe_frequency",
+      "community": 7
+    },
+    {
+      "label": "Classical Frequency",
+      "file_type": "document",
+      "source_file": "results/damage_detection.png",
+      "id": "classical_frequency",
+      "community": 7
+    },
+    {
+      "label": "Quantum Structural Health Monitoring",
+      "file_type": "document",
+      "source_file": "results/damage_detection.png",
+      "id": "quantum_structural_health_monitoring",
+      "community": 7
+    },
+    {
+      "label": "Damage Detection via Frequency Shift",
+      "file_type": "document",
+      "source_file": "results/damage_detection.png",
+      "id": "damage_detection_application",
+      "community": 7
+    },
+    {
+      "label": "VQE vs Classical Frequency Comparison Bar Chart",
+      "file_type": "image",
+      "source_file": "results/frequency_comparison.png",
+      "id": "frequency_comparison_chart",
+      "community": 3
+    },
+    {
+      "label": "Angular Frequency Unit (rad/s)",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "omega_rad_s",
+      "community": 3
+    },
+    {
+      "label": "Ill-Conditioning Study - Novel Result Visualization",
+      "file_type": "image",
+      "source_file": "results/ill_conditioning_study.png",
+      "id": "ill_conditioning_study_chart",
+      "community": 5
+    },
+    {
+      "label": "Continuous Mode Shapes Visualization",
+      "file_type": "image",
+      "source_file": "results/mode_shapes_continuous.png",
+      "id": "mode_shapes_continuous_chart",
+      "community": 9
+    },
+    {
+      "label": "Mode Shape (Eigenvector)",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "mode_shape",
+      "community": 9
+    },
+    {
+      "label": "Eigenvector",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "eigenvector",
+      "community": 9
+    },
+    {
+      "label": "Optimizer Comparison Chart",
+      "file_type": "image",
+      "source_file": "results/optimizer_comparison.png",
+      "id": "optimizer_comparison_chart",
+      "community": 2
+    },
+    {
+      "label": "L-BFGS-B Optimizer",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "lbfgsb_optimizer",
+      "community": 2
+    },
+    {
+      "label": "Structural Generalized Eigenvalue Problem",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "structural_eigenvalue_problem",
+      "community": 3
+    },
+    {
+      "label": "Barren Plateau Phenomenon",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "barren_plateau",
+      "community": 5
+    },
+    {
+      "label": "Structural Ill-Conditioning vs VQE Convergence Research Gap",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "ill_conditioning_research_gap",
+      "community": 5
+    },
+    {
+      "label": "Symmetric Fundamental Mode Shape Property",
+      "file_type": "document",
+      "source_file": "VQA_Modal_Analysis.md",
+      "id": "symmetric_mode_shape",
+      "community": 9
+    }
+  ],
+  "links": [
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "ansatz.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_src": "ansatz_py",
+      "_tgt": "ansatz_hardware_efficient_ansatz",
+      "source": "ansatz_py",
+      "target": "ansatz_hardware_efficient_ansatz",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "ansatz.py",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_src": "ansatz_py",
+      "_tgt": "ansatz_symmetric_ansatz",
+      "source": "ansatz_py",
+      "target": "ansatz_symmetric_ansatz",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "ansatz.py",
+      "source_location": "L46",
+      "weight": 1.0,
+      "_src": "ansatz_py",
+      "_tgt": "ansatz_minimal_ansatz",
+      "source": "ansatz_py",
+      "target": "ansatz_minimal_ansatz",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "ansatz.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_src": "ansatz_rationale_6",
+      "_tgt": "ansatz_hardware_efficient_ansatz",
+      "source": "ansatz_hardware_efficient_ansatz",
+      "target": "ansatz_rationale_6",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "ansatz.py",
+      "source_location": "L17",
+      "weight": 1.0,
+      "_src": "ansatz_rationale_17",
+      "_tgt": "ansatz_symmetric_ansatz",
+      "source": "ansatz_symmetric_ansatz",
+      "target": "ansatz_rationale_17",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "ansatz.py",
+      "source_location": "L47",
+      "weight": 1.0,
+      "_src": "ansatz_rationale_47",
+      "_tgt": "ansatz_minimal_ansatz",
+      "source": "ansatz_minimal_ansatz",
+      "target": "ansatz_rationale_47",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "fea.py",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_src": "fea_py",
+      "_tgt": "fea_beam_element_stiffness",
+      "source": "fea_py",
+      "target": "fea_beam_element_stiffness",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "fea.py",
+      "source_location": "L19",
+      "weight": 1.0,
+      "_src": "fea_py",
+      "_tgt": "fea_beam_element_mass",
+      "source": "fea_py",
+      "target": "fea_beam_element_mass",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "fea.py",
+      "source_location": "L33",
+      "weight": 1.0,
+      "_src": "fea_py",
+      "_tgt": "fea_assemble_beam",
+      "source": "fea_py",
+      "target": "fea_assemble_beam",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "fea.py",
+      "source_location": "L63",
+      "weight": 1.0,
+      "_src": "fea_py",
+      "_tgt": "fea_apply_simply_supported_bc",
+      "source": "fea_py",
+      "target": "fea_apply_simply_supported_bc",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "fea.py",
+      "source_location": "L80",
+      "weight": 1.0,
+      "_src": "fea_py",
+      "_tgt": "fea_apply_cantilever_bc",
+      "source": "fea_py",
+      "target": "fea_apply_cantilever_bc",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "fea.py",
+      "source_location": "L93",
+      "weight": 1.0,
+      "_src": "fea_py",
+      "_tgt": "fea_classical_modal_analysis",
+      "source": "fea_py",
+      "target": "fea_classical_modal_analysis",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "fea.py",
+      "source_location": "L102",
+      "weight": 1.0,
+      "_src": "fea_py",
+      "_tgt": "fea_analytical_simply_supported",
+      "source": "fea_py",
+      "target": "fea_analytical_simply_supported",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "fea.py",
+      "source_location": "L50",
+      "weight": 1.0,
+      "_src": "fea_assemble_beam",
+      "_tgt": "fea_beam_element_stiffness",
+      "source": "fea_beam_element_stiffness",
+      "target": "fea_assemble_beam",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "fea.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "_src": "fea_rationale_5",
+      "_tgt": "fea_beam_element_stiffness",
+      "source": "fea_beam_element_stiffness",
+      "target": "fea_rationale_5",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "fea.py",
+      "source_location": "L51",
+      "weight": 1.0,
+      "_src": "fea_assemble_beam",
+      "_tgt": "fea_beam_element_mass",
+      "source": "fea_beam_element_mass",
+      "target": "fea_assemble_beam",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "fea.py",
+      "source_location": "L20",
+      "weight": 1.0,
+      "_src": "fea_rationale_20",
+      "_tgt": "fea_beam_element_mass",
+      "source": "fea_beam_element_mass",
+      "target": "fea_rationale_20",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "fea.py",
+      "source_location": "L34",
+      "weight": 1.0,
+      "_src": "fea_rationale_34",
+      "_tgt": "fea_assemble_beam",
+      "source": "fea_assemble_beam",
+      "target": "fea_rationale_34",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "fea.py",
+      "source_location": "L64",
+      "weight": 1.0,
+      "_src": "fea_rationale_64",
+      "_tgt": "fea_apply_simply_supported_bc",
+      "source": "fea_apply_simply_supported_bc",
+      "target": "fea_rationale_64",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "fea.py",
+      "source_location": "L81",
+      "weight": 1.0,
+      "_src": "fea_rationale_81",
+      "_tgt": "fea_apply_cantilever_bc",
+      "source": "fea_apply_cantilever_bc",
+      "target": "fea_rationale_81",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "fea.py",
+      "source_location": "L94",
+      "weight": 1.0,
+      "_src": "fea_rationale_94",
+      "_tgt": "fea_classical_modal_analysis",
+      "source": "fea_classical_modal_analysis",
+      "target": "fea_rationale_94",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "fea.py",
+      "source_location": "L103",
+      "weight": 1.0,
+      "_src": "fea_rationale_103",
+      "_tgt": "fea_analytical_simply_supported",
+      "source": "fea_analytical_simply_supported",
+      "target": "fea_rationale_103",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "main.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_src": "main_rationale_1",
+      "_tgt": "main_py",
+      "source": "main_py",
+      "target": "main_rationale_1",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "main.py",
+      "source_location": "L13",
+      "weight": 0.8,
+      "_src": "main_rationale_1",
+      "_tgt": "vqe_runner_vqestructuralsolver",
+      "source": "main_rationale_1",
+      "target": "vqe_runner_vqestructuralsolver",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "novel_study.py",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_src": "novel_study_py",
+      "_tgt": "novel_study_tapered_beam_assemble_v2",
+      "source": "novel_study_py",
+      "target": "novel_study_tapered_beam_assemble_v2",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "novel_study.py",
+      "source_location": "L41",
+      "weight": 1.0,
+      "_src": "novel_study_py",
+      "_tgt": "novel_study_linear_taper_elements",
+      "source": "novel_study_py",
+      "target": "novel_study_linear_taper_elements",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "novel_study.py",
+      "source_location": "L54",
+      "weight": 1.0,
+      "_src": "novel_study_py",
+      "_tgt": "novel_study_tapered_beam_study",
+      "source": "novel_study_py",
+      "target": "novel_study_tapered_beam_study",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "novel_study.py",
+      "source_location": "L138",
+      "weight": 1.0,
+      "_src": "novel_study_py",
+      "_tgt": "novel_study_damage_detection_study",
+      "source": "novel_study_py",
+      "target": "novel_study_damage_detection_study",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "novel_study.py",
+      "source_location": "L76",
+      "weight": 1.0,
+      "_src": "novel_study_tapered_beam_study",
+      "_tgt": "novel_study_tapered_beam_assemble_v2",
+      "source": "novel_study_tapered_beam_assemble_v2",
+      "target": "novel_study_tapered_beam_study",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "novel_study.py",
+      "source_location": "L12",
+      "weight": 1.0,
+      "_src": "novel_study_rationale_12",
+      "_tgt": "novel_study_tapered_beam_assemble_v2",
+      "source": "novel_study_tapered_beam_assemble_v2",
+      "target": "novel_study_rationale_12",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "novel_study.py",
+      "source_location": "L73",
+      "weight": 1.0,
+      "_src": "novel_study_tapered_beam_study",
+      "_tgt": "novel_study_linear_taper_elements",
+      "source": "novel_study_linear_taper_elements",
+      "target": "novel_study_tapered_beam_study",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "novel_study.py",
+      "source_location": "L42",
+      "weight": 1.0,
+      "_src": "novel_study_rationale_42",
+      "_tgt": "novel_study_linear_taper_elements",
+      "source": "novel_study_linear_taper_elements",
+      "target": "novel_study_rationale_42",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "novel_study.py",
+      "source_location": "L55",
+      "weight": 1.0,
+      "_src": "novel_study_rationale_55",
+      "_tgt": "novel_study_tapered_beam_study",
+      "source": "novel_study_tapered_beam_study",
+      "target": "novel_study_rationale_55",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "novel_study.py",
+      "source_location": "L139",
+      "weight": 1.0,
+      "_src": "novel_study_rationale_139",
+      "_tgt": "novel_study_damage_detection_study",
+      "source": "novel_study_damage_detection_study",
+      "target": "novel_study_rationale_139",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "novel_study.py",
+      "source_location": "L7",
+      "weight": 0.8,
+      "_src": "novel_study_rationale_12",
+      "_tgt": "vqe_runner_vqestructuralsolver",
+      "source": "novel_study_rationale_12",
+      "target": "vqe_runner_vqestructuralsolver",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "novel_study.py",
+      "source_location": "L7",
+      "weight": 0.8,
+      "_src": "novel_study_rationale_42",
+      "_tgt": "vqe_runner_vqestructuralsolver",
+      "source": "novel_study_rationale_42",
+      "target": "vqe_runner_vqestructuralsolver",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "novel_study.py",
+      "source_location": "L7",
+      "weight": 0.8,
+      "_src": "novel_study_rationale_55",
+      "_tgt": "vqe_runner_vqestructuralsolver",
+      "source": "novel_study_rationale_55",
+      "target": "vqe_runner_vqestructuralsolver",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "novel_study.py",
+      "source_location": "L7",
+      "weight": 0.8,
+      "_src": "novel_study_rationale_139",
+      "_tgt": "vqe_runner_vqestructuralsolver",
+      "source": "novel_study_rationale_139",
+      "target": "vqe_runner_vqestructuralsolver",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "optimizer_comparison.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_src": "optimizer_comparison_rationale_1",
+      "_tgt": "optimizer_comparison_py",
+      "source": "optimizer_comparison_py",
+      "target": "optimizer_comparison_rationale_1",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "optimizer_comparison.py",
+      "source_location": "L17",
+      "weight": 0.8,
+      "_src": "optimizer_comparison_rationale_1",
+      "_tgt": "vqe_runner_vqestructuralsolver",
+      "source": "optimizer_comparison_rationale_1",
+      "target": "vqe_runner_vqestructuralsolver",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "quantum_setup.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "_src": "quantum_setup_py",
+      "_tgt": "quantum_setup_build_structural_hamiltonian",
+      "source": "quantum_setup_py",
+      "target": "quantum_setup_build_structural_hamiltonian",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "quantum_setup.py",
+      "source_location": "L55",
+      "weight": 1.0,
+      "_src": "quantum_setup_py",
+      "_tgt": "quantum_setup_inspect_pauli_decomposition",
+      "source": "quantum_setup_py",
+      "target": "quantum_setup_inspect_pauli_decomposition",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "quantum_setup.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "_src": "quantum_setup_rationale_7",
+      "_tgt": "quantum_setup_build_structural_hamiltonian",
+      "source": "quantum_setup_build_structural_hamiltonian",
+      "target": "quantum_setup_rationale_7",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "quantum_setup.py",
+      "source_location": "L56",
+      "weight": 1.0,
+      "_src": "quantum_setup_rationale_56",
+      "_tgt": "quantum_setup_inspect_pauli_decomposition",
+      "source": "quantum_setup_inspect_pauli_decomposition",
+      "target": "quantum_setup_rationale_56",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "visualize.py",
+      "source_location": "L20",
+      "weight": 1.0,
+      "_src": "visualize_py",
+      "_tgt": "visualize_plot_beam_geometry",
+      "source": "visualize_py",
+      "target": "visualize_plot_beam_geometry",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "visualize.py",
+      "source_location": "L74",
+      "weight": 1.0,
+      "_src": "visualize_py",
+      "_tgt": "visualize_plot_mode_shapes_continuous",
+      "source": "visualize_py",
+      "target": "visualize_plot_mode_shapes_continuous",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "visualize.py",
+      "source_location": "L183",
+      "weight": 1.0,
+      "_src": "visualize_py",
+      "_tgt": "visualize_plot_dual_convergence",
+      "source": "visualize_py",
+      "target": "visualize_plot_dual_convergence",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "visualize.py",
+      "source_location": "L252",
+      "weight": 1.0,
+      "_src": "visualize_py",
+      "_tgt": "visualize_plot_optimizer_comparison",
+      "source": "visualize_py",
+      "target": "visualize_plot_optimizer_comparison",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "visualize.py",
+      "source_location": "L330",
+      "weight": 1.0,
+      "_src": "visualize_py",
+      "_tgt": "visualize_plot_convergence",
+      "source": "visualize_py",
+      "target": "visualize_plot_convergence",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "visualize.py",
+      "source_location": "L361",
+      "weight": 1.0,
+      "_src": "visualize_py",
+      "_tgt": "visualize_plot_mode_shapes",
+      "source": "visualize_py",
+      "target": "visualize_plot_mode_shapes",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "visualize.py",
+      "source_location": "L394",
+      "weight": 1.0,
+      "_src": "visualize_py",
+      "_tgt": "visualize_plot_frequency_comparison",
+      "source": "visualize_py",
+      "target": "visualize_plot_frequency_comparison",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "visualize.py",
+      "source_location": "L428",
+      "weight": 1.0,
+      "_src": "visualize_py",
+      "_tgt": "visualize_plot_ill_conditioning_study",
+      "source": "visualize_py",
+      "target": "visualize_plot_ill_conditioning_study",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "visualize.py",
+      "source_location": "L508",
+      "weight": 1.0,
+      "_src": "visualize_py",
+      "_tgt": "visualize_plot_damage_detection",
+      "source": "visualize_py",
+      "target": "visualize_plot_damage_detection",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "visualize.py",
+      "source_location": "L21",
+      "weight": 1.0,
+      "_src": "visualize_rationale_21",
+      "_tgt": "visualize_plot_beam_geometry",
+      "source": "visualize_plot_beam_geometry",
+      "target": "visualize_rationale_21",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "visualize.py",
+      "source_location": "L76",
+      "weight": 1.0,
+      "_src": "visualize_rationale_76",
+      "_tgt": "visualize_plot_mode_shapes_continuous",
+      "source": "visualize_plot_mode_shapes_continuous",
+      "target": "visualize_rationale_76",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "visualize.py",
+      "source_location": "L184",
+      "weight": 1.0,
+      "_src": "visualize_rationale_184",
+      "_tgt": "visualize_plot_dual_convergence",
+      "source": "visualize_plot_dual_convergence",
+      "target": "visualize_rationale_184",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "visualize.py",
+      "source_location": "L254",
+      "weight": 1.0,
+      "_src": "visualize_rationale_254",
+      "_tgt": "visualize_plot_optimizer_comparison",
+      "source": "visualize_plot_optimizer_comparison",
+      "target": "visualize_rationale_254",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "visualize.py",
+      "source_location": "L331",
+      "weight": 1.0,
+      "_src": "visualize_rationale_331",
+      "_tgt": "visualize_plot_convergence",
+      "source": "visualize_plot_convergence",
+      "target": "visualize_rationale_331",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "visualize.py",
+      "source_location": "L362",
+      "weight": 1.0,
+      "_src": "visualize_rationale_362",
+      "_tgt": "visualize_plot_mode_shapes",
+      "source": "visualize_plot_mode_shapes",
+      "target": "visualize_rationale_362",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "visualize.py",
+      "source_location": "L395",
+      "weight": 1.0,
+      "_src": "visualize_rationale_395",
+      "_tgt": "visualize_plot_frequency_comparison",
+      "source": "visualize_plot_frequency_comparison",
+      "target": "visualize_rationale_395",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "visualize.py",
+      "source_location": "L429",
+      "weight": 1.0,
+      "_src": "visualize_rationale_429",
+      "_tgt": "visualize_plot_ill_conditioning_study",
+      "source": "visualize_plot_ill_conditioning_study",
+      "target": "visualize_rationale_429",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "visualize.py",
+      "source_location": "L509",
+      "weight": 1.0,
+      "_src": "visualize_rationale_509",
+      "_tgt": "visualize_plot_damage_detection",
+      "source": "visualize_plot_damage_detection",
+      "target": "visualize_rationale_509",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "vqe_runner.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_src": "vqe_runner_py",
+      "_tgt": "vqe_runner_vqestructuralsolver",
+      "source": "vqe_runner_py",
+      "target": "vqe_runner_vqestructuralsolver",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "vqe_runner.py",
+      "source_location": "L131",
+      "weight": 1.0,
+      "_src": "vqe_runner_py",
+      "_tgt": "vqe_runner_classical_reference",
+      "source": "vqe_runner_py",
+      "target": "vqe_runner_classical_reference",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "vqe_runner.py",
+      "source_location": "L14",
+      "weight": 1.0,
+      "_src": "vqe_runner_vqestructuralsolver",
+      "_tgt": "vqe_runner_vqestructuralsolver_init",
+      "source": "vqe_runner_vqestructuralsolver",
+      "target": "vqe_runner_vqestructuralsolver_init",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "vqe_runner.py",
+      "source_location": "L24",
+      "weight": 1.0,
+      "_src": "vqe_runner_vqestructuralsolver",
+      "_tgt": "vqe_runner_vqestructuralsolver_get_optimizer",
+      "source": "vqe_runner_vqestructuralsolver",
+      "target": "vqe_runner_vqestructuralsolver_get_optimizer",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "vqe_runner.py",
+      "source_location": "L32",
+      "weight": 1.0,
+      "_src": "vqe_runner_vqestructuralsolver",
+      "_tgt": "vqe_runner_vqestructuralsolver_callback",
+      "source": "vqe_runner_vqestructuralsolver",
+      "target": "vqe_runner_vqestructuralsolver_callback",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "vqe_runner.py",
+      "source_location": "L39",
+      "weight": 1.0,
+      "_src": "vqe_runner_vqestructuralsolver",
+      "_tgt": "vqe_runner_vqestructuralsolver_solve",
+      "source": "vqe_runner_vqestructuralsolver",
+      "target": "vqe_runner_vqestructuralsolver_solve",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "vqe_runner.py",
+      "source_location": "L101",
+      "weight": 1.0,
+      "_src": "vqe_runner_vqestructuralsolver_solve_excited_states",
+      "_tgt": "vqe_runner_vqestructuralsolver",
+      "source": "vqe_runner_vqestructuralsolver",
+      "target": "vqe_runner_vqestructuralsolver_solve_excited_states",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "vqe_runner.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "_src": "vqe_runner_rationale_9",
+      "_tgt": "vqe_runner_vqestructuralsolver",
+      "source": "vqe_runner_vqestructuralsolver",
+      "target": "vqe_runner_rationale_9",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "vqe_runner.py",
+      "source_location": "L43",
+      "weight": 1.0,
+      "_src": "vqe_runner_vqestructuralsolver_solve",
+      "_tgt": "vqe_runner_vqestructuralsolver_get_optimizer",
+      "source": "vqe_runner_vqestructuralsolver_get_optimizer",
+      "target": "vqe_runner_vqestructuralsolver_solve",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "vqe_runner.py",
+      "source_location": "L33",
+      "weight": 1.0,
+      "_src": "vqe_runner_rationale_33",
+      "_tgt": "vqe_runner_vqestructuralsolver_callback",
+      "source": "vqe_runner_vqestructuralsolver_callback",
+      "target": "vqe_runner_rationale_33",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "vqe_runner.py",
+      "source_location": "L106",
+      "weight": 1.0,
+      "_src": "vqe_runner_vqestructuralsolver_solve_excited_states",
+      "_tgt": "vqe_runner_vqestructuralsolver_solve",
+      "source": "vqe_runner_vqestructuralsolver_solve",
+      "target": "vqe_runner_vqestructuralsolver_solve_excited_states",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "vqe_runner.py",
+      "source_location": "L40",
+      "weight": 1.0,
+      "_src": "vqe_runner_rationale_40",
+      "_tgt": "vqe_runner_vqestructuralsolver_solve",
+      "source": "vqe_runner_vqestructuralsolver_solve",
+      "target": "vqe_runner_rationale_40",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "vqe_runner.py",
+      "source_location": "L93",
+      "weight": 1.0,
+      "_src": "vqe_runner_rationale_93",
+      "_tgt": "vqe_runner_vqestructuralsolver_solve_excited_states",
+      "source": "vqe_runner_vqestructuralsolver_solve_excited_states",
+      "target": "vqe_runner_rationale_93",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "vqe_runner.py",
+      "source_location": "L132",
+      "weight": 1.0,
+      "_src": "vqe_runner_rationale_132",
+      "_tgt": "vqe_runner_classical_reference",
+      "source": "vqe_runner_classical_reference",
+      "target": "vqe_runner_rationale_132",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "implemented_via",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "modal_analysis",
+      "_tgt": "vqe_algorithm",
+      "source": "vqe_algorithm",
+      "target": "modal_analysis"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "vqe_algorithm",
+      "_tgt": "pauli_decomposition",
+      "source": "vqe_algorithm",
+      "target": "pauli_decomposition"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "vqe_algorithm",
+      "_tgt": "hardware_efficient_ansatz_hea",
+      "source": "vqe_algorithm",
+      "target": "hardware_efficient_ansatz_hea"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "vqe_algorithm",
+      "_tgt": "symmetry_aware_ansatz",
+      "source": "vqe_algorithm",
+      "target": "symmetry_aware_ansatz"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "cobyla_optimizer",
+      "_tgt": "vqe_algorithm",
+      "source": "vqe_algorithm",
+      "target": "cobyla_optimizer"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "spsa_optimizer",
+      "_tgt": "vqe_algorithm",
+      "source": "vqe_algorithm",
+      "target": "spsa_optimizer"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "vqe_algorithm",
+      "_tgt": "vqe_deflation",
+      "source": "vqe_algorithm",
+      "target": "vqe_deflation"
+    },
+    {
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "hybrid_classical_quantum",
+      "_tgt": "vqe_algorithm",
+      "source": "vqe_algorithm",
+      "target": "hybrid_classical_quantum"
+    },
+    {
+      "relation": "affected_by",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "vqe_algorithm",
+      "_tgt": "vqe_convergence",
+      "source": "vqe_algorithm",
+      "target": "vqe_convergence"
+    },
+    {
+      "relation": "applied_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "vqe_algorithm",
+      "_tgt": "damage_detection",
+      "source": "vqe_algorithm",
+      "target": "damage_detection"
+    },
+    {
+      "relation": "runs",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "ibm_quantum_hardware",
+      "_tgt": "vqe_algorithm",
+      "source": "vqe_algorithm",
+      "target": "ibm_quantum_hardware"
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "qiskit",
+      "_tgt": "vqe_algorithm",
+      "source": "vqe_algorithm",
+      "target": "qiskit"
+    },
+    {
+      "relation": "mathematical_basis_of",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "variational_principle",
+      "_tgt": "vqe_algorithm",
+      "source": "vqe_algorithm",
+      "target": "variational_principle"
+    },
+    {
+      "relation": "addresses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "vqe_algorithm",
+      "_tgt": "research_gap",
+      "source": "vqe_algorithm",
+      "target": "research_gap"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "results/optimizer_comparison.png",
+      "_src": "optimizer_comparison_chart",
+      "_tgt": "vqe_algorithm",
+      "source": "vqe_algorithm",
+      "target": "optimizer_comparison_chart"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "lbfgsb_optimizer",
+      "_tgt": "vqe_algorithm",
+      "source": "vqe_algorithm",
+      "target": "lbfgsb_optimizer"
+    },
+    {
+      "relation": "used_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "euler_bernoulli_beam",
+      "_tgt": "modal_analysis",
+      "source": "modal_analysis",
+      "target": "euler_bernoulli_beam"
+    },
+    {
+      "relation": "used_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "portal_frame",
+      "_tgt": "modal_analysis",
+      "source": "modal_analysis",
+      "target": "portal_frame"
+    },
+    {
+      "relation": "used_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "composite_laminated_beam",
+      "_tgt": "modal_analysis",
+      "source": "modal_analysis",
+      "target": "composite_laminated_beam"
+    },
+    {
+      "relation": "computed_from",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "natural_frequencies",
+      "_tgt": "generalized_eigenvalue_problem",
+      "source": "natural_frequencies",
+      "target": "generalized_eigenvalue_problem"
+    },
+    {
+      "relation": "tracks_shifts_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "damage_detection",
+      "_tgt": "natural_frequencies",
+      "source": "natural_frequencies",
+      "target": "damage_detection"
+    },
+    {
+      "relation": "triggered_when",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "resonance",
+      "_tgt": "natural_frequencies",
+      "source": "natural_frequencies",
+      "target": "resonance"
+    },
+    {
+      "relation": "computed_from",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "mode_shapes",
+      "_tgt": "generalized_eigenvalue_problem",
+      "source": "mode_shapes",
+      "target": "generalized_eigenvalue_problem"
+    },
+    {
+      "relation": "encodes_symmetry_of",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "symmetry_aware_ansatz",
+      "_tgt": "mode_shapes",
+      "source": "mode_shapes",
+      "target": "symmetry_aware_ansatz"
+    },
+    {
+      "relation": "participates_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "stiffness_matrix_k",
+      "_tgt": "generalized_eigenvalue_problem",
+      "source": "stiffness_matrix_k",
+      "target": "generalized_eigenvalue_problem"
+    },
+    {
+      "relation": "computes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "finite_element_analysis_fea",
+      "_tgt": "stiffness_matrix_k",
+      "source": "stiffness_matrix_k",
+      "target": "finite_element_analysis_fea"
+    },
+    {
+      "relation": "converted_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "stiffness_matrix_k",
+      "_tgt": "quantum_hamiltonian",
+      "source": "stiffness_matrix_k",
+      "target": "quantum_hamiltonian"
+    },
+    {
+      "relation": "applied_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "boundary_conditions",
+      "_tgt": "stiffness_matrix_k",
+      "source": "stiffness_matrix_k",
+      "target": "boundary_conditions"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "structural_eigenvalue_problem",
+      "_tgt": "stiffness_matrix_k",
+      "source": "stiffness_matrix_k",
+      "target": "structural_eigenvalue_problem"
+    },
+    {
+      "relation": "participates_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "mass_matrix_m",
+      "_tgt": "generalized_eigenvalue_problem",
+      "source": "mass_matrix_m",
+      "target": "generalized_eigenvalue_problem"
+    },
+    {
+      "relation": "computes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "finite_element_analysis_fea",
+      "_tgt": "mass_matrix_m",
+      "source": "mass_matrix_m",
+      "target": "finite_element_analysis_fea"
+    },
+    {
+      "relation": "converted_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "mass_matrix_m",
+      "_tgt": "quantum_hamiltonian",
+      "source": "mass_matrix_m",
+      "target": "quantum_hamiltonian"
+    },
+    {
+      "relation": "applied_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "boundary_conditions",
+      "_tgt": "mass_matrix_m",
+      "source": "mass_matrix_m",
+      "target": "boundary_conditions"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "structural_eigenvalue_problem",
+      "_tgt": "mass_matrix_m",
+      "source": "mass_matrix_m",
+      "target": "structural_eigenvalue_problem"
+    },
+    {
+      "relation": "mathematically_identical_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "schrodinger_equation",
+      "_tgt": "generalized_eigenvalue_problem",
+      "source": "generalized_eigenvalue_problem",
+      "target": "schrodinger_equation"
+    },
+    {
+      "relation": "modeled_by",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "euler_bernoulli_beam",
+      "_tgt": "finite_element_analysis_fea",
+      "source": "finite_element_analysis_fea",
+      "target": "euler_bernoulli_beam"
+    },
+    {
+      "relation": "produces",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "standard_form_transformation",
+      "_tgt": "quantum_hamiltonian",
+      "source": "quantum_hamiltonian",
+      "target": "standard_form_transformation"
+    },
+    {
+      "relation": "enables",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "pauli_decomposition",
+      "_tgt": "quantum_hamiltonian",
+      "source": "quantum_hamiltonian",
+      "target": "pauli_decomposition"
+    },
+    {
+      "relation": "basis_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "qubit",
+      "_tgt": "pauli_decomposition",
+      "source": "pauli_decomposition",
+      "target": "qubit"
+    },
+    {
+      "relation": "hypothesized_to_improve",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "symmetry_aware_ansatz",
+      "_tgt": "vqe_convergence",
+      "source": "symmetry_aware_ansatz",
+      "target": "vqe_convergence"
+    },
+    {
+      "relation": "covers",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "research_gap",
+      "_tgt": "symmetry_aware_ansatz",
+      "source": "symmetry_aware_ansatz",
+      "target": "research_gap"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "results/optimizer_comparison.png",
+      "_src": "optimizer_comparison_chart",
+      "_tgt": "cobyla_optimizer",
+      "source": "cobyla_optimizer",
+      "target": "optimizer_comparison_chart"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "results/optimizer_comparison.png",
+      "_src": "optimizer_comparison_chart",
+      "_tgt": "spsa_optimizer",
+      "source": "spsa_optimizer",
+      "target": "optimizer_comparison_chart"
+    },
+    {
+      "relation": "degrades",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "structural_ill_conditioning",
+      "_tgt": "vqe_convergence",
+      "source": "structural_ill_conditioning",
+      "target": "vqe_convergence"
+    },
+    {
+      "relation": "causes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "slenderness_ratio",
+      "_tgt": "structural_ill_conditioning",
+      "source": "structural_ill_conditioning",
+      "target": "slenderness_ratio"
+    },
+    {
+      "relation": "measures",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "condition_number",
+      "_tgt": "structural_ill_conditioning",
+      "source": "structural_ill_conditioning",
+      "target": "condition_number"
+    },
+    {
+      "relation": "causes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "buckling_analysis",
+      "_tgt": "structural_ill_conditioning",
+      "source": "structural_ill_conditioning",
+      "target": "buckling_analysis"
+    },
+    {
+      "relation": "covers",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "research_gap",
+      "_tgt": "structural_ill_conditioning",
+      "source": "structural_ill_conditioning",
+      "target": "research_gap"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "slenderness_ratio",
+      "_tgt": "vqe_convergence",
+      "source": "slenderness_ratio",
+      "target": "vqe_convergence"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "results/ill_conditioning_study.png",
+      "_src": "ill_conditioning_study_chart",
+      "_tgt": "slenderness_ratio",
+      "source": "slenderness_ratio",
+      "target": "ill_conditioning_study_chart"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "slenderness_ratio",
+      "_tgt": "condition_number",
+      "source": "slenderness_ratio",
+      "target": "condition_number"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "damage_detection",
+      "_tgt": "vqe_convergence",
+      "source": "damage_detection",
+      "target": "vqe_convergence"
+    },
+    {
+      "relation": "covers",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "research_gap",
+      "_tgt": "damage_detection",
+      "source": "damage_detection",
+      "target": "research_gap"
+    },
+    {
+      "relation": "mitigates_noise_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "zero_noise_extrapolation_zne",
+      "_tgt": "ibm_quantum_hardware",
+      "source": "zero_noise_extrapolation_zne",
+      "target": "ibm_quantum_hardware"
+    },
+    {
+      "relation": "physically_equivalent_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "minimum_potential_energy",
+      "_tgt": "variational_principle",
+      "source": "variational_principle",
+      "target": "minimum_potential_energy"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "results/ill_conditioning_study.png",
+      "_src": "ill_conditioning_study_chart",
+      "_tgt": "condition_number",
+      "source": "condition_number",
+      "target": "ill_conditioning_study_chart"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "condition_number",
+      "_tgt": "vqe_convergence",
+      "source": "condition_number",
+      "target": "vqe_convergence"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "condition_number",
+      "_tgt": "barren_plateau",
+      "source": "condition_number",
+      "target": "barren_plateau"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "ill_conditioning_research_gap",
+      "_tgt": "condition_number",
+      "source": "condition_number",
+      "target": "ill_conditioning_research_gap"
+    },
+    {
+      "relation": "affects",
+      "confidence": "INFERRED",
+      "confidence_score": 0.7,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "barren_plateaus",
+      "_tgt": "vqe_convergence",
+      "source": "barren_plateaus",
+      "target": "vqe_convergence"
+    },
+    {
+      "relation": "measures",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "results/convergence.png",
+      "_src": "vqe_convergence",
+      "_tgt": "cost_function",
+      "source": "vqe_convergence",
+      "target": "cost_function"
+    },
+    {
+      "relation": "produces",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "results/convergence.png",
+      "_src": "vqe_convergence",
+      "_tgt": "frequency_error",
+      "source": "vqe_convergence",
+      "target": "frequency_error"
+    },
+    {
+      "relation": "compares_against",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "results/convergence.png",
+      "_src": "vqe_convergence",
+      "_tgt": "classical_lambda_reference",
+      "source": "vqe_convergence",
+      "target": "classical_lambda_reference"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.7,
+      "source_file": "results/convergence.png",
+      "_src": "vqe_convergence",
+      "_tgt": "damage_detection_application",
+      "source": "vqe_convergence",
+      "target": "damage_detection_application"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "results/ill_conditioning_study.png",
+      "_src": "ill_conditioning_study_chart",
+      "_tgt": "vqe_convergence",
+      "source": "vqe_convergence",
+      "target": "ill_conditioning_study_chart"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "barren_plateau",
+      "_tgt": "vqe_convergence",
+      "source": "vqe_convergence",
+      "target": "barren_plateau"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "ill_conditioning_research_gap",
+      "_tgt": "vqe_convergence",
+      "source": "vqe_convergence",
+      "target": "ill_conditioning_research_gap"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "results/convergence.png",
+      "_src": "cost_function",
+      "_tgt": "frequency_error",
+      "source": "cost_function",
+      "target": "frequency_error"
+    },
+    {
+      "relation": "measures",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "results/damage_detection.png",
+      "_src": "damage_detection_application",
+      "_tgt": "stiffness_reduction_damage",
+      "source": "stiffness_reduction_damage",
+      "target": "damage_detection_application"
+    },
+    {
+      "relation": "causes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "results/damage_detection.png",
+      "_src": "stiffness_reduction_damage",
+      "_tgt": "natural_frequency_omega",
+      "source": "stiffness_reduction_damage",
+      "target": "natural_frequency_omega"
+    },
+    {
+      "relation": "causes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "results/damage_detection.png",
+      "_src": "stiffness_reduction_damage",
+      "_tgt": "frequency_shift",
+      "source": "stiffness_reduction_damage",
+      "target": "frequency_shift"
+    },
+    {
+      "relation": "represents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "results/damage_detection.png",
+      "_src": "vqe_frequency",
+      "_tgt": "natural_frequency_omega",
+      "source": "natural_frequency_omega",
+      "target": "vqe_frequency"
+    },
+    {
+      "relation": "represents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "results/damage_detection.png",
+      "_src": "classical_frequency",
+      "_tgt": "natural_frequency_omega",
+      "source": "natural_frequency_omega",
+      "target": "classical_frequency"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "results/damage_detection.png",
+      "_src": "natural_frequency_omega",
+      "_tgt": "frequency_shift",
+      "source": "natural_frequency_omega",
+      "target": "frequency_shift"
+    },
+    {
+      "relation": "produces",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "results/damage_detection.png",
+      "_src": "vqe_frequency",
+      "_tgt": "frequency_shift",
+      "source": "frequency_shift",
+      "target": "vqe_frequency"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "quantum_structural_health_monitoring",
+      "_tgt": "frequency_shift",
+      "source": "frequency_shift",
+      "target": "quantum_structural_health_monitoring"
+    },
+    {
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "results/damage_detection.png",
+      "_src": "quantum_structural_health_monitoring",
+      "_tgt": "vqe_frequency",
+      "source": "vqe_frequency",
+      "target": "quantum_structural_health_monitoring"
+    },
+    {
+      "relation": "enables",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "results/damage_detection.png",
+      "_src": "quantum_structural_health_monitoring",
+      "_tgt": "damage_detection_application",
+      "source": "quantum_structural_health_monitoring",
+      "target": "damage_detection_application"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "results/frequency_comparison.png",
+      "_src": "frequency_comparison_chart",
+      "_tgt": "structural_eigenvalue_problem",
+      "source": "frequency_comparison_chart",
+      "target": "structural_eigenvalue_problem"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "omega_rad_s",
+      "_tgt": "structural_eigenvalue_problem",
+      "source": "omega_rad_s",
+      "target": "structural_eigenvalue_problem"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "results/mode_shapes_continuous.png",
+      "_src": "mode_shapes_continuous_chart",
+      "_tgt": "mode_shape",
+      "source": "mode_shapes_continuous_chart",
+      "target": "mode_shape"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "results/mode_shapes_continuous.png",
+      "_src": "mode_shapes_continuous_chart",
+      "_tgt": "eigenvector",
+      "source": "mode_shapes_continuous_chart",
+      "target": "eigenvector"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "mode_shape",
+      "_tgt": "eigenvector",
+      "source": "mode_shape",
+      "target": "eigenvector"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "VQA_Modal_Analysis.md",
+      "_src": "mode_shape",
+      "_tgt": "symmetric_mode_shape",
+      "source": "mode_shape",
+      "target": "symmetric_mode_shape"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "results/optimizer_comparison.png",
+      "_src": "optimizer_comparison_chart",
+      "_tgt": "lbfgsb_optimizer",
+      "source": "optimizer_comparison_chart",
+      "target": "lbfgsb_optimizer"
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "vqe_pipeline_components",
+      "label": "VQE Pipeline for Modal Analysis",
+      "nodes": [
+        "vqe_algorithm",
+        "pauli_decomposition",
+        "hardware_efficient_ansatz_hea",
+        "symmetry_aware_ansatz",
+        "cobyla_optimizer",
+        "spsa_optimizer",
+        "vqe_deflation"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.85,
+      "source_file": "VQA_Modal_Analysis.md"
+    },
+    {
+      "id": "structural_systems_studied",
+      "label": "Structural Systems Studied",
+      "nodes": [
+        "euler_bernoulli_beam",
+        "portal_frame",
+        "composite_laminated_beam",
+        "buckling_analysis",
+        "damage_detection"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.8,
+      "source_file": "VQA_Modal_Analysis.md"
+    },
+    {
+      "id": "novel_contribution_research_gap",
+      "label": "Novel Contribution Research Gaps",
+      "nodes": [
+        "structural_ill_conditioning",
+        "slenderness_ratio",
+        "symmetry_aware_ansatz",
+        "damage_detection",
+        "vqe_convergence",
+        "barren_plateaus"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.85,
+      "source_file": "VQA_Modal_Analysis.md"
+    },
+    {
+      "id": "damage_detection_workflow",
+      "label": "Damage Detection via VQE Frequency Shift",
+      "nodes": [
+        "stiffness_reduction_damage",
+        "natural_frequency_omega",
+        "vqe_frequency",
+        "classical_frequency",
+        "frequency_shift"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "results/damage_detection.png"
+    },
+    {
+      "id": "vqe_convergence_analysis",
+      "label": "VQE Convergence Analysis Components",
+      "nodes": [
+        "cost_function",
+        "frequency_error",
+        "classical_lambda_reference",
+        "vqe_convergence"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "results/convergence.png"
+    },
+    {
+      "id": "vqe_optimizer_landscape",
+      "label": "VQE Optimizer Selection Landscape",
+      "nodes": [
+        "vqe_algorithm",
+        "cobyla_optimizer",
+        "spsa_optimizer",
+        "lbfgsb_optimizer"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md"
+    },
+    {
+      "id": "modal_analysis_output",
+      "label": "Modal Analysis Output Entities",
+      "nodes": [
+        "natural_frequencies",
+        "mode_shapes",
+        "omega_rad_s",
+        "eigenvector"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "VQA_Modal_Analysis.md"
+    }
+  ]
+}
