@@ -2,12 +2,13 @@
 
 ## Pre-Deployment Verification
 
-- [x] Core truss FEA module (`truss.py`) - 8 functions implemented
+- [x] Core truss FEA module (`truss.py`) - 1D + 2D Warren truss (14 functions)
+- [x] 2D truss visualization module (`visualize_truss2d.py`) - 4 functions
 - [x] Validation script (`validate_truss.py`) - all checks pass
-- [x] Main pipeline integration (`main.py`) - beam + truss working
+- [x] Main pipeline integration (`main.py`) - beam + 1D truss + 2D truss VQE
 - [x] Novel studies (`novel_study.py`) - truss studies added
-- [x] Visualizations (`visualize.py`) - truss plots added
-- [x] Documentation (`README.md`) - truss section added
+- [x] Visualizations (`visualize.py`) - beam + 1D truss plots
+- [x] Documentation (`README.md`) - updated with 2D truss sections
 - [x] Requirements file (`requirements.txt`)
 - [x] Conda environment (`environment.yml`)
 - [x] Git ignore (`.gitignore`)

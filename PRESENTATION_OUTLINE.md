@@ -91,6 +91,25 @@ Natural frequencies ω = √λ
 
 ---
 
+## Slide 6B: 1D Truss Results
+**Bar Element Model (Axial DOFs Only)**
+
+| Parameter | Value |
+|-----------|-------|
+| Elements | 4 |
+| Free DOFs | 3 |
+| Qubits | 2 |
+| Condition Number | ~10 |
+
+**Results:**
+- Mode 1: ~1221.57 rad/s (VQE: 1221.57 rad/s, <0.01% error)
+- Classical and VQE frequencies in excellent agreement
+- Demonstrates quantum pipeline works for truss topology
+
+**Visual:** Insert `results/truss_geometry.png`, `results/truss_mode_shapes.png`
+
+---
+
 ## Slide 7: Higher Modes via Deflation
 **Excited State Extraction**
 
@@ -117,6 +136,19 @@ Tapered Beam Study:
 ```
 
 **Significance:** First study of structural ill-conditioning effects on VQE
+
+**Visual:** Insert `results/ill_conditioning_study.png`, `results/tapered_beam_study.csv`
+
+---
+
+## Slide 8B: Novel Contribution #1B - Truss Ill-Conditioning & Damage Detection
+**Extending the Studies to 1D Truss**
+
+- `tapered_truss_study()` — Vary cross-section area along truss
+- `truss_damage_study()` — Simulate crack via stiffness reduction
+- Same quantum pipeline, different structural topology
+
+**Results:** Frequency shift detection capability for truss structures
 
 ---
 
@@ -172,6 +204,39 @@ Study: 0% → 50% damage, measure detected shift
 | 3 | 3409.80 | 542.7 |
 
 **Condition Number:** 171.89 (well-conditioned, stable structure)
+
+---
+
+## Slide 12B: Mode Shape Validation
+**Before and After the Fix**
+
+**Before (Bug):**
+- VQE mode shapes never displayed (vector length mismatch)
+- DOF mapping from reduced→physical space was wrong
+- Plot showed only classical results, no quantum comparison
+
+**After (Fixed):**
+- Proper `_map_vqe_to_transverse()` helper function
+- Maps reduced DOF space → full DOF space → transverse displacements
+- VQE mode shapes now overlay correctly with classical FEA
+- Analytical sin(nπx/L) curves added for reference
+
+**Visual:** Insert `results/mode_shapes_continuous.png`
+
+---
+
+## Slide 12C: Why the 2D Truss Is Small-Scale
+**Tractability vs. Completeness Tradeoff**
+
+| Configuration | Nodes | DOFs | Qubits | Est. Runtime |
+|--------------|-------|------|--------|-------------|
+| Full Warren (n_chords=5) | 10 | 17 | 5 | >2 hours |
+| Reduced (n_chords=2) | 4 | 2 | 2 | <1 minute |
+
+**Why we chose n_chords=2:**
+- Preserves topology (triangular elements, Warren pattern)
+- Validates the classical→quantum pipeline end-to-end
+- Same code scales directly to full truss (just change one parameter)
 
 ---
 

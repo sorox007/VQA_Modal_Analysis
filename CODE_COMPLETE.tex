@@ -1,0 +1,217 @@
+\documentclass[12pt, a4paper]{article}
+
+% ---- Packages ----
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{setspace}
+\usepackage{fancyvrb}
+\usepackage{hyperref}
+
+\geometry{margin=1in}
+\onehalfspacing
+
+% ---- Hyperref ----
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+}
+
+% ---- Code listing style ----
+\lstset{
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!8},
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!50!black},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    numbersep=5pt,
+    showstringspaces=false,
+    tabsize=2,
+    captionpos=b
+}
+
+\lstdefinestyle{python}{
+    language=Python,
+    morekeywords={self,True,False,None,from,import,def,class,return,if,else,elif,for,while,with,as,in,print,range,enumerate,zip,list,dict,set,tuple,ndarray,pd,DataFrame,plt,fig,ax}
+}
+
+% ---- Section formatting ----
+\titleformat{\section}{\normalfont\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{1em}{}
+
+\title{\textbf{VQA Modal Analysis --- Complete Code Repository} \\
+\large Quantum Computing for Structural Dynamics}
+\author{Somro, COEP Technological University}
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+% ===================================================================
+\section{Project Overview}
+% ===================================================================
+
+This document contains the complete source code for the \textbf{Variational Quantum Eigensolver (VQE) Modal Analysis} project. The codebase implements a quantum-classical hybrid pipeline for computing natural frequencies and mode shapes of structural systems (beams and 2D Warren trusses).
+
+\subsection{File Inventory}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{File} & \textbf{Description} \\
+\midrule
+\texttt{main.py} & Main pipeline orchestrator \\
+\texttt{fea.py} & 1D Beam finite element analysis \\
+\texttt{truss.py} & 1D and 2D truss finite element analysis \\
+\texttt{quantum\_setup.py} & Hamiltonian construction \& Pauli decomposition \\
+\texttt{ansatz.py} & Quantum circuit ans\"atze (HEA, Symmetric, Minimal) \\
+\texttt{vqe\_runner.py} & VQE solver with multi-start \& deflation \\
+\texttt{visualize.py} & 1D beam and truss visualizations \\
+\texttt{visualize\_truss2d.py} & 2D Warren truss visualizations \\
+\texttt{novel\_study.py} & Ill-conditioning \& damage detection studies \\
+\texttt{optimizer\_comparison.py} & COBYLA vs L-BFGS-B benchmark \\
+\texttt{validate\_fea.py} & Beam FEA validation vs analytical solution \\
+\texttt{validate\_truss.py} & Truss FEA validation vs analytical solution \\
+\texttt{test\_convergence.py} & Mesh convergence study \\
+\texttt{test\_n\_elem.py} & Element count vs qubit count analysis \\
+\texttt{generate\_presentation.py} & Presentation slide generator \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ===================================================================
+\section{main.py --- Pipeline Orchestrator}
+% ===================================================================
+
+\lstinputlisting[style=python, caption={main.py --- Full VQA Modal Analysis Pipeline}]{main.py}
+
+% ===================================================================
+\section{fea.py --- Beam Finite Element Analysis}
+% ===================================================================
+
+\lstinputlisting[style=python, caption={fea.py --- Beam FEA Module}]{fea.py}
+
+% ===================================================================
+\section{truss.py --- 1D and 2D Truss Analysis}
+% ===================================================================
+
+\lstinputlisting[style=python, caption={truss.py --- Truss FEA Module (1D + 2D Warren)}]{truss.py}
+
+% ===================================================================
+\section{quantum\_setup.py --- Hamiltonian Construction}
+% ===================================================================
+
+\lstinputlisting[style=python, caption={quantum\_setup.py --- Structural-to-Quantum Hamiltonian Mapping}]{quantum_setup.py}
+
+% ===================================================================
+\section{ansatz.py --- Quantum Circuit Ans\"atze}
+% ===================================================================
+
+\lstinputlisting[style=python, caption={ansatz.py --- Hardware-Efficient, Symmetric \& Minimal Ans\"atze}]{ansatz.py}
+
+% ===================================================================
+\section{vqe\_runner.py --- VQE Solver}
+% ===================================================================
+
+\lstinputlisting[style=python, caption={vqe\_runner.py --- Multi-Start VQE with Deflation}]{vqe_runner.py}
+
+% ===================================================================
+\section{visualize.py --- 1D Beam and Truss Plots}
+% ===================================================================
+
+\lstinputlisting[style=python, caption={visualize.py --- Beam and 1D Truss Visualization}]{visualize.py}
+
+% ===================================================================
+\section{visualize\_truss2d.py --- 2D Warren Truss Plots}
+% ===================================================================
+
+\lstinputlisting[style=python, caption={visualize\_truss2d.py --- 2D Truss Geometry, Mode Shapes \& Animation}]{visualize_truss2d.py}
+
+% ===================================================================
+\section{novel\_study.py --- Ill-Conditioning \& Damage Detection}
+% ===================================================================
+
+\lstinputlisting[style=python, caption={novel\_study.py --- Tapered \& Damage Studies for Beam and Truss}]{novel_study.py}
+
+% ===================================================================
+\section{optimizer\_comparison.py --- COBYLA vs L-BFGS-B}
+% ===================================================================
+
+\lstinputlisting[style=python, caption={optimizer\_comparison.py --- Solver Benchmark}]{\detokenize{optimizer_comparison.py}}
+
+% ===================================================================
+\section{validate\_fea.py --- Beam Validation}
+% ===================================================================
+
+\lstinputlisting[style=python, caption={validate\_fea.py --- Beam FEA vs Analytical Check}]{\detokenize{validate_fea.py}}
+
+% ===================================================================
+\section{validate\_truss.py --- Truss Validation}
+% ===================================================================
+
+\lstinputlisting[style=python, caption={validate\_truss.py --- Truss FEA vs Analytical Check}]{\detokenize{/validate_truss.py}}
+
+% ===================================================================
+\section{test\_convergence.py --- Mesh Convergence Study}
+% ===================================================================
+
+\lstinputlisting[style=python, caption={test\_convergence.py --- FEM Convergence vs Analytical}]{\detokenize{test_convergence.py}}
+
+% ===================================================================
+\section{test\_n\_elem.py --- Qubit Count Analysis}
+% ===================================================================
+
+\lstinputlisting[style=python, caption={test\_n\_elem.py --- Free DOFs and Qubit Requirements}]{\detokenize{test_n_elem.py}}
+
+% ===================================================================
+\section{generate\_presentation.py --- Slide Generator}
+% ===================================================================
+
+\lstinputlisting[style=python, caption={generate\_presentation.py --- Auto-Generate Presentation Slides}]{\detokenize{generate_presentation.py}}
+
+% ===================================================================
+\section{Report (Original LaTeX)}
+% ===================================================================
+
+The formal project report is in \texttt{VQA\_Modal\_Analysis\_Report.tex}:
+
+\lstinputlisting[style=python, caption={VQA\_Modal\_Analysis\_Report.tex}]{VQA_Modal_Analysis_Report.tex}
+
+% ===================================================================
+\section{Conclusion}
+% ===================================================================
+
+This document contains every Python source file in the repository along with the LaTeX report template. The complete pipeline covers:
+
+\begin{enumerate}
+    \item \textbf{Beam FEA} --- Euler-Bernoulli elements, simply-supported BCs, analytical validation
+    \item \textbf{1D Truss FEA} --- Axial bar elements, fixed-fixed BCs, analytical validation
+    \item \textbf{2D Warren Truss FEA} --- Triangular mesh, pinned-roller BCs, proper geometry
+    \item \textbf{Quantum Hamiltonian} --- $H = M^{-1/2} K M^{-1/2}$, Pauli decomposition, normalization
+    \item \textbf{VQE Solver} --- Multi-start optimization, two-stage refinement, excited-state deflation
+    \item \textbf{Visualization} --- Convergence curves, mode shapes, frequency comparisons, animations
+    \item \textbf{Novel Studies} --- Ill-conditioning (tapered structures), damage detection (stiffness reduction)
+    \item \textbf{Optimizer Comparison} --- COBYLA vs L-BFGS-B benchmarking
+\end{enumerate}
+
+\end{document}

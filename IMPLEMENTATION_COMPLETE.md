@@ -1,4 +1,4 @@
-# Implementation Complete: Truss Analysis for VQA Modal Analysis
+# Implementation Complete: 2D Warren Truss VQA Modal Analysis
 
 **Project:** VQA Modal Analysis  
 **Date:** 2026-05-06  
@@ -8,7 +8,7 @@
 
 ## Summary
 
-Successfully extended the VQA Modal Analysis project to support **truss (bar element)** structural analysis alongside existing beam analysis. The implementation adds comprehensive truss FEA capabilities while maintaining full compatibility with the existing quantum pipeline.
+Successfully extended the VQA Modal Analysis project to support **2D Warren Truss** structural analysis alongside existing beam analysis. The implementation adds proper 2D truss FEA capabilities (4x4 element stiffness, triangular web members, pinned-roller BCs) and integrates VQE quantum computation on a 2-chord minimal truss while maintaining full compatibility with the existing quantum pipeline.
 
 > **⚠️ IMPORTANT NOTE:** Qiskit version pinned to **0.46.x** (not 1.0) in requirements due to Estimator API breaking changes in Qiskit 1.0. The code uses Qiskit 0.x API patterns.
 
@@ -45,6 +45,13 @@ Successfully extended the VQA Modal Analysis project to support **truss (bar ele
 - `plot_truss_geometry()` - 1D bar with node labels
 - `plot_truss_mode_shapes()` - Axial displacement profiles
 - `plot_truss_frequency_comparison()` - VQE vs classical bar chart
+
+#### 2D Warren Truss (`visualize_truss2d.py`) [NEW]
+
+- `plot_truss2d_geometry()` - 2D layout with pinned/roller supports
+- `plot_truss2d_mode_shapes()` - Deformed shape overlay on undeformed truss
+- `animate_truss2d_mode()` - GIF animation of oscillating truss
+- `plot_truss2d_frequency_comparison()` - VQE vs classical frequency bar chart
 
 ### 6. Documentation
 - **README.md** - Added truss module reference, theory, quick start
@@ -295,7 +302,7 @@ df_damage = truss_damage_study(E, A, rho, L,
    - Impact: Coarser mesh, higher error in mode 1 (~2.6%)
    - Mitigation: Acceptable for VQE convergence studies
 
-3. **1D Only:** Truss implementation is 1D (axial loading)
+3. **1D Truss Retained:** Original 1D truss kept for comparison; 2D Warren Truss now the primary implementation
    - Impact: Cannot model 2D/3D truss frames
    - Future: Could extend to space trusses with 3 DOF/node
 

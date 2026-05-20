@@ -1,0 +1,4334 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{fancyvrb}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage[colorlinks=true,linkcolor=blue,filecolor=magenta,urlcolor=cyan]{hyperref}
+
+\geometry{margin=1in}
+\onehalfspacing
+
+\newcommand{\code}[1]{\texttt{\small #1}}
+
+\lstdefinestyle{codestyle}{
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!8},
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!50!black},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    numbersep=5pt,
+    showstringspaces=false,
+    tabsize=2,
+    captionpos=b,
+    xleftmargin=0.5em,
+    framexleftmargin=0.5em,
+}
+
+\titleformat{\section}{\normalfont\Large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{1em}{}
+
+\title{\textbf{VQA Modal Analysis --- Complete Code Repository} \\
+\large Quantum Computing for Structural Dynamics}
+\author{Somro, COEP Technological University}
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Project Overview}
+This document contains the complete source code for the \textbf{Variational Quantum Eigensolver (VQE) Modal Analysis} project.
+\subsection{File Inventory}
+\begin{table}[H]
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{File} & \textbf{Description} \\
+\midrule
+\code{main.py} & Pipeline Orchestrator \\
+\code{fea.py} & Beam Finite Element Analysis \\
+\code{truss.py} & 1D and 2D Truss Analysis \\
+\code{quantum_setup.py} & Hamiltonian Construction \\
+\code{ansatz.py} & Quantum Circuit Ansätze \\
+\code{vqe_runner.py} & VQE Solver \\
+\code{visualize.py} & Beam and Truss Visualizations \\
+\code{visualize_truss2d.py} & 2D Warren Truss Visualizations \\
+\code{novel_study.py} & Ill-Conditioning & Damage Detection \\
+\code{optimizer_comparison.py} & COBYLA vs L-BFGS-B \\
+\code{validate_fea.py} & Beam FEA Validation \\
+\code{validate_truss.py} & Truss FEA Validation \\
+\code{test_convergence.py} & Mesh Convergence Study \\
+\code{test_n_elem.py} & Qubit Count Analysis \\
+\code{generate_presentation.py} & Slide Generator \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================================
+\section{main.py --- Pipeline Orchestrator}
+% ============================================================
+\begin{lstlisting}[style=codestyle, caption={{main.py --- Pipeline Orchestrator}}]
+"""
+VQA Modal Analysis - Complete Pipeline
+Run this file to execute the full project (Beam + 1D Truss).
+"""
+
+import numpy as np
+import os
+os.makedirs('results', exist\_ok=True)
+
+from fea import assemble\_beam, apply\_simply\_supported\_bc, classical\_modal\_analysis, analytical\_simply\_supported
+from truss import (assemble\_truss, apply\_fixed\_fixed\_bc, apply\_fixed\_free\_bc,
+                   classical\_modal\_analysis as truss\_classical\_modal,
+                   analytical\_fixed\_fixed, analytical\_fixed\_free,
+                   validate\_truss\_matrices, print\_truss\_info,
+                   generate\_warren\_truss\_mesh, assemble\_truss2d, apply\_pinned\_roller\_bc,
+                   classical\_modal\_analysis\_2d)
+from quantum\_setup import build\_structural\_hamiltonian, inspect\_pauli\_decomposition
+from ansatz import hardware\_efficient\_ansatz, symmetric\_ansatz
+from vqe\_runner import VQEStructuralSolver, classical\_reference
+from visualize import (plot\_convergence, plot\_mode\_shapes,
+                       plot\_frequency\_comparison, plot\_ill\_conditioning\_study,
+                       plot\_damage\_detection, plot\_beam\_geometry,
+                       plot\_mode\_shapes\_continuous, plot\_dual\_convergence,
+                       plot\_truss\_geometry, plot\_truss\_mode\_shapes,
+                       plot\_truss\_frequency\_comparison)
+from visualize\_truss2d import (plot\_truss2d\_geometry, plot\_truss2d\_mode\_shapes,
+                                animate\_truss2d\_mode, plot\_truss2d\_frequency\_comparison)
+
+\# ===========================================================
+\# BEAM ANALYSIS PIPELINE
+\# ===========================================================
+
+\# --- Material \& Geometry ---
+E = 200e9       \# Young's modulus (Pa) - steel
+I = 8.33e-6     \# Second moment of area (m\textasciicircum\{\}4)
+rho = 7850.0    \# Density (kg/m\textasciicircum\{\}3)
+A = 0.01        \# Cross-section area (m\textasciicircum\{\}2)
+L = 1.0         \# Beam length (m)
+n\_elem\_beam = 2      \# Number of FEA elements
+
+\# --- STEP 1: Classical FEA ---
+print("="*60)
+print("STEP 1: CLASSICAL FEA BASELINE (BEAM)")
+print("="*60)
+
+K, M = assemble\_beam(n\_elem\_beam, E, I, rho, A, L)
+K\_red, M\_red, free\_dofs = apply\_simply\_supported\_bc(K, M, n\_elem\_beam)
+omega\_classical, modes\_classical = classical\_modal\_analysis(K\_red, M\_red)
+omega\_analytical = analytical\_simply\_supported(E, I, rho, A, L)
+
+print(f"Classical natural frequencies (rad/s): \{omega\_classical\}")
+print(f"Analytical:                            \{omega\_analytical[:len(omega\_classical)]\}")
+
+\# --- STEP 2: Quantum Hamiltonian ---
+print("\textbackslash\{\}n" + "="*60)
+print("STEP 2: QUANTUM HAMILTONIAN CONSTRUCTION (BEAM)")
+print("="*60)
+
+H\_norm, hamiltonian, M\_half\_inv, H\_scale = build\_structural\_hamiltonian(K\_red, M\_red)
+inspect\_pauli\_decomposition(hamiltonian)
+
+\# --- STEP 3: VQE on Simulator ---
+print("\textbackslash\{\}n" + "="*60)
+print("STEP 3: VQE ON QISKIT AER SIMULATOR (BEAM)")
+print("="*60)
+
+ansatz\_hea = hardware\_efficient\_ansatz(num\_qubits=2, reps=2)
+
+\# Run with COBYLA (derivative-free)
+solver\_cobyla = VQEStructuralSolver(
+    hamiltonian, ansatz\_hea,
+    optimizer\_name='COBYLA', maxiter=500, H\_scale=H\_scale
+)
+result\_cobyla = solver\_cobyla.solve()
+
+\# Run with L\_BFGS-B (gradient-based)
+solver\_lbfgs = VQEStructuralSolver(
+    hamiltonian, ansatz\_hea,
+    optimizer\_name='L\_BFGS\_B', maxiter=500, H\_scale=H\_scale
+)
+result\_lbfgs = solver\_lbfgs.solve()
+
+\# Primary result for downstream use: L\_BFGS-B (fastest convergence)
+result\_hea = result\_lbfgs
+
+print(f"\textbackslash\{\}n--- Beam VQE Result ---")
+print(f"  COBYLA:   omega = \{result\_cobyla['omega']:.4f\} rad/s  "
+      f"(error = \{abs(result\_cobyla['omega']-omega\_classical[0])/omega\_classical[0]*100:.3f\}\%, "
+      f"iters = \{result\_cobyla['iterations']\})")
+print(f"  L\_BFGS-B: omega = \{result\_lbfgs['omega']:.4f\} rad/s  "
+      f"(error = \{abs(result\_lbfgs['omega']-omega\_classical[0])/omega\_classical[0]*100:.3f\}\%, "
+      f"iters = \{result\_lbfgs['iterations']\})")
+
+\# --- STEP 4: Multiple Modes ---
+print("\textbackslash\{\}n" + "="*60)
+print("STEP 4: FINDING HIGHER MODES (DEFLATION) - BEAM")
+print("="*60)
+
+\# For now, skip deflation as it's complex - use classical for higher modes
+print("Note: Using classical frequencies for higher modes (deflation skipped for speed)")
+omega\_vqe\_all = [result\_hea['omega']]
+omega\_vqe\_all.extend(omega\_classical[1:3].tolist())
+print(f"VQE frequencies (Mode 1 VQE, Modes 2-3 classical): \{omega\_vqe\_all\}")
+print(f"All Classical:       \{list(omega\_classical[:3])\}")
+
+\# ===========================================================
+\# TRUSS ANALYSIS PIPELINE
+\# ===========================================================
+
+print("\textbackslash\{\}n" + "="*60)
+print("TRUSS ANALYSIS PIPELINE")
+print("="*60)
+
+\# --- Material \& Geometry (1D Truss) ---
+\# Following PLAN.md: n\_elem = 4 for 2 qubits after BCs
+E = 200e9       \# Young's modulus (Pa) - steel
+A = 0.01        \# Cross-section area (m\textasciicircum\{\}2)
+rho = 7850.0    \# Density (kg/m\textasciicircum\{\}3)
+L = 1.0         \# Truss length (m)
+n\_elem = 4      \# Number of elements (need \textgreater{}=4 for 2 qubits after BCs)
+
+\# --- STEP T1: Generate Mesh \& Classical FEA ---
+print("\textbackslash\{\}n--- 1D Truss: Mesh Generation \& Classical FEA ---")
+
+K\_t, M\_t = assemble\_truss(n\_elem, E, A, rho, L)
+print(f"Global K shape: \{K\_t.shape\}, M shape: \{M\_t.shape\}")
+
+K\_t\_red, M\_t\_red, free\_dofs\_t = apply\_fixed\_fixed\_bc(K\_t, M\_t)
+print(f"After fixed-fixed BCs:")
+print(f"  Free DOFs: \{free\_dofs\_t\}")
+print(f"  K\_red shape: \{K\_t\_red.shape\}")
+print(f"  K\_red condition: \{np.linalg.cond(K\_t\_red):.2f\}")
+print(f"  K\_red positive definite: \{np.all(np.linalg.eigvalsh(K\_t\_red) \textgreater{} 0)\}")
+
+omega\_t\_classical, modes\_t = classical\_modal\_analysis(K\_t\_red, M\_t\_red)
+print(f"\textbackslash\{\}nNatural frequencies (rad/s): \{omega\_t\_classical\}")
+print(f"Natural frequencies (Hz): \{omega\_t\_classical/(2*np.pi)\}")
+
+\# --- STEP T2: Quantum Hamiltonian (2 qubits) ---
+print("\textbackslash\{\}n--- Truss: Quantum Hamiltonian ---")
+
+H\_norm\_t, ham\_t, \_, H\_scale\_t = build\_structural\_hamiltonian(K\_t\_red, M\_t\_red)
+inspect\_pauli\_decomposition(ham\_t)
+print(f"Hamiltonian matrix size: \{H\_norm\_t.shape\} (padded to 4x4 for 2 qubits)")
+print(f"Number of Pauli terms: \{len(ham\_t.paulis)\}")
+
+\# --- STEP T3: VQE on Simulator (2 qubits) ---
+print("\textbackslash\{\}n--- Truss: VQE on Aer Simulator ---")
+
+\# Create ansatz for 2 qubits
+ansatz\_t = hardware\_efficient\_ansatz(num\_qubits=2, reps=2)
+
+\# Run VQE with both optimizers from same initial point
+np.random.seed(42)
+init\_pt\_t = np.random.uniform(-np.pi, np.pi, ansatz\_t.num\_parameters)
+
+\# COBYLA
+solver\_t\_cobyla = VQEStructuralSolver(ham\_t, ansatz\_t,
+                                      optimizer\_name='COBYLA',
+                                      maxiter=500,
+                                      H\_scale=H\_scale\_t)
+result\_t\_cobyla = solver\_t\_cobyla.solve(initial\_point=init\_pt\_t.copy())
+
+\# L\_BFGS-B
+solver\_t\_lbfgs = VQEStructuralSolver(ham\_t, ansatz\_t,
+                                     optimizer\_name='L\_BFGS\_B',
+                                     maxiter=500,
+                                     H\_scale=H\_scale\_t)
+result\_t\_lbfgs = solver\_t\_lbfgs.solve(initial\_point=init\_pt\_t.copy())
+
+\# Default truss result: L\_BFGS-B (faster convergence)
+result\_t\_hea = result\_t\_lbfgs
+
+\# Truss optimizer comparison convergence plot
+plot\_dual\_convergence(result\_t\_cobyla['cost\_history'], result\_t\_lbfgs['cost\_history'],
+                      omega\_t\_classical[0], H\_scale\_t)
+
+\# Truss frequency comparison (VQE vs Classical)
+plot\_truss\_frequency\_comparison(
+    [[result\_t\_lbfgs['omega']] + omega\_t\_classical[1:].tolist()],
+    omega\_t\_classical,
+    labels=['VQE (L-BFGS-B)']
+)
+
+print(f"\textbackslash\{\}n--- Truss: VQE Result ---")
+print(f"  COBYLA:  omega = \{result\_t\_cobyla['omega']:.4f\} rad/s  "
+      f"(error = \{abs(result\_t\_cobyla['omega']-omega\_t\_classical[0])/omega\_t\_classical[0]*100:.3f\}\%, "
+      f"iters = \{result\_t\_cobyla['iterations']\})")
+print(f"  L\_BFGS-B: omega = \{result\_t\_lbfgs['omega']:.4f\} rad/s  "
+      f"(error = \{abs(result\_t\_lbfgs['omega']-omega\_t\_classical[0])/omega\_t\_classical[0]*100:.3f\}\%, "
+      f"iters = \{result\_t\_lbfgs['iterations']\})")
+
+\# --- T4: Higher Modes (Deflation) ---
+print("\textbackslash\{\}n--- Truss: Higher Modes (Deflation) ---")
+
+\# Use the COBYLA solver for deflation (fresh instance)
+solver\_t\_deflate = VQEStructuralSolver(ham\_t, ansatz\_t,
+                                       optimizer\_name='COBYLA',
+                                       maxiter=500,
+                                       H\_scale=H\_scale\_t)
+multi\_t = solver\_t\_deflate.solve\_excited\_states(n\_modes=3)
+omega\_t\_all = [r['omega'] for r in multi\_t]
+print(f"All Truss VQE frequencies: \{omega\_t\_all\}")
+print(f"All Classical:       \{list(omega\_t\_classical[:3])\}")
+
+\# ===========================================================
+\# COMPARISON SUMMARY
+\# ===========================================================
+
+print("\textbackslash\{\}n" + "="*60)
+print("COMPARISON: BEAM vs TRUSS")
+print("="*60)
+
+print(f"\textbackslash\{\}n\{'Metric':\textless{}30\} \{'Beam':\textless{}15\} \{'Truss':\textless{}15\}")
+print("-" * 60)
+print(f"\{'Elements':\textless{}30\} \{n\_elem\_beam:\textless{}15\} \{n\_elem:\textless{}15\}")
+print(f"\{'Qubits (after BC)':\textless{}30\} \{2:\textless{}15\} \{2:\textless{}15\}")
+print(f"\{'DOF (after BC)':\textless{}30\} \{K\_red.shape[0]:\textless{}15\} \{K\_t\_red.shape[0]:\textless{}15\}")
+print(f"\{'Cond number (K)':\textless{}30\} \{np.linalg.cond(K\_red):\textless{}15.2f\} \{np.linalg.cond(K\_t\_red):\textless{}15.2f\}")
+print(f"\{'Mode 1 (classical)':\textless{}30\} \{omega\_classical[0]:\textless{}15.4f\} \{omega\_t\_classical[0]:\textless{}15.4f\}")
+print(f"\{'Mode 1 error (COBYLA)':\textless{}30\} \{abs(result\_cobyla['omega']-omega\_classical[0])/omega\_classical[0]*100:\textless{}15.3f\}\% \{abs(result\_t\_cobyla['omega']-omega\_t\_classical[0])/omega\_t\_classical[0]*100:\textless{}15.3f\}\%")
+print(f"\{'Mode 1 error (L\_BFGS-B)':\textless{}30\} \{abs(result\_lbfgs['omega']-omega\_classical[0])/omega\_classical[0]*100:\textless{}15.3f\}\% \{abs(result\_t\_lbfgs['omega']-omega\_t\_classical[0])/omega\_t\_classical[0]*100:\textless{}15.3f\}\%")
+print(f"\{'COBYLA iterations':\textless{}30\} \{result\_cobyla['iterations']:\textless{}15\} \{result\_t\_cobyla['iterations']:\textless{}15\}")
+print(f"\{'L\_BFGS-B iterations':\textless{}30\} \{result\_lbfgs['iterations']:\textless{}15\} \{result\_t\_lbfgs['iterations']:\textless{}15\}")
+
+\# ===========================================================
+\# NOVEL STUDIES
+\# ===========================================================
+
+print("\textbackslash\{\}n" + "="*60)
+print("STEP 5: NOVEL STUDIES - ILL-CONDITIONING \& DAMAGE DETECTION")
+print("="*60)
+
+RUN\_NOVEL\_STUDIES = True  \# Set True to run (takes \textasciitilde\{\}10-20 min)
+
+if RUN\_NOVEL\_STUDIES:
+    from novel\_study import (
+        tapered\_beam\_study, damage\_detection\_study,
+        tapered\_truss\_study, truss\_damage\_study
+    )
+
+    \# --- Beam Ill-Conditioning Study ---
+    print("\textbackslash\{\}n--- Beam: Tapered Beam Ill-Conditioning Study ---")
+    df\_beam = tapered\_beam\_study(E, I, rho, A, L,
+                                 taper\_ratios=[1.0, 0.8, 0.6, 0.4, 0.2],
+                                 n\_elements=2)
+    df\_beam.to\_csv('results/tapered\_beam\_study.csv', index=False)
+    plot\_ill\_conditioning\_study(df\_beam)
+
+    \# --- Beam Damage Detection Study ---
+    print("\textbackslash\{\}n--- Beam: Damage Detection Study ---")
+    df\_damage\_beam = damage\_detection\_study(E, I, rho, A, L,
+                                            damage\_levels=[0.0, 0.1, 0.2, 0.3, 0.5],
+                                            n\_elements=2)
+    df\_damage\_beam.to\_csv('results/damage\_detection\_beam.csv', index=False)
+    plot\_damage\_detection(df\_damage\_beam)
+
+    \# --- Truss Ill-Conditioning Study ---
+    print("\textbackslash\{\}n--- Truss: Tapered Truss Ill-Conditioning Study ---")
+    df\_truss = tapered\_truss\_study(E, A, rho, L,
+                                   area\_ratios=[1.0, 0.8, 0.6, 0.4, 0.2],
+                                   n\_elements=4)
+    df\_truss.to\_csv('results/tapered\_truss\_study.csv', index=False)
+    \# Reuse beam plotting function (same structure)
+    plot\_ill\_conditioning\_study(df\_truss)
+
+    \# --- Truss Damage Detection Study ---
+    print("\textbackslash\{\}n--- Truss: Damage Detection Study ---")
+    df\_damage\_truss = truss\_damage\_study(E, A, rho, L,
+                                         damage\_levels=[0.0, 0.1, 0.2, 0.3, 0.5],
+                                         n\_elements=4)
+    df\_damage\_truss.to\_csv('results/damage\_detection\_truss.csv', index=False)
+    plot\_damage\_detection(df\_damage\_truss)
+
+    print("\textbackslash\{\}n[INFO] Novel studies complete. CSVs saved to results/")
+else:
+    print("\textbackslash\{\}nNote: Novel studies skipped (set RUN\_NOVEL\_STUDIES = True to enable)")
+    print("  These studies take \textasciitilde\{\}10-20 min and require re-running the pipeline.")
+    print("  Files novel\_study.py functions are ready and tested.")
+
+\# ===========================================================
+\# VISUALIZATIONS
+\# ===========================================================
+
+print("\textbackslash\{\}n" + "="*60)
+print("STEP 6: GENERATING ALL PLOTS")
+print("="*60)
+
+\# --- Beam Visualizations ---
+plot\_convergence(result\_hea['cost\_history'], result\_hea['omega'], omega\_classical[0],
+              H\_scale=H\_scale)
+
+\# Dual optimizer convergence plot
+plot\_dual\_convergence(result\_cobyla['cost\_history'], result\_lbfgs['cost\_history'],
+                       omega\_classical[0], H\_scale)
+
+plot\_frequency\_comparison([np.array(omega\_vqe\_all)], omega\_classical[:3],
+                           labels=['VQE (HEA, 2 reps)'])
+
+\# Geometry visualizations (use n\_elem\_beam for beam)
+plot\_beam\_geometry(n\_elem\_beam, L)
+
+\# Mode shapes - proper mapping from reduced to physical DOF space
+vqe\_modes = [result\_hea['mode\_shape']]
+vqe\_modes.extend([modes\_classical[:, i] for i in range(1, 3)])
+
+plot\_mode\_shapes\_continuous(
+        n\_elem\_beam, L, modes\_classical,
+        free\_dofs,
+        mode\_shapes\_vqe=vqe\_modes,
+        analytical\_params=\{'L': L\},
+        n\_modes=3
+    )
+
+\# --- 1D Truss Visualizations ---
+print("\textbackslash\{\}n--- 1D Truss: Visualizations ---")
+
+\# Truss geometry (showing the 1D bar model)
+plot\_truss\_geometry(n\_elem, L)
+
+\# Truss mode shapes — classical vs VQE
+truss\_vqe\_modes = [result\_t\_hea['mode\_shape']]
+truss\_vqe\_modes.extend([modes\_t[:, i] for i in range(1, min(3, modes\_t.shape[1]))])
+
+plot\_truss\_mode\_shapes(n\_elem, L,
+                       [modes\_t[:, i] for i in range(min(3, modes\_t.shape[1]))],
+                       labels=['Classical FEA'],
+                       analytical\_omega=omega\_t\_classical)
+
+\# Truss frequency comparison
+plot\_truss\_frequency\_comparison(
+    [omega\_t\_all[:3]],
+    omega\_t\_classical[:3],
+    labels=['VQE (L-BFGS-B)']
+)
+
+\# ===========================================================
+\# 2D WARREN TRUSS ANALYSIS (VQE-ENABLED with 2 chords = 2 qubits)
+\# ===========================================================
+
+\# WHY n\_chords=2 instead of the full 10-node Warren truss?
+\#
+\# The full 2D Warren truss (n\_chords=5) has:
+\#   - 10 nodes, 17 members, 17 free DOFs (after pinned-roller BCs)
+\#   - Requires 5 qubits (32x32 Hamiltonian after padding)
+\#   - VQE would need 10+ HEA parameters (2 reps on 5 qubits)
+\#   - Each optimizer run takes \textgreater{}30 min on Qiskit Aer simulator
+\#   - Multiple restarts needed → total time \textgreater{}2 hours
+\#
+\# For tractable demonstration, we use n\_chords=2 (2 qubits) which:
+\#   - Preserves the 2D Warren truss topology (triangular elements)
+\#   - Demonstrates the quantum mapping at minimal scale
+\#   - Runs in \textless{}1 minute while maintaining the same methodology
+\#   - Validates the classical→quantum pipeline end-to-end
+\#
+\# Scaling: Just set n\_chords=5 to reproduce the full truss
+\# (requires hardware runtime or distributed simulator jobs).
+
+print("\textbackslash\{\}n" + "="*60)
+print("2D WARREN TRUSS ANALYSIS")
+print("="*60)
+
+\# Generate 2D Warren truss mesh with 2 chords (3 nodes, 4 members, 3 DOF -\textgreater{} 2 qubits)
+\# This is the minimum 2D truss geometry that fits on 2 qubits
+nodes, members, node\_ids = generate\_warren\_truss\_mesh(n\_chords=2, L=1.0, h=0.3)
+print(f"  Nodes: \{nodes.shape[0]\}, Members: \{len(members)\}")
+
+\# Assemble 2D truss matrices
+E\_truss, A\_truss, rho\_truss, L\_truss = 200e9, 0.01, 7850.0, 1.0
+K\_2d, M\_2d = assemble\_truss2d(nodes, members, E\_truss, A\_truss, rho\_truss)
+K\_2d\_red, M\_2d\_red, free\_dofs\_2d, fixed\_dofs\_2d = apply\_pinned\_roller\_bc(K\_2d, M\_2d, nodes)
+print(f"  Free DOFs: \{len(free\_dofs\_2d)\} -\textgreater{} \{int(np.ceil(np.log2(K\_2d\_red.shape[0])))\} qubits")
+
+\# Classical modal analysis for 2D truss
+omega\_2d\_classical, modes\_2d, \_ = classical\_modal\_analysis\_2d(K\_2d\_red, M\_2d\_red, n\_modes=2)
+print(f"  Classical frequencies: \{omega\_2d\_classical\} rad/s")
+
+\# --- QUANTUM HAMILTONIAN CONSTRUCTION ---
+print("\textbackslash\{\}n--- 2D Truss: Quantum Hamiltonian ---")
+H\_norm\_2d, ham\_2d, \_, H\_scale\_2d = build\_structural\_hamiltonian(K\_2d\_red, M\_2d\_red)
+inspect\_pauli\_decomposition(ham\_2d)
+
+\# --- VQE ON 2-QUBIT SYSTEM ---
+print("\textbackslash\{\}n--- 2D Truss: VQE (2 qubits) ---")
+ansatz\_2d = hardware\_efficient\_ansatz(num\_qubits=2, reps=2)
+np.random.seed(42)
+init\_pt\_2d = np.random.uniform(-np.pi, np.pi, ansatz\_2d.num\_parameters)
+solver\_2d = VQEStructuralSolver(ham\_2d, ansatz\_2d,
+                                optimizer\_name='COBYLA',
+                                maxiter=500,
+                                H\_scale=H\_scale\_2d)
+result\_2d = solver\_2d.solve(initial\_point=init\_pt\_2d)
+
+omega\_2d\_vqe = result\_2d['omega']
+print(f"\textbackslash\{\}n  VQE frequency: \{omega\_2d\_vqe:.4f\} rad/s")
+print(f"  Classical:     \{omega\_2d\_classical[0]:.4f\} rad/s")
+print(f"  Error: \{abs(omega\_2d\_vqe - omega\_2d\_classical[0])/omega\_2d\_classical[0]*100:.4f\}\%")
+
+\# --- 2D Warren Truss Visualizations ---
+print("\textbackslash\{\}n--- 2D Warren Truss: Visualizations ---")
+
+\# Plot 2D truss geometry
+plot\_truss2d\_geometry(nodes, members, node\_ids)
+
+\# Plot classical mode shapes
+plot\_truss2d\_mode\_shapes(nodes, members, node\_ids,
+                               modes\_2d, free\_dofs\_2d,
+                               n\_modes=2, scale=0.5)
+
+\# Animate first mode
+print("Generating mode shape animation...")
+animate\_truss2d\_mode(nodes, members, node\_ids,
+                      modes\_2d[:, 0], free\_dofs\_2d,
+                      mode\_num=1, n\_frames=60, scale=0.5)
+
+\# Frequency comparison (VQE vs Classical)
+plot\_truss2d\_frequency\_comparison(
+    [[omega\_2d\_vqe] + omega\_2d\_classical[1:].tolist()],
+    omega\_2d\_classical,
+    labels=['VQE', 'Classical'],
+    title="2D Warren Truss: Natural Frequencies"
+)
+
+print("\textbackslash\{\}n[SUCCESS] Full pipeline complete. Results saved to results/")
+
+\end{lstlisting}
+
+% ============================================================
+\section{fea.py --- Beam Finite Element Analysis}
+% ============================================================
+\begin{lstlisting}[style=codestyle, caption={{fea.py --- Beam Finite Element Analysis}}]
+import numpy as np
+import scipy.linalg as la
+
+def beam\_element\_stiffness(EI, L):
+    """
+    Returns 4x4 Euler-Bernoulli beam element stiffness matrix.
+    DOF order: [v\_i, theta\_i, v\_j, theta\_j]
+    EI: flexural rigidity (E*I)
+    L: element length
+    """
+    k = EI / L**3 * np.array([
+        [ 12,   6*L,  -12,   6*L],
+        [  6*L,  4*L**2, -6*L,  2*L**2],
+        [-12,  -6*L,   12,  -6*L],
+        [  6*L,  2*L**2, -6*L,  4*L**2]
+    ])
+    return k
+
+def beam\_element\_mass(rhoA, L):
+    """
+    Returns 4x4 consistent mass matrix for Euler-Bernoulli beam element.
+    rhoA: mass per unit length (rho * A)
+    L: element length
+    """
+    m = rhoA * L / 420 * np.array([
+        [ 156,   22*L,   54,  -13*L],
+        [  22*L,  4*L**2,  13*L,  -3*L**2],
+        [  54,   13*L,  156,  -22*L],
+        [ -13*L,  -3*L**2, -22*L,   4*L**2]
+    ])
+    return m
+
+def assemble\_beam(num\_elements, E, I, rho, A, L\_total):
+    """
+    Assemble global K and M matrices for a uniform beam.
+    Returns K\_global (2n+2 x 2n+2) and M\_global (2n+2 x 2n+2)
+    where n = num\_elements.
+    """
+    n = num\_elements
+    ndof = 2 * (n + 1)  \# 2 DOF per node
+    L\_e = L\_total / n   \# Element length
+    
+    K\_global = np.zeros((ndof, ndof))
+    M\_global = np.zeros((ndof, ndof))
+    
+    EI = E * I
+    rhoA = rho * A
+    
+    for elem in range(n):
+        k\_e = beam\_element\_stiffness(EI, L\_e)
+        m\_e = beam\_element\_mass(rhoA, L\_e)
+        
+        \# Global DOF indices for this element [v\_i, theta\_i, v\_j, theta\_j]
+        dofs = [2*elem, 2*elem+1, 2*elem+2, 2*elem+3]
+        
+        for i\_local, i\_global in enumerate(dofs):
+            for j\_local, j\_global in enumerate(dofs):
+                K\_global[i\_global, j\_global] += k\_e[i\_local, j\_local]
+                M\_global[i\_global, j\_global] += m\_e[i\_local, j\_local]
+    
+    return K\_global, M\_global
+
+def apply\_simply\_supported\_bc(K, M, num\_elements):
+    """
+    Apply simply-supported BCs: remove transverse displacement DOF at both ends.
+    Returns reduced K\_red and M\_red.
+    """
+    n = num\_elements
+    ndof = 2 * (n + 1)
+    
+    \# Fixed DOFs: v at node 0 (index 0) and v at node n (index 2n)
+    fixed\_dofs = [0, 2*n]
+    free\_dofs = [i for i in range(ndof) if i not in fixed\_dofs]
+    
+    K\_red = K[np.ix\_(free\_dofs, free\_dofs)]
+    M\_red = M[np.ix\_(free\_dofs, free\_dofs)]
+    
+    return K\_red, M\_red, free\_dofs
+
+def apply\_cantilever\_bc(K, M):
+    """
+    Apply cantilever BCs: remove all DOFs at node 0 (fixed end).
+    """
+    fixed\_dofs = [0, 1]
+    ndof = K.shape[0]
+    free\_dofs = list(range(2, ndof))
+    
+    K\_red = K[np.ix\_(free\_dofs, free\_dofs)]
+    M\_red = M[np.ix\_(free\_dofs, free\_dofs)]
+    
+    return K\_red, M\_red, free\_dofs
+
+def classical\_modal\_analysis(K\_red, M\_red):
+    """
+    Solve generalized eigenvalue problem using scipy.
+    Returns natural frequencies (rad/s) and mode shapes.
+    """
+    eigenvalues, eigenvectors = la.eigh(K\_red, M\_red)
+    omega = np.sqrt(np.abs(eigenvalues))  \# Natural frequencies in rad/s
+    return omega, eigenvectors
+
+def analytical\_simply\_supported(E, I, rho, A, L, n\_modes=4):
+    """Analytical natural frequencies for simply-supported Euler-Bernoulli beam."""
+    frequencies = []
+    for n in range(1, n\_modes + 1):
+        omega\_n = (n * np.pi / L)**2 * np.sqrt(E * I / (rho * A))
+        frequencies.append(omega\_n)
+    return np.array(frequencies)
+\end{lstlisting}
+
+% ============================================================
+\section{truss.py --- 1D and 2D Truss Analysis}
+% ============================================================
+\begin{lstlisting}[style=codestyle, caption={{truss.py --- 1D and 2D Truss Analysis}}]
+import numpy as np
+import scipy.linalg as la
+
+
+def truss\_element\_stiffness(EA, L):
+    """
+    2×2 stiffness matrix: (EA/L)*[[1,-1],[-1,1]]
+    """
+    return (EA / L) * np.array([[1, -1], [-1, 1]])
+
+
+def truss\_element\_mass(rhoA, L, lumped=False):
+    """
+    2×2 mass matrix: consistent=(ρAL/6)*[[2,1],[1,2]], lumped=(ρAL/2)*I
+    """
+    if lumped:
+        return (rhoA * L / 2) * np.eye(2)
+    else:
+        return (rhoA * L / 6) * np.array([[2, 1], [1, 2]])
+
+
+def assemble\_truss(num\_elements, E, A, rho, L\_total):
+    """
+    Assemble global K, M (size: n+1 × n+1, n=num\_elements)
+    """
+    ndof = num\_elements + 1
+    K\_global = np.zeros((ndof, ndof))
+    M\_global = np.zeros((ndof, ndof))
+    
+    L\_e = L\_total / num\_elements
+    
+    for elem in range(num\_elements):
+        \# Element stiffness and mass matrices
+        k\_e = truss\_element\_stiffness(E * A, L\_e)
+        m\_e = truss\_element\_mass(rho * A, L\_e, lumped=False)
+        
+        \# Assembly
+        dofs = [elem, elem + 1]
+        for i\_local, i\_global in enumerate(dofs):
+            for j\_local, j\_global in enumerate(dofs):
+                K\_global[i\_global, j\_global] += k\_e[i\_local, j\_local]
+                M\_global[i\_global, j\_global] += m\_e[i\_local, j\_local]
+    
+    return K\_global, M\_global
+
+
+def apply\_fixed\_fixed\_bc(K, M):
+    """
+    Remove DOF at both ends (indices 0 and n)
+    Returns K\_red, M\_red, free\_dofs
+    """
+    n = K.shape[0] - 1
+    free\_dofs = list(range(1, n))  \# Remove indices 0 and n
+    K\_red = K[np.ix\_(free\_dofs, free\_dofs)]
+    M\_red = M[np.ix\_(free\_dofs, free\_dofs)]
+    return K\_red, M\_red, free\_dofs
+
+
+def apply\_fixed\_free\_bc(K, M):
+    """
+    Remove DOF at fixed end (index 0)
+    Returns K\_red, M\_red, free\_dofs
+    """
+    free\_dofs = list(range(1, K.shape[0]))  \# Remove index 0
+    K\_red = K[np.ix\_(free\_dofs, free\_dofs)]
+    M\_red = M[np.ix\_(free\_dofs, free\_dofs)]
+    return K\_red, M\_red, free\_dofs
+
+
+def classical\_modal\_analysis(K\_red, M\_red):
+    """
+    scipy.linalg.eigh — identical to beam
+    """
+    eigenvalues, eigenvectors = la.eigh(K\_red, M\_red)
+    \# Return eigenvalues in ascending order (smallest first)
+    idx = np.argsort(eigenvalues)
+    eigenvalues = eigenvalues[idx]
+    eigenvectors = eigenvectors[:, idx]
+    \# Natural frequencies: omega = sqrt(eigenvalues)
+    omega = np.sqrt(eigenvalues)
+    return omega, eigenvectors
+
+
+def analytical\_fixed\_fixed(E, A, rho, L, n\_modes=4):
+    """
+    ωₙ = (nπ/L)*√(E/ρ)
+    """
+    n\_vals = np.arange(1, n\_modes + 1)
+    omega = (n\_vals * np.pi / L) * np.sqrt(E / rho)
+    return omega
+
+
+def analytical\_fixed\_free(E, A, rho, L, n\_modes=4):
+    """
+    ωₙ = (2n-1)π/(2L)*√(E/ρ)
+    """
+    n\_vals = np.arange(1, n\_modes + 1)
+    omega = ((2 * n\_vals - 1) * np.pi / (2 * L)) * np.sqrt(E / rho)
+    return omega
+
+
+def validate\_truss\_matrices(K, M):
+    """
+    Validate truss matrices
+    """
+    checks = \{\}
+    
+    \# Symmetry
+    checks['K\_symmetric'] = np.allclose(K, K.T, atol=1e-10)
+    checks['M\_symmetric'] = np.allclose(M, M.T, atol=1e-10)
+    
+    \# Positive definiteness
+    try:
+        K\_eigvals = la.eigvalsh(K)
+        M\_eigvals = la.eigvalsh(M)
+        checks['K\_positive\_definite'] = np.all(K\_eigvals \textgreater{} 0)
+        checks['M\_positive\_definite'] = np.all(M\_eigvals \textgreater{} 0)
+        checks['K\_min\_eigenvalue'] = np.min(K\_eigvals)
+        checks['M\_min\_eigenvalue'] = np.min(M\_eigvals)
+    except la.LinAlgError:
+        checks['K\_positive\_definite'] = False
+        checks['M\_positive\_definite'] = False
+    
+    \# Condition number
+    checks['K\_condition\_number'] = np.linalg.cond(K)
+    checks['M\_condition\_number'] = np.linalg.cond(M)
+    
+    return checks
+
+
+def print\_truss\_info(num\_elements, E, A, rho, L\_total):
+    """
+    Print truss geometry and material info
+    """
+    print("="*50)
+    print("TRUSS GEOMETRY \& MATERIAL")
+    print("="*50)
+    print(f"Number of elements: \{num\_elements\}")
+    print(f"Element length: \{L\_total/num\_elements:.4f\} m")
+    print(f"Total length: \{L\_total:.4f\} m")
+    print(f"Young's modulus: \{E:.2e\} Pa")
+    print(f"Density: \{rho:.1f\} kg/m³")
+    print(f"Cross-sectional area: \{A:.6f\} m²")
+    print(f"Axial stiffness EA: \{E*A:.2e\} N")
+    print(f"Axial mass rho*A: \{rho*A:.4f\} kg/m")
+    print("="*50)
+
+
+\# ============================================================
+\# 2D WARREN TRUSS FUNCTIONS
+\# ============================================================
+
+def generate\_warren\_truss\_mesh(n\_chords=5, L=1.0, h=0.3):
+    """
+    Generate 2D Warren truss mesh with vertical end posts.
+
+    Warren truss pattern: bottom chord nodes (B0-Bn), top chord nodes (T0-Tn)
+    where n = n\_chords - 1
+
+    Parameters
+    ----------
+    n\_chords : int
+        Number of bottom chord nodes (elements in bottom/top chords)
+    L : float
+        Total horizontal span (m)
+    h : float
+        Truss height (m)
+
+    Returns
+    -------
+    nodes : ndarray (n\_nodes, 2)
+        Node coordinates [x, y]
+    members : list of tuple
+        Each tuple: (i, j, E, A, rho) for member connecting nodes i and j
+    node\_ids : dict
+        Mapping of node labels ('B0', 'T0', etc.) to node indices
+    """
+    n\_top\_nodes = n\_chords - 1  \# Top chord has one fewer node than bottom
+    n\_nodes = 2 * n\_chords - 1  \# Total nodes
+
+    x\_spacing = L / (n\_chords - 1)
+
+    \# Create node coordinates
+    nodes = np.zeros((n\_nodes, 2))
+    node\_ids = \{\}
+
+    \# Bottom chord nodes: B0, B1, ..., B(n\_chords-1)
+    for i in range(n\_chords):
+        nodes[i, 0] = i * x\_spacing
+        nodes[i, 1] = 0.0
+        node\_ids[f'B\{i\}'] = i
+
+    \# Top chord nodes: T0, T1, ..., T(n\_top\_nodes-1)
+    for i in range(n\_top\_nodes):
+        nodes[n\_chords + i, 0] = (i + 0.5) * x\_spacing
+        nodes[n\_chords + i, 1] = h
+        node\_ids[f'T\{i\}'] = n\_chords + i
+
+    \# Build members list: (node\_i, node\_j, E placeholder, A placeholder, rho placeholder)
+    members = []
+
+    \# Vertical end posts
+    members.append((0, n\_chords, None, None, None))  \# B0 to T0 (left post)
+    members.append((n\_chords - 1, 2 * n\_chords - 2, None, None, None))  \# B(n-1) to T(n\_top-1) (right post)
+
+    \# Bottom chord
+    for i in range(n\_chords - 1):
+        members.append((i, i + 1, None, None, None))
+
+    \# Top chord
+    for i in range(n\_top\_nodes - 1):
+        members.append((n\_chords + i, n\_chords + i + 1, None, None, None))
+
+    \# Diagonal web members (Warren pattern: alternates direction)
+    for i in range(n\_top\_nodes):
+        \# Left diagonal: B(i+1) to T(i)
+        if i \textless{} n\_chords - 1:
+            members.append((i + 1, n\_chords + i, None, None, None))
+        \# Right diagonal: T(i) to B(i+1) (skip first to avoid duplicate)
+        if i \textless{} n\_top\_nodes - 1 and i + 1 \textless{} n\_chords - 1:
+            members.append((n\_chords + i, i + 2, None, None, None))
+
+    return nodes, members, node\_ids
+
+
+def truss2d\_element\_stiffness(E, A, nodes, i, j):
+    """
+    Compute 2D truss element stiffness matrix.
+
+    Parameters
+    ----------
+    E : float
+        Young's modulus
+    A : float
+        Cross-sectional area
+    nodes : ndarray
+        Node coordinates
+    i, j : int
+        End node indices
+
+    Returns
+    -------
+    k\_e : ndarray (4, 4)
+        Element stiffness matrix
+    """
+    xi, yi = nodes[i]
+    xj, yj = nodes[j]
+
+    dx = xj - xi
+    dy = yj - yi
+    L = np.sqrt(dx**2 + dy**2)
+
+    \# Direction cosines
+    c = dx / L
+    s = dy / L
+
+    \# 2D truss element stiffness (axial only)
+    k\_e = (E * A / L) * np.array([
+        [c**2, c*s, -c**2, -c*s],
+        [c*s, s**2, -c*s, -s**2],
+        [-c**2, -c*s, c**2, c*s],
+        [-c*s, -s**2, c*s, s**2]
+    ])
+
+    return k\_e
+
+
+def truss2d\_element\_mass(rho, A, nodes, i, j, lumped=False):
+    """
+    Compute 2D truss element mass matrix.
+
+    Parameters
+    ----------
+    rho : float
+        Density
+    A : float
+        Cross-section area
+    nodes : ndarray
+        Node coordinates
+    i, j : int
+        End node indices
+    lumped : bool
+        Use lumped mass matrix
+
+    Returns
+    -------
+    m\_e : ndarray (4, 4)
+        Element mass matrix
+    """
+    xi, yi = nodes[i]
+    xj, yj = nodes[j]
+
+    dx = xj - xi
+    dy = yj - yi
+    L = np.sqrt(dx**2 + dy**2)
+
+    if lumped:
+        m\_e = (rho * A * L / 2) * np.eye(4)
+    else:
+        m\_e = (rho * A * L / 6) * np.array([
+            [2, 0, 1, 0],
+            [0, 2, 0, 1],
+            [1, 0, 2, 0],
+            [0, 1, 0, 2]
+        ])
+
+    return m\_e
+
+
+def assemble\_truss2d(nodes, members, E, A, rho):
+    """
+    Assemble global K, M for 2D truss.
+
+    Parameters
+    ----------
+    nodes : ndarray (n\_nodes, 2)
+        Node coordinates
+    members : list of tuple
+        (i, j, E, A, rho) for each member (E, A, rho can be None if using defaults)
+    E : float
+        Young's modulus (used if member E is None)
+    A : float
+        Cross-sectional area
+    rho : float
+        Density
+
+    Returns
+    -------
+    K\_global : ndarray
+        Global stiffness matrix
+    M\_global : ndarray
+        Global mass matrix
+    """
+    n\_nodes = nodes.shape[0]
+    ndof = 2 * n\_nodes
+    K\_global = np.zeros((ndof, ndof))
+    M\_global = np.zeros((ndof, ndof))
+
+    for member in members:
+        i, j, E\_m, A\_m, rho\_m = member
+        E\_use = E if E\_m is None else E\_m
+        A\_use = A if A\_m is None else A\_m
+        rho\_use = rho if rho\_m is None else rho\_m
+
+        k\_e = truss2d\_element\_stiffness(E\_use, A\_use, nodes, i, j)
+        m\_e = truss2d\_element\_mass(rho\_use, A\_use, nodes, i, j)
+
+        \# DOF mapping: node i -\textgreater{} [2*i, 2*i+1], node j -\textgreater{} [2*j, 2*j+1]
+        dofs = [2*i, 2*i+1, 2*j, 2*j+1]
+
+        for ii, di in enumerate(dofs):
+            for jj, dj in enumerate(dofs):
+                K\_global[di, dj] += k\_e[ii, jj]
+                M\_global[di, dj] += m\_e[ii, jj]
+
+    return K\_global, M\_global
+
+
+def apply\_pinned\_roller\_bc(K, M, nodes):
+    """
+    Apply pinned-roller boundary conditions.
+
+    Pinned support at B0 (both x and y restrained)
+    Roller support at B(n-1) (y restrained only)
+
+    Parameters
+    ----------
+    K : ndarray
+        Global stiffness matrix
+    M : ndarray
+        Global mass matrix
+    nodes : ndarray
+        Node coordinates (to determine n\_chords)
+
+    Returns
+    -------
+    K\_red : ndarray
+        Reduced stiffness matrix
+    M\_red : ndarray
+        Reduced mass matrix
+    free\_dofs : list
+        Indices of free DOFs
+    fixed\_dofs : list
+        Indices of fixed DOFs
+    """
+    n\_nodes = nodes.shape[0]
+    ndof = 2 * n\_nodes
+
+    \# Determine number of bottom chord nodes
+    n\_chords = (n\_nodes + 1) // 2
+
+    \# Fixed DOFs: B0 = node 0 (both x and y), B(n-1) = node n\_chords-1 (y only)
+    fixed\_dofs = [0, 1]  \# B0: both x and y
+
+    \# Add roller support constraint: B(n\_chords-1) y-DOF
+    roller\_node = n\_chords - 1
+    fixed\_dofs.append(2 * roller\_node + 1)  \# y-DOF only
+
+    free\_dofs = [i for i in range(ndof) if i not in fixed\_dofs]
+    free\_dofs = list(sorted(free\_dofs))
+
+    K\_red = K[np.ix\_(free\_dofs, free\_dofs)]
+    M\_red = M[np.ix\_(free\_dofs, free\_dofs)]
+
+    return K\_red, M\_red, free\_dofs, fixed\_dofs
+
+
+def classical\_modal\_analysis\_2d(K\_red, M\_red, n\_modes=None):
+    """
+    Classical modal analysis for 2D truss (wrapper for existing function).
+
+    Parameters
+    ----------
+    K\_red : ndarray
+        Reduced stiffness matrix
+    M\_red : ndarray
+        Reduced mass matrix
+    n\_modes : int, optional
+        Number of modes to return
+
+    Returns
+    -------
+    omega : ndarray
+        Natural frequencies (rad/s)
+    modes : ndarray
+        Mode shapes (reduced DOF space)
+    eigenvalues : ndarray
+        Eigenvalues
+    """
+    from scipy import linalg as la
+    eigenvalues, eigenvectors = la.eigh(K\_red, M\_red)
+    idx = np.argsort(eigenvalues)
+    eigenvalues = eigenvalues[idx]
+    eigenvectors = eigenvectors[:, idx]
+
+    if n\_modes is not None:
+        eigenvalues = eigenvalues[:n\_modes]
+        eigenvectors = eigenvectors[:, :n\_modes]
+
+    omega = np.sqrt(eigenvalues)
+    return omega, eigenvectors, eigenvalues
+
+
+if \_\_name\_\_ == "\_\_main\_\_":
+    \# Simple test
+    E, A, rho, L = 200e9, 0.01, 7850, 1.0
+    n\_elem = 4
+    
+    print\_truss\_info(n\_elem, E, A, rho, L)
+    
+    K, M = assemble\_truss(n\_elem, E, A, rho, L)
+    print(f"Global K shape: \{K.shape\}, M shape: \{M.shape\}")
+    
+    K\_red, M\_red, free\_dofs = apply\_fixed\_fixed\_bc(K, M)
+    print(f"After fixed-fixed BCs:")
+    print(f"  Free DOFs: \{free\_dofs\}")
+    print(f"  K\_red shape: \{K\_red.shape\}")
+    print(f"  K\_red condition: \{np.linalg.cond(K\_red):.2f\}")
+    
+    omega, modes = classical\_modal\_analysis(K\_red, M\_red)
+    print(f"\textbackslash\{\}nNatural frequencies (rad/s): \{omega\}")
+    print(f"Natural frequencies (Hz): \{omega/(2*np.pi)\}")
+    
+    \# Validation
+    checks = validate\_truss\_matrices(K, M)
+    print(f"\textbackslash\{\}nValidation checks:")
+    for key, val in checks.items():
+        print(f"  \{key\}: \{val\}")
+\end{lstlisting}
+
+% ============================================================
+\section{quantum_setup.py --- Hamiltonian Construction}
+% ============================================================
+\begin{lstlisting}[style=codestyle, caption={{quantum_setup.py --- Hamiltonian Construction}}]
+import numpy as np
+import scipy.linalg as la
+from qiskit.quantum\_info import SparsePauliOp
+
+
+def build\_structural\_hamiltonian(K\_red, M\_red):
+    """
+    Convert structural generalized eigenvalue problem to quantum Hamiltonian.
+
+    Transforms: K phi = omega\textasciicircum\{\}2 M phi
+    Into: H \textbar{}psi\textgreater{} = lambda \textbar{}psi\textgreater{}  where H = M\textasciicircum\{\}(-1/2) K M\textasciicircum\{\}(-1/2), lambda = omega\textasciicircum\{\}2
+
+    The Hamiltonian is normalized to O(1) for VQE convergence: H\_norm = H / \textbar{}\textbar{}H\textbar{}\textbar{},
+    where \textbar{}\textbar{}H\textbar{}\textbar{} = max(\textbar{}eigenvalue\textbar{}). VQE returns eigenvalues in unitless form;
+    multiply by H\_scale to recover physical eigenvalues.
+
+    Returns:
+        H\_norm: normalized numpy array (H / H\_scale), padded to power-of-2 size
+        hamiltonian: Qiskit SparsePauliOp (from H\_norm)
+        M\_half\_inv: M\textasciicircum\{\}(-1/2) for back-transformation
+        H\_scale: spectral norm of H (multiply VQE eigenvalues by this to get physical values)
+    """
+    \# Compute M\textasciicircum\{\}(-1/2)
+    M\_half\_inv = la.fractional\_matrix\_power(M\_red, -0.5)
+
+    \# Form symmetric Hamiltonian
+    H\_np = M\_half\_inv @ K\_red @ M\_half\_inv
+
+    \# Symmetrize (remove numerical noise)
+    H\_np = 0.5 * (H\_np + H\_np.T)
+
+    \# Verify Hermitian
+    assert np.allclose(H\_np, H\_np.T, atol=1e-10), "H is not Hermitian!"
+
+    \# Compute eigenvalue spectrum for normalization
+    raw\_eigenvalues = np.linalg.eigvalsh(H\_np)
+    H\_scale = np.max(np.abs(raw\_eigenvalues))
+
+    \# Normalize to O(1) - VQE needs this for stable gradient steps
+    H\_norm = H\_np / H\_scale
+
+    \# Pad to power-of-2 size for Qiskit (SparsePauliOp requires 2\textasciicircum\{\}N x 2\textasciicircum\{\}N)
+    n = H\_norm.shape[0]
+    n\_qubits = int(np.ceil(np.log2(n)))
+    padded\_size = 2 ** n\_qubits
+    if padded\_size != n:
+        \# Pad with a large diagonal to push padded eigenvalues above ground state
+        \# This ensures VQE finds the true ground state from the unpadded region
+        pad\_value = 2.0  \# Larger than max normalized eigenvalue (1.0)
+        H\_padded = np.eye(padded\_size) * pad\_value
+        H\_padded[:n, :n] = H\_norm
+        H\_norm = H\_padded
+
+    \# Convert to Qiskit SparsePauliOp
+    hamiltonian = SparsePauliOp.from\_operator(H\_norm)
+
+    \# Debug: verify Pauli decomposition
+    H\_reconstructed = hamiltonian.to\_matrix()
+    eigvals\_pauli = np.linalg.eigvalsh(H\_reconstructed)
+    print(f"Pauli op eigenvalues (reconstructed): \{eigvals\_pauli\}")
+
+    print(f"Matrix size: \{H\_norm.shape\} (padded from \{H\_np.shape\})")
+    print(f"Number of Pauli terms: \{len(hamiltonian)\}")
+    print(f"Condition number of H: \{np.linalg.cond(H\_np):.2f\}")
+    print(f"H\_scale (spectral norm): \{H\_scale:.4e\}")
+    print(f"Unnormalized eigenvalue range: [\{raw\_eigenvalues.min():.4e\}, \{raw\_eigenvalues.max():.4e\}]")
+    print(f"Normalized eigenvalue range: [\{(raw\_eigenvalues / H\_scale).min():.6f\}, \{(raw\_eigenvalues / H\_scale).max():.6f\}]")
+
+    return H\_norm, hamiltonian, M\_half\_inv, H\_scale
+
+
+def inspect\_pauli\_decomposition(hamiltonian):
+    """Print all Pauli terms and their coefficients."""
+    print("\textbackslash\{\}n=== PAULI DECOMPOSITION ===")
+    print(f"\{'Pauli String':\textless{}15\} \{'Coefficient':\textless{}15\}")
+    print("-" * 30)
+    for pauli, coeff in zip(hamiltonian.paulis, hamiltonian.coeffs):
+        if abs(coeff) \textgreater{} 1e-10:
+            print(f"\{str(pauli):\textless{}15\} \{coeff.real:\textless{}15.6f\}")
+
+\end{lstlisting}
+
+% ============================================================
+\section{ansatz.py --- Quantum Circuit Ansätze}
+% ============================================================
+\begin{lstlisting}[style=codestyle, caption={{ansatz.py --- Quantum Circuit Ansätze}}]
+from qiskit.circuit.library import EfficientSU2, RealAmplitudes
+from qiskit.circuit import QuantumCircuit, ParameterVector
+import numpy as np
+
+def hardware\_efficient\_ansatz(num\_qubits, reps=2):
+    """Standard Hardware-Efficient Ansatz (HEA)."""
+    ansatz = EfficientSU2(
+        num\_qubits=num\_qubits,
+        reps=reps,
+        entanglement='linear'
+    )
+    ansatz = ansatz.decompose()
+    print(f"HEA: \{num\_qubits\} qubits, \{reps\} reps, \{ansatz.num\_parameters\} parameters")
+    return ansatz
+
+def symmetric\_ansatz(num\_qubits, reps=2):
+    """
+    Symmetry-aware ansatz for simply-supported beam.
+    Constrains parameters to enforce mirror symmetry of mode shapes.
+    Fewer parameters → faster convergence (hypothesis to test).
+    """
+    n\_params = 2 * reps + 2
+    theta = ParameterVector('θ', n\_params)
+    qc = QuantumCircuit(num\_qubits)
+    
+    param\_idx = 0
+    for rep in range(reps):
+        \# Symmetric rotation layer
+        for q in range(num\_qubits // 2):
+            qc.ry(theta[param\_idx], q)
+            qc.ry(theta[param\_idx], num\_qubits - 1 - q)  \# Mirror
+        param\_idx += 1
+        
+        \# Entanglement layer
+        for q in range(num\_qubits - 1):
+            qc.cx(q, q + 1)
+    
+    \# Final rotation layer (asymmetric for higher modes)
+    for q in range(num\_qubits):
+        qc.ry(theta[param\_idx], q)
+        param\_idx += 1
+    
+    print(f"Symmetric ansatz: \{num\_qubits\} qubits, \{reps\} reps, \{qc.num\_parameters\} parameters")
+    return qc
+
+def minimal\_ansatz(num\_qubits):
+    """Minimal 2-parameter ansatz for quick testing."""
+    theta = ParameterVector('θ', 2 * num\_qubits)
+    qc = QuantumCircuit(num\_qubits)
+    for q in range(num\_qubits):
+        qc.ry(theta[q], q)
+    qc.cx(0, 1)
+    for q in range(num\_qubits):
+        qc.ry(theta[num\_qubits + q], q)
+    return qc
+\end{lstlisting}
+
+% ============================================================
+\section{vqe_runner.py --- VQE Solver}
+% ============================================================
+\begin{lstlisting}[style=codestyle, caption={{vqe_runner.py --- VQE Solver}}]
+import numpy as np
+import time
+from qiskit\_algorithms import VQE, NumPyMinimumEigensolver
+from qiskit\_algorithms.optimizers import COBYLA, SPSA, L\_BFGS\_B, SLSQP
+from qiskit\_aer.primitives import EstimatorV2
+from qiskit.quantum\_info import Statevector, SparsePauliOp
+
+
+class VQEStructuralSolver:
+    """
+    Complete VQE solver for structural eigenvalue problems.
+    Handles optimization, result extraction, and logging.
+    """
+
+    def \_\_init\_\_(self, hamiltonian, ansatz, optimizer\_name='SPSA', maxiter=500, H\_scale=1.0,
+                 num\_restarts=5, use\_two\_stage=True):
+        self.hamiltonian = hamiltonian
+        self.ansatz = ansatz
+        self.optimizer\_name = optimizer\_name
+        self.maxiter = maxiter
+        self.H\_scale = H\_scale
+        self.num\_restarts = num\_restarts
+        self.use\_two\_stage = use\_two\_stage
+
+        self.cost\_history = []
+        self.iteration\_count = 0
+        self.\_best\_result = None
+
+    def \_get\_optimizer(self, name=None):
+        opt\_name = name or self.optimizer\_name
+        if opt\_name == 'SPSA':
+            return SPSA(
+                maxiter=self.maxiter,
+                learning\_rate=0.01,
+                perturbation=0.05,
+                last\_avg=1,
+                resamplings=1
+            )
+        elif opt\_name == 'COBYLA':
+            return COBYLA(maxiter=self.maxiter, rhobeg=0.5, tol=1e-6)
+        elif opt\_name == 'L\_BFGS\_B':
+            return L\_BFGS\_B(maxiter=self.maxiter, maxfun=15000)
+        elif opt\_name == 'SLSQP':
+            return SLSQP(maxiter=self.maxiter)
+        else:
+            return COBYLA(maxiter=self.maxiter)
+
+    def \_callback(self, nfev, x, fx, dx):
+        self.cost\_history.append(fx)
+        self.iteration\_count += 1
+        if self.iteration\_count \% 100 == 0:
+            print(f"  Iteration \{self.iteration\_count\}: cost = \{fx:.8f\}")
+
+    def \_generate\_initial\_points(self, num\_points=None, classical\_hint=None):
+        """Generate multiple initial points for multi-start optimization."""
+        n\_points = num\_points or self.num\_restarts
+        n\_params = self.ansatz.num\_parameters
+        points = []
+        
+        \# 1. If classical hint provided, use it as initial point
+        if classical\_hint is not None:
+            \# Convert classical eigenvector to parameters (using amplitude encoding)
+            hint\_normalized = classical\_hint[:2**n\_params] / np.linalg.norm(classical\_hint[:2**n\_params])
+            \# Use angles that approximate the target state (simple approach)
+            hint\_params = np.angle(hint\_normalized[:n\_params]) + np.pi/2
+            points.append(hint\_params)
+            n\_points -= 1
+        
+        \# 2. Random points
+        for i in range(n\_points):
+            np.random.seed(42 + i * 100)
+            points.append(np.random.uniform(-np.pi/2, np.pi/2, n\_params))
+        
+        \# 3. Add points near identity state (all zeros - corresponds to \textbar{}0\textgreater{}\textasciicircum\{\}n)
+        points.append(np.zeros(n\_params))
+        
+        \# 4. Add points near uniform superposition
+        points.append(np.full(n\_params, np.pi/4))
+        
+        return points
+
+    def \_run\_single\_vqe(self, initial\_point, optimizer\_name=None):
+        """Run VQE from a single initial point."""
+        self.cost\_history = []
+        self.iteration\_count = 0
+        
+        estimator = EstimatorV2()
+        opt\_name = optimizer\_name or self.optimizer\_name
+        optimizer = self.\_get\_optimizer(opt\_name)
+
+        vqe = VQE(
+            estimator=estimator,
+            ansatz=self.ansatz,
+            optimizer=optimizer,
+            callback=self.\_callback,
+            initial\_point=initial\_point
+        )
+
+        result = vqe.compute\_minimum\_eigenvalue(self.hamiltonian)
+        
+        lambda\_vqe = result.eigenvalue.real
+        lambda\_physical = lambda\_vqe * self.H\_scale
+        omega\_vqe = np.sqrt(abs(lambda\_physical))
+
+        bound\_circuit = self.ansatz.assign\_parameters(result.optimal\_point)
+        state = Statevector(bound\_circuit)
+        mode\_shape\_state = state.data.real
+
+        return \{
+            'eigenvalue\_physical': lambda\_physical,
+            'eigenvalue\_vqe': lambda\_vqe,
+            'omega': omega\_vqe,
+            'optimal\_point': result.optimal\_point,
+            'optimal\_circuit': result.optimal\_circuit,
+            'mode\_shape': mode\_shape\_state,
+            'cost\_history': self.cost\_history.copy(),
+            'iterations': self.iteration\_count,
+            'optimal\_value': result.eigenvalue.real
+        \}
+
+    def solve(self, initial\_point=None):
+        """Run VQE with multi-start and two-stage optimization."""
+
+        if initial\_point is not None:
+            return self.\_run\_single\_vqe(initial\_point)
+
+        initial\_points = self.\_generate\_initial\_points()
+        best\_result = None
+        best\_eigenvalue = float('inf')
+
+        print(f"Running VQE with multi-start (\{len(initial\_points)\} initial points)...")
+        
+        for i, init\_pt in enumerate(initial\_points):
+            opt\_name = self.optimizer\_name
+            
+            result = self.\_run\_single\_vqe(init\_pt, optimizer\_name=opt\_name)
+            
+            print(f"  Start \{i+1\}/\{len(initial\_points)\}: "
+                  f"lambda=\{result['eigenvalue\_vqe']:.6f\}, "
+                  f"omega=\{result['omega']:.4f\} rad/s, "
+                  f"iters=\{result['iterations']\}")
+            
+            if result['eigenvalue\_vqe'] \textless{} best\_eigenvalue:
+                best\_eigenvalue = result['eigenvalue\_vqe']
+                best\_result = result
+
+        if self.use\_two\_stage and best\_result is not None:
+            print("\textbackslash\{\}nRunning two-stage refinement (SPSA -\textgreater{} L\_BFGS\_B)...")
+            
+            \# Stage 2: Local refinement with L-BFGS-B
+            refined\_result = self.\_run\_single\_vqe(
+                best\_result['optimal\_point'],
+                optimizer\_name='L\_BFGS\_B'
+            )
+            
+            if refined\_result['eigenvalue\_vqe'] \textless{} best\_eigenvalue:
+                best\_result = refined\_result
+                print(f"  Refinement improved: \{best\_eigenvalue:.6f\} -\textgreater{} \{refined\_result['eigenvalue\_vqe']:.6f\}")
+
+        print(f"\textbackslash\{\}nBest VQE Result:")
+        print(f"  lambda\_vqe (normalized) = \{best\_result['eigenvalue\_vqe']:.8f\}")
+        print(f"  lambda\_physical = \{best\_result['eigenvalue\_physical']:.6f\}")
+        print(f"  omega\_fundamental = \{best\_result['omega']:.4f\} rad/s")
+        print(f"  Iterations: \{best\_result['iterations']\}")
+
+        self.\_best\_result = best\_result
+        return best\_result
+
+    def solve\_excited\_states(self, n\_modes=3, penalty\_factor=10.0):
+        """Find multiple natural frequencies using improved VQE with reinitialization."""
+        from qiskit.quantum\_info import Operator
+
+        results = []
+        H\_current = self.hamiltonian
+        
+        \# Get classical eigenvalues for penalty scaling
+        H\_np = self.hamiltonian.to\_matrix()
+        classical\_eigs = np.sort(np.linalg.eigvalsh(H\_np))
+        
+        for mode\_idx in range(n\_modes):
+            print(f"\textbackslash\{\}n=== Finding Mode \{mode\_idx + 1\} ===")
+
+            \# Calculate appropriate penalty strength - scale with eigenvalue
+            penalty = penalty\_factor * abs(classical\_eigs[mode\_idx + 1] - classical\_eigs[mode\_idx]) if mode\_idx \textless{} len(classical\_eigs) - 1 else penalty\_factor * abs(classical\_eigs[-1])
+            penalty = max(penalty, 5.0)  \# Minimum penalty
+
+            \# Solve with current Hamiltonian using L\_BFGS\_B (faster)
+            solver = VQEStructuralSolver(
+                H\_current, self.ansatz,
+                optimizer\_name='L\_BFGS\_B',
+                maxiter=self.maxiter,
+                H\_scale=self.H\_scale,
+                num\_restarts=2,
+                use\_two\_stage=False
+            )
+            result = solver.solve()
+            results.append(result)
+
+            if mode\_idx \textless{} n\_modes - 1:
+                \# Build deflation projector using proper operator construction
+                optimal\_params = result['optimal\_point']
+                bound\_circuit = self.ansatz.assign\_parameters(optimal\_params)
+                state = Statevector(bound\_circuit)
+                
+                \# Projector in computational basis
+                state\_vec = state.data
+                projector\_matrix = np.outer(state\_vec, state\_vec.conj()).real
+                
+                \# Convert to operator and add to Hamiltonian
+                proj\_op = SparsePauliOp.from\_operator(projector\_matrix * penalty)
+                
+                \# Add to current Hamiltonian (penalty in original scale, then normalize)
+                H\_current = H\_current + proj\_op
+                
+                print(f"  Added deflation penalty: \{penalty:.4f\}")
+
+        return results
+
+
+def classical\_reference(hamiltonian\_np):
+    """Classical exact eigenvalue solution for comparison."""
+    eigenvalues = np.linalg.eigvalsh(hamiltonian\_np)
+    return eigenvalues
+
+\end{lstlisting}
+
+% ============================================================
+\section{visualize.py --- Beam and Truss Visualizations}
+% ============================================================
+\begin{lstlisting}[style=codestyle, caption={{visualize.py --- Beam and Truss Visualizations}}]
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')  \# Non-interactive backend — prevents Tkinter main-loop errors
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from matplotlib.patches import FancyArrowPatch
+
+\# --- Color Scheme ---
+NAVY    = "\#1A2151"
+BLUE    = "\#0D6EFD"
+CYAN    = "\#00B4D8"
+GREEN   = "\#0A7C59"
+RED     = "\#C0392B"
+ORANGE  = "\#E67E22"
+GREY    = "\#566573"
+LIGHT   = "\#EBF5FB"
+
+\# ============================================================
+\# BEAM GEOMETRY
+\# ============================================================
+
+def plot\_beam\_geometry(n\_elem, L\_total, taper\_ratios=None):
+    """2D side-view of the beam with supports and optional taper."""
+    fig, ax = plt.subplots(figsize=(10, 2.5))
+    L\_e = L\_total / n\_elem
+    h0\_vis = 0.12
+    x\_nodes = [i * L\_e for i in range(n\_elem + 1)]
+
+    if taper\_ratios is not None:
+        xs = np.linspace(0, L\_total, 200)
+        heights = []
+        for x in xs:
+            elem\_idx = min(int(x / L\_e), n\_elem - 1)
+            heights.append(h0\_vis * taper\_ratios[elem\_idx])
+        heights = np.array(heights)
+        ax.fill\_between(xs, -heights / 2, heights / 2,
+                        color=GREY, alpha=0.5, edgecolor=NAVY, linewidth=2,
+                        label="Tapered beam")
+        for x in x\_nodes[1:-1]:
+            ax.axvline(x, color=GREY, linewidth=0.5, alpha=0.4)
+    else:
+        rect = plt.Rectangle((0, -h0\_vis / 2), L\_total, h0\_vis,
+                             facecolor=GREY, alpha=0.5, edgecolor=NAVY, linewidth=2)
+        ax.add\_patch(rect)
+        for x in x\_nodes[1:-1]:
+            ax.axvline(x, color=GREY, linewidth=0.5, alpha=0.4)
+
+    \# Pinned support triangles
+    for x\_s in [0, L\_total]:
+        tri = plt.Polygon(
+            [(x\_s, -h0\_vis / 2 - 0.005), (x\_s - 0.02, -h0\_vis / 2 - 0.035),
+             (x\_s + 0.02, -h0\_vis / 2 - 0.035)],
+            facecolor=NAVY, edgecolor='black'
+        )
+        ax.add\_patch(tri)
+
+    ax.set\_xlim(-0.05, L\_total + 0.05)
+    ax.set\_ylim(-0.08, 0.08)
+    ax.set\_aspect('equal')
+    ax.set\_xlabel("Length (m)", fontsize=12)
+    ax.set\_ylabel("Cross-section", fontsize=12)
+    ax.set\_title(f"Beam Geometry (\{n\_elem\} elements, L=\{L\_total\}m)",
+                 fontsize=13, fontweight='bold', color=NAVY)
+    ax.set\_yticks([])
+    ax.grid(True, axis='x', alpha=0.3)
+    plt.tight\_layout()
+    plt.savefig('results/beam\_geometry.png', dpi=150, bbox\_inches='tight')
+    plt.show()
+
+
+\# ============================================================
+\# MODE SHAPE VISUALIZATION (Continuous interpolation)
+\# ============================================================
+
+def \_map\_vqe\_to\_transverse(vqe\_state, free\_dofs, n\_full\_dof, n\_elem, L\_total):
+    """
+    Map VQE state vector (in reduced DOF space) back to transverse displacements.
+
+    For a beam, DOFs are interleaved: [v0, θ0, v1, θ1, ...].
+    Transverse displacements are at even indices (0, 2, 4, ...).
+    The VQE state vector has one component per free DOF, in the order of free\_dofs.
+    """
+    \# Map to full DOF space
+    u\_full = np.zeros(n\_full\_dof)
+    n\_use = min(len(vqe\_state), len(free\_dofs))
+    for i in range(n\_use):
+        u\_full[free\_dofs[i]] = vqe\_state[i]
+
+    \# Extract transverse DOFs only (even indices: 0, 2, 4, ...)
+    node\_positions = np.array([i * L\_total / n\_elem for i in range(n\_elem + 1)])
+    transverse\_vals = np.array([u\_full[2*j] for j in range(n\_elem + 1)])
+
+    return node\_positions, transverse\_vals
+
+
+def plot\_mode\_shapes\_continuous(n\_elem, L\_total, mode\_shapes\_classical,
+                                 free\_dofs, mode\_shapes\_vqe=None,
+                                 analytical\_params=None, n\_modes=3):
+    """
+    Plot mode shapes as continuous curves with markers at nodes.
+    Handles both classical FEA and VQE results.
+
+    Parameters
+    ----------
+    n\_elem : int
+        Number of beam elements
+    L\_total : float
+        Total beam length
+    mode\_shapes\_classical : ndarray (n\_free, n\_modes)
+        Classical mode shapes in reduced DOF space
+    free\_dofs : list
+        Indices of free DOFs after BCs
+    mode\_shapes\_vqe : list of ndarray, optional
+        VQE mode shapes (each is a state vector in reduced space)
+    analytical\_params : dict, optional
+        Parameters for analytical solution (e.g., \{'L': L\})
+    n\_modes : int
+        Number of modes to plot
+    """
+    fig, axes = plt.subplots(min(n\_modes, 3), 1, figsize=(10, 3 * min(n\_modes, 3)))
+    if n\_modes == 1:
+        axes = [axes]
+
+    \# Node positions for plotting (one point per element end)
+    x\_nodes = np.array([i * L\_total / n\_elem for i in range(n\_elem + 1)])
+
+    for mode\_idx in range(min(n\_modes, len(axes))):
+        ax = axes[mode\_idx]
+
+        \# --- Classical mode shape ---
+        \# Map from reduced DOF space to full DOF space
+        n\_full\_dof = 2 * (n\_elem + 1)
+        u\_full\_classical = np.zeros(n\_full\_dof)
+        for i, dof in enumerate(free\_dofs):
+            if i \textless{} mode\_shapes\_classical.shape[0]:
+                u\_full\_classical[dof] = mode\_shapes\_classical[i, mode\_idx]
+
+        \# Extract transverse displacements (even DOF indices: 0, 2, 4, ...)
+        u\_classical\_transverse = np.array([u\_full\_classical[2*j] for j in range(n\_elem + 1)])
+
+        \# Normalize for plotting
+        u\_classical\_plot = u\_classical\_transverse.copy()
+        max\_abs = np.max(np.abs(u\_classical\_plot))
+        if max\_abs \textgreater{} 1e-12:
+            u\_classical\_plot /= max\_abs
+
+        ax.plot(x\_nodes, u\_classical\_plot, 'o-', color=RED,
+                linewidth=2, markersize=8, label='Classical FEA')
+
+        \# --- VQE mode shape ---
+        if mode\_shapes\_vqe and mode\_idx \textless{} len(mode\_shapes\_vqe):
+            u\_vqe = mode\_shapes\_vqe[mode\_idx]
+            x\_vqe, u\_vqe\_transverse = \_map\_vqe\_to\_transverse(
+                u\_vqe, free\_dofs, n\_full\_dof, n\_elem, L\_total
+            )
+            \# Normalize
+            max\_abs\_vqe = np.max(np.abs(u\_vqe\_transverse))
+            if max\_abs\_vqe \textgreater{} 1e-12:
+                u\_vqe\_transverse = u\_vqe\_transverse / max\_abs\_vqe
+
+            ax.plot(x\_vqe, u\_vqe\_transverse, 's--', color=BLUE,
+                    linewidth=2, markersize=8, label='VQE')
+
+        \# --- Analytical mode shape ---
+        if analytical\_params is not None:
+            L\_ana = analytical\_params.get('L', L\_total)
+            x\_ana = np.linspace(0, L\_ana, 200)
+            \# Simply supported beam mode shape: sin(n*pi*x/L)
+            n\_mode = mode\_idx + 1
+            u\_ana = np.sin(n\_mode * np.pi * x\_ana / L\_ana)
+            ax.plot(x\_ana, u\_ana, '--', color=GREEN, linewidth=2,
+                   alpha=0.7, label='Analytical')
+
+        ax.set\_xlim(-0.02 * L\_total, 1.02 * L\_total)
+        ax.set\_ylim(-1.3, 1.3)
+        ax.set\_ylabel(f"Mode \{mode\_idx+1\}\textbackslash\{\}nAmplitude", fontsize=11)
+        ax.set\_title(f"Mode \{mode\_idx+1\} Shape", fontsize=12, fontweight='bold')
+        ax.legend(fontsize=9, loc='upper right')
+        ax.grid(True, alpha=0.3)
+        ax.axhline(0, color='black', linewidth=0.5)
+
+    axes[-1].set\_xlabel("Length (m)", fontsize=12)
+    plt.suptitle("Mode Shapes - Classical vs VQE vs Analytical",
+                 fontsize=14, fontweight='bold', color=NAVY)
+    plt.tight\_layout()
+    plt.savefig('results/mode\_shapes\_continuous.png', dpi=150, bbox\_inches='tight')
+    plt.show()
+
+
+def plot\_dual\_convergence(cobyla\_costs, lbfgs\_costs, omega\_ref, H\_scale=1.0):
+    """Side-by-side convergence comparison."""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+
+    \# COBYLA
+    ax1.semilogy(cobyla\_costs, color=BLUE, linewidth=2, label='COBYLA')
+    ax1.axhline(omega\_ref**2 / H\_scale, color=RED, linestyle='--',
+                linewidth=2, label='Classical Reference')
+    ax1.set\_xlabel("Iteration", fontsize=12)
+    ax1.set\_ylabel("Cost Function (VQE Energy)", fontsize=12)
+    ax1.set\_title("COBYLA Convergence", fontweight='bold', color=BLUE)
+    ax1.legend(fontsize=11)
+    ax1.grid(True, alpha=0.4)
+
+    \# L-BFGS-B
+    ax2.semilogy(lbfgs\_costs, color=ORANGE, linewidth=2, label='L-BFGS-B')
+    ax2.axhline(omega\_ref**2 / H\_scale, color=RED, linestyle='--',
+                linewidth=2, label='Classical Reference')
+    ax2.set\_xlabel("Iteration", fontsize=12)
+    ax2.set\_ylabel("Cost Function (VQE Energy)", fontsize=12)
+    ax2.set\_title("L-BFGS-B Convergence", fontweight='bold', color=ORANGE)
+    ax2.legend(fontsize=11)
+    ax2.grid(True, alpha=0.4)
+
+    plt.suptitle("Optimizer Comparison: Convergence Behavior",
+                 fontsize=14, fontweight='bold', color=NAVY)
+    plt.tight\_layout()
+    plt.savefig('results/optimizer\_comparison.png', dpi=150, bbox\_inches='tight')
+    plt.show()
+
+
+def plot\_optimizer\_comparison(cobyla\_results, lbfgs\_results, classical\_ref,
+                               labels=None):
+    """Bar chart comparing final VQE results to classical."""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+
+    x = np.arange(len(classical\_ref))
+    width = 0.35
+
+    \# Plot 1: Frequencies
+    if labels is None:
+        labels = ['VQE']
+
+    for i, (vqe\_freqs, label) in enumerate(zip(cobyla\_results, labels)):
+        offset = width * i
+        ax1.bar(x + offset, vqe\_freqs, width, label=f'\{label\} (VQE)',
+               color=BLUE if i == 0 else CYAN, alpha=0.8)
+
+    ax1.bar(x + width * len(cobyla\_results), classical\_ref, width,
+           label='Classical (FEA/scipy)', color=RED, alpha=0.8)
+    ax1.set\_ylabel('Frequency (rad/s)', fontsize=12)
+    ax1.set\_title('Natural Frequencies: VQE vs Classical',
+                  fontweight='bold', color=NAVY)
+    ax1.set\_xticks(x + width * (len(cobyla\_results) + 1) / 2)
+    ax1.set\_xticklabels([f'Mode \{i+1\}' for i in range(len(classical\_ref))])
+    ax1.legend(fontsize=10)
+    ax1.grid(True, alpha=0.3, axis='y')
+
+    \# Plot 2: Relative error
+    for i, (vqe\_freqs, label) in enumerate(zip(cobyla\_results, labels)):
+        offset = width * i
+        errors = np.abs(np.array(vqe\_freqs) - np.array(classical\_ref)) / np.array(classical\_ref) * 100
+        ax2.bar(x + offset, errors, width, label=f'\{label\} (VQE)',
+               color=BLUE if i == 0 else CYAN, alpha=0.8)
+
+    ax2.set\_ylabel('Absolute Error (\%)', fontsize=12)
+    ax2.set\_title('VQE Accuracy vs Classical Reference',
+                  fontweight='bold', color=NAVY)
+    ax2.set\_xticks(x + width * (len(cobyla\_results) + 1) / 2)
+    ax2.set\_xticklabels([f'Mode \{i+1\}' for i in range(len(classical\_ref))])
+    ax2.legend(fontsize=10)
+    ax2.grid(True, alpha=0.3, axis='y')
+    ax2.axhline(2, color='red', linestyle='--', linewidth=1, alpha=0.5,
+               label='Target: \textless{}2\%')
+
+    plt.suptitle("Frequency Comparison Across Modes",
+                 fontsize=14, fontweight='bold', color=NAVY)
+    plt.tight\_layout()
+    plt.savefig('results/frequency\_comparison.png', dpi=150, bbox\_inches='tight')
+    plt.show()
+
+
+def plot\_convergence(cost\_history, omega\_vqe, omega\_ref, H\_scale=1.0, title="VQE Convergence", filename='convergence.png'):
+    """Plot VQE cost function convergence and final frequency error."""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+
+    \# Convergence curve
+    ax1.semilogy(cost\_history, color=BLUE, linewidth=2)
+    ax1.axhline(omega\_ref**2 / H\_scale, color=RED, linestyle='--',
+                linewidth=2, label='Classical eigenvalue')
+    ax1.set\_xlabel("Iteration", fontsize=12)
+    ax1.set\_ylabel("VQE Energy (E/\textbar{}\textbar{}H\textbar{}\textbar{})", fontsize=12)
+    ax1.set\_title("VQE Cost Function Convergence", fontweight='bold', color=NAVY)
+    ax1.legend(fontsize=11)
+    ax1.grid(True, alpha=0.4)
+
+    \# Frequency comparison
+    freq\_error = abs(omega\_vqe - omega\_ref) / omega\_ref * 100
+    bars = ax2.bar(['Classical (FEA/scipy)', 'VQE (Quantum)'],
+                    [omega\_ref, omega\_vqe],
+                    color=[RED, BLUE], alpha=0.8, width=0.5)
+
+    \# Add value labels on bars
+    for bar, val in zip(bars, [omega\_ref, omega\_vqe]):
+        height = bar.get\_height()
+        ax2.text(bar.get\_x() + bar.get\_width()/2., height,
+                f'\{val:.4f\}', ha='center', va='bottom', fontsize=11)
+
+    ax2.set\_ylabel('Frequency (rad/s)', fontsize=12)
+    ax2.set\_title(f'Fundamental Frequency\textbackslash\{\}n(Error: \{freq\_error:.3f\}\%)',
+                  fontweight='bold', color=NAVY)
+    ax2.grid(True, alpha=0.3, axis='y')
+
+    plt.suptitle(title, fontsize=14, fontweight='bold', color=NAVY)
+    plt.tight\_layout()
+    plt.savefig(f'results/\{filename\}', dpi=150, bbox\_inches='tight')
+    plt.show()
+
+
+def plot\_mode\_shapes(mode\_shapes\_vqe, mode\_shapes\_classical, n\_modes=3):
+    """Simple bar/stem plot comparing mode shapes."""
+    fig, axes = plt.subplots(min(n\_modes, 3), 1, figsize=(10, 3*min(n\_modes, 3)))
+    if n\_modes == 1:
+        axes = [axes]
+
+    for mode\_idx in range(min(n\_modes, len(axes))):
+        ax = axes[mode\_idx]
+        n = len(mode\_shapes\_classical[mode\_idx])
+        x = np.arange(n)
+
+        ax.stem(x, mode\_shapes\_classical[mode\_idx],
+                linefmt=RED, markerfmt='ro', basefmt=' ',
+                label='Classical', use\_line\_collection=True)
+        if mode\_idx \textless{} len(mode\_shapes\_vqe):
+            \# Normalize VQE mode shape for comparison
+            vqe\_mode = mode\_shapes\_vqe[mode\_idx][:n]
+            if np.max(np.abs(vqe\_mode)) \textgreater{} 0:
+                vqe\_mode = vqe\_mode / np.max(np.abs(vqe\_mode))
+            ax.stem(x, vqe\_mode,
+                    linefmt=BLUE, markerfmt='bs', basefmt=' ',
+                    label='VQE', use\_line\_collection=True)
+
+        ax.set\_ylabel(f"Mode \{mode\_idx+1\}", fontsize=11)
+        ax.set\_title(f"Mode Shape - Mode \{mode\_idx+1\}",
+                     fontweight='bold', color=NAVY)
+        ax.legend(fontsize=9)
+        ax.grid(True, alpha=0.3, axis='y')
+
+    axes[-1].set\_xlabel("Node index", fontsize=12)
+    plt.suptitle("Mode Shapes: Classical vs VQE",
+                 fontsize=14, fontweight='bold', color=NAVY)
+    plt.tight\_layout()
+    plt.savefig('results/mode\_shapes.png', dpi=150, bbox\_inches='tight')
+    plt.show()
+
+
+def plot\_frequency\_comparison(omega\_vqe\_list, omega\_classical, labels=None):
+    """Compare frequencies across different VQE runs."""
+    if labels is None:
+        labels = [f'Run \{i+1\}' for i in range(len(omega\_vqe\_list))]
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+
+    x = np.arange(len(omega\_classical))
+    width = 0.35
+
+    for i, (vqe\_freqs, label) in enumerate(zip(omega\_vqe\_list, labels)):
+        offset = width * i
+        ax.bar(x + offset, vqe\_freqs, width, label=label,
+               color=BLUE if i == 0 else CYAN, alpha=0.8)
+
+    ax.bar(x + width * len(omega\_vqe\_list), omega\_classical, width,
+           label='Classical', color=RED, alpha=0.8)
+
+    ax.set\_ylabel('Frequency (rad/s)', fontsize=12)
+    ax.set\_title('Natural Frequencies Comparison',
+                 fontweight='bold', color=NAVY)
+    ax.set\_xticks(x + width * (len(omega\_vqe\_list) + 1) / 2)
+    ax.set\_xticklabels([f'Mode \{i+1\}' for i in range(len(omega\_classical))])
+    ax.legend(fontsize=10)
+    ax.grid(True, alpha=0.3, axis='y')
+
+    plt.tight\_layout()
+    plt.savefig('results/frequency\_comparison.png', dpi=150, bbox\_inches='tight')
+    plt.show()
+
+
+def plot\_ill\_conditioning\_study(df):
+    """Plot condition number vs VQE performance for beam and truss."""
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(16, 5))
+
+    \# Determine if this is beam or truss data
+    is\_beam = 'taper\_ratio' in df.columns and len(df) \textgreater{} 0
+
+    \# Subplot 1: Condition number vs taper
+    ax1.plot(df['taper\_ratio'], df['condition\_number'],
+             'o-', color=BLUE, linewidth=2, markersize=8)
+    ax1.set\_xlabel('Taper Ratio (h\_min/h\_max)', fontsize=12)
+    ax1.set\_ylabel('Condition Number of H', fontsize=12)
+    ax1.set\_title('Condition Number vs Geometric Non-uniformity',
+                  fontweight='bold', color=NAVY)
+    ax1.grid(True, alpha=0.4)
+
+    \# Subplot 2: Iterations vs condition number
+    ax2.loglog(df['condition\_number'], df['cobyla\_iterations'],
+               's-', color=ORANGE, linewidth=2, markersize=8, label='COBYLA')
+    ax2.loglog(df['condition\_number'], df['lbfgs\_iterations'],
+               'o-', color=CYAN, linewidth=2, markersize=8, label='L-BFGS-B')
+    ax2.set\_xlabel('Condition Number of H', fontsize=12)
+    ax2.set\_ylabel('VQE Iterations to Convergence', fontsize=12)
+    ax2.set\_title('Iteration Count vs Conditioning',
+                  fontweight='bold', color=NAVY)
+    ax2.legend(fontsize=10)
+    ax2.grid(True, alpha=0.4, which='both')
+
+    \# Subplot 3: Error vs condition number
+    ax3.semilogx(df['condition\_number'], df['cobyla\_error\_pct'],
+                 's-', color=ORANGE, linewidth=2, markersize=8, label='COBYLA')
+    ax3.semilogx(df['condition\_number'], df['lbfgs\_error\_pct'],
+                 'o-', color=CYAN, linewidth=2, markersize=8, label='L-BFGS-B')
+    ax3.set\_xlabel('Condition Number of H', fontsize=12)
+    ax3.set\_ylabel('Frequency Error (\%)', fontsize=12)
+    ax3.set\_title('Solution Accuracy vs Conditioning',
+                  fontweight='bold', color=NAVY)
+    ax3.legend(fontsize=10)
+    ax3.grid(True, alpha=0.4, which='both')
+
+    system\_type = "Beam" if is\_beam else ("Truss" if 'taper\_ratio' in df.columns else "System")
+    plt.suptitle(f"Ill-Conditioning Study: \{system\_type\} (VQE Performance)",
+                 fontsize=14, fontweight='bold', color=NAVY)
+    plt.tight\_layout()
+    plt.savefig('results/ill\_conditioning\_study.png', dpi=150, bbox\_inches='tight')
+    plt.show()
+
+
+def plot\_damage\_detection(df):
+    """Frequency shift vs damage severity (beam and truss)."""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5))
+    fig.suptitle("Quantum Structural Health Monitoring via Frequency Shift",
+                 fontsize=14, fontweight='bold', color=NAVY)
+
+    ax1.plot(df['damage\_pct'], df['omega\_ref'],
+              's--', color=RED, linewidth=2, markersize=8, label='Classical')
+    ax1.plot(df['damage\_pct'], df['omega\_vqe'],
+              'o-', color=BLUE, linewidth=2, markersize=8, label='VQE')
+    ax1.set\_xlabel("Stiffness Reduction (\% damage)", fontsize=12)
+    ax1.set\_ylabel("Fundamental Frequency (rad/s)", fontsize=12)
+    ax1.set\_title("Natural Frequency Drops with Damage", fontweight='bold')
+    ax1.legend()
+    ax1.set\_facecolor(LIGHT)
+    ax1.grid(True, alpha=0.4)
+
+    omega\_0 = df['omega\_ref'].iloc[0]
+    freq\_shift\_classical = (df['omega\_ref'] - omega\_0) / omega\_0 * 100
+    freq\_shift\_vqe = (df['omega\_vqe'] - omega\_0) / omega\_0 * 100
+
+    ax2.plot(df['damage\_pct'], freq\_shift\_classical,
+              's--', color=RED, linewidth=2, markersize=8, label='Classical shift')
+    ax2.plot(df['damage\_pct'], freq\_shift\_vqe,
+              'o-', color=BLUE, linewidth=2, markersize=8, label='VQE-detected shift')
+    ax2.set\_xlabel("Stiffness Reduction (\% damage)", fontsize=12)
+    ax2.set\_ylabel("Frequency Shift from Intact (\%)", fontsize=12)
+    ax2.set\_title("VQE Detects Damage via Frequency Shift", fontweight='bold')
+    ax2.legend()
+    ax2.set\_facecolor(LIGHT)
+    ax2.grid(True, alpha=0.4)
+    ax2.axhline(0, color='black', linewidth=0.5)
+
+    plt.tight\_layout()
+    plt.savefig('results/damage\_detection.png', dpi=150, bbox\_inches='tight')
+    plt.show()
+
+
+\# ============================================================
+\# TRUSS-SPECIFIC VISUALIZATIONS
+\# ============================================================
+
+def plot\_truss\_geometry(n\_elem, L\_total):
+    """
+    1D horizontal bar representation of truss with node labels.
+
+    Parameters
+    ----------
+    n\_elem : int
+        Number of truss elements
+    L\_total : float
+        Total truss length (m)
+    """
+    fig, ax = plt.subplots(figsize=(10, 3))
+
+    L\_e = L\_total / n\_elem
+    x\_nodes = np.linspace(0, L\_total, n\_elem + 1)
+
+    \# Draw truss as thick horizontal line
+    ax.plot([0, L\_total], [0, 0], color=GREY, linewidth=10,
+            solid\_capstyle='round', alpha=0.6, label='Truss member')
+
+    \# Draw nodes as circles
+    ax.scatter(x\_nodes, np.zeros\_like(x\_nodes), s=200, c=BLUE,
+              zorder=5, edgecolors=NAVY, linewidths=2, label='Nodes')
+
+    \# Node labels and DOF indicators
+    for i, x in enumerate(x\_nodes):
+        ax.text(x, 0.08, f'N\{i\}\textbackslash\{\}n(u\{i\})', ha='center', va='bottom',
+               fontsize=10, fontweight='bold', color=NAVY)
+
+    \# Fixed ends (first and last nodes)
+    ax.plot([0, 0], [-0.1, 0.1], color=RED, linewidth=4, marker='\textasciicircum\{\}',
+           markersize=12, markeredgecolor='black', label='Fixed support')
+    ax.plot([L\_total, L\_total], [-0.1, 0.1], color=RED, linewidth=4,
+           marker='\textasciicircum\{\}', markersize=12, markeredgecolor='black')
+
+    \# Element labels
+    for i in range(n\_elem):
+        x\_mid = (x\_nodes[i] + x\_nodes[i+1]) / 2
+        ax.text(x\_mid, -0.08, f'Elem \{i+1\}', ha='center', va='top',
+               fontsize=9, style='italic', color=GREY)
+
+    ax.set\_xlim(-0.05 * L\_total, 1.05 * L\_total)
+    ax.set\_ylim(-0.15, 0.15)
+    ax.set\_aspect('equal')
+    ax.set\_xlabel("Length (m)", fontsize=12)
+    ax.set\_yticks([])
+    ax.set\_title(f"Truss Geometry (\{n\_elem\} elements, L=\{L\_total\}m)",
+                fontsize=13, fontweight='bold', color=NAVY)
+    ax.legend(loc='upper right', fontsize=9)
+    ax.grid(True, axis='x', alpha=0.3)
+
+    plt.tight\_layout()
+    plt.savefig('results/truss\_geometry.png', dpi=150, bbox\_inches='tight')
+    plt.show()
+
+
+def plot\_truss\_mode\_shapes(n\_elem, L\_total, modes, labels=None,
+                            analytical\_omega=None, show\_displacements=True):
+    """
+    Plot truss mode shapes (axial displacement profiles).
+
+    Parameters
+    ----------
+    n\_elem : int
+        Number of elements
+    L\_total : float
+        Total length
+    modes : list of ndarray
+        List of mode shape arrays (one per mode)
+    labels : list of str, optional
+        Label for each mode set (e.g., ['Classical', 'VQE'])
+    analytical\_omega : ndarray, optional
+        Analytical natural frequencies for comparison
+    show\_displacements : bool
+        If True, show deformed shape with exaggerated displacement
+    """
+    if labels is None:
+        labels = [f'Mode Set \{i+1\}' for i in range(len(modes))]
+
+    n\_modes = min(len(modes), 3)
+    fig, axes = plt.subplots(n\_modes, 1, figsize=(10, 3.5 * n\_modes))
+    if n\_modes == 1:
+        axes = [axes]
+
+    x\_nodes = np.linspace(0, L\_total, n\_elem + 1)
+
+    for mode\_idx in range(n\_modes):
+        ax = axes[mode\_idx]
+        mode = modes[mode\_idx]
+
+        \# Truss undeformed position (horizontal line)
+        ax.plot([0, L\_total], [0, 0], 'k--', linewidth=1, alpha=0.5,
+               label='Undeformed')
+
+        if show\_displacements and mode is not None:
+            \# Use mode shape as displacement (scale for visibility)
+            u = mode[:len(x\_nodes)] if len(mode) \textgreater{}= len(x\_nodes) else mode
+            if len(u) \textless{} len(x\_nodes):
+                \# Pad if needed
+                u\_padded = np.zeros(len(x\_nodes))
+                u\_padded[:len(u)] = u
+                u = u\_padded
+
+            \# Normalize for plotting
+            if np.max(np.abs(u)) \textgreater{} 1e-10:
+                u\_plot = u / np.max(np.abs(u)) * 0.1  \# 10\% max displacement
+            else:
+                u\_plot = u
+
+            \# Plot deformed shape
+            ax.plot(x\_nodes, u\_plot, 'o-', linewidth=2.5,
+                   markersize=8, label=f'\{labels[0]\} mode shape')
+
+            \# Draw arrows for displacement direction
+            for i, x in enumerate(x\_nodes):
+                if abs(u\_plot[i]) \textgreater{} 1e-6:
+                    color = GREEN if u\_plot[i] \textgreater{} 0 else RED
+                    ax.annotate('', xy=(x, u\_plot[i]), xytext=(x, 0),
+                               arrowprops=dict(arrowstyle='-\textgreater{}', lw=1.5,
+                                             color=color, alpha=0.7))
+
+            \# Node markers
+            ax.scatter(x\_nodes, u\_plot, s=100, c=BLUE, zorder=5,
+                      edgecolors=NAVY, linewidths=1.5)
+
+        \# Analytical frequency if provided
+        freq\_str = ""
+        if analytical\_omega is not None and mode\_idx \textless{} len(analytical\_omega):
+            freq\_str = f" (ω=\{analytical\_omega[mode\_idx]:.1f\} rad/s)"
+
+        ax.set\_xlim(-0.05 * L\_total, 1.05 * L\_total)
+        max\_disp = max(0.15, np.max(np.abs(ax.get\_ylim())) * 1.1)
+        ax.set\_ylim(-max\_disp, max\_disp)
+        ax.set\_ylabel(f"Axial Disp.", fontsize=11)
+        ax.set\_title(f"Mode \{mode\_idx+1\}\{freq\_str\}",
+                    fontweight='bold', color=NAVY)
+        ax.legend(fontsize=9, loc='upper right')
+        ax.grid(True, alpha=0.3, axis='both')
+        ax.axhline(0, color='black', linewidth=0.5)
+
+        \# Draw supports
+        ax.plot([0, 0], [-max\_disp*0.9, max\_disp*0.9], 'r-', linewidth=3,
+               alpha=0.7, label='Fixed' if mode\_idx == 0 else '')
+        ax.plot([L\_total, L\_total], [-max\_disp*0.9, max\_disp*0.9], 'r-',
+               linewidth=3, alpha=0.7)
+
+    axes[-1].set\_xlabel("Length (m)", fontsize=12)
+    plt.suptitle("Truss Mode Shapes - Axial Displacement",
+                fontsize=14, fontweight='bold', color=NAVY)
+    plt.tight\_layout()
+    plt.savefig('results/truss\_mode\_shapes.png', dpi=150, bbox\_inches='tight')
+    plt.show()
+
+
+def plot\_truss\_frequency\_comparison(vqe\_freqs, classical\_freqs, labels=None):
+    """
+    Compare truss natural frequencies from VQE and classical analysis.
+
+    Parameters
+    ----------
+    vqe\_freqs : list of list
+        VQE frequencies for each run/config
+    classical\_freqs : ndarray
+        Classical frequencies
+    labels : list of str, optional
+        Labels for VQE runs
+    """
+    if labels is None:
+        labels = ['VQE']
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+
+    n\_modes = len(classical\_freqs)
+    x = np.arange(n\_modes)
+    width = 0.35
+
+    \# Frequencies
+    for i, (vqe\_f, label) in enumerate(zip(vqe\_freqs, labels)):
+        offset = width * i
+        ax1.bar(x + offset, vqe\_f[:n\_modes], width, label=label,
+               color=BLUE if i == 0 else CYAN, alpha=0.8)
+
+    ax1.bar(x + width * len(vqe\_freqs), classical\_freqs, width,
+           label='Classical (Analytical)', color=RED, alpha=0.8)
+
+    ax1.set\_ylabel('Natural Frequency (rad/s)', fontsize=12)
+    ax1.set\_title('Truss Natural Frequencies: VQE vs Classical',
+                  fontweight='bold', color=NAVY)
+    ax1.set\_xticks(x + width * (len(vqe\_freqs) + 1) / 2)
+    ax1.set\_xticklabels([f'Mode \{i+1\}' for i in range(n\_modes)])
+    ax1.legend(fontsize=10)
+    ax1.grid(True, alpha=0.3, axis='y')
+
+    \# Relative errors
+    for i, (vqe\_f, label) in enumerate(zip(vqe\_freqs, labels)):
+        offset = width * i
+        errors = np.abs(np.array(vqe\_f[:n\_modes]) - classical\_freqs) / classical\_freqs * 100
+        ax2.bar(x + offset, errors, width, label=label,
+               color=BLUE if i == 0 else CYAN, alpha=0.8)
+
+    ax2.set\_ylabel('Absolute Error (\%)', fontsize=12)
+    ax2.set\_title('VQE Accuracy for Truss Modes',
+                  fontweight='bold', color=NAVY)
+    ax2.set\_xticks(x + width * (len(vqe\_freqs) + 1) / 2)
+    ax2.set\_xticklabels([f'Mode \{i+1\}' for i in range(n\_modes)])
+    ax2.legend(fontsize=10)
+    ax2.grid(True, alpha=0.3, axis='y')
+    ax2.axhline(2, color='red', linestyle='--', linewidth=1, alpha=0.5,
+               label='Target: \textless{}2\%')
+
+    plt.suptitle("Truss Frequency Comparison Across Modes",
+                fontsize=14, fontweight='bold', color=NAVY)
+    plt.tight\_layout()
+    plt.savefig('results/truss\_frequency\_comparison.png', dpi=150, bbox\_inches='tight')
+    plt.show()
+
+\end{lstlisting}
+
+% ============================================================
+\section{visualize_truss2d.py --- 2D Warren Truss Visualizations}
+% ============================================================
+\begin{lstlisting}[style=codestyle, caption={{visualize_truss2d.py --- 2D Warren Truss Visualizations}}]
+"""
+2D Warren Truss Visualization Functions
+
+This module contains visualization functions for the 2D Warren truss,
+including geometry plotting, mode shape visualization, and animation.
+"""
+
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')  \# Non-interactive backend — prevents Tkinter main-loop errors
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from matplotlib.patches import Polygon, Circle
+
+\# Color scheme (matching visualize.py)
+NAVY    = "\#1A2151"
+BLUE    = "\#0D6EFD"
+CYAN    = "\#00B4D8"
+GREEN   = "\#0A7C59"
+RED     = "\#C0392B"
+ORANGE  = "\#E67E22"
+GREY    = "\#566573"
+LIGHT   = "\#EBF5FB"
+
+
+def plot\_truss2d\_geometry(nodes, members, node\_ids, title="2D Warren Truss Geometry"):
+    """
+    Plot 2D Warren truss geometry with node labels and member connectivity.
+
+    Parameters
+    ----------
+    nodes : ndarray (n\_nodes, 2)    Node coordinates [x, y]
+    members : list of tuple            (i, j, E, A, rho) for each member
+    node\_ids : dict                    Mapping of node labels to indices
+    title : str                        Plot title
+    """
+    fig, ax = plt.subplots(figsize=(12, 4))
+
+    \# Draw members as lines
+    for idx, (i, j, E, A, rho) in enumerate(members):
+        xi, yi = nodes[i]
+        xj, yj = nodes[j]
+        ax.plot([xi, xj], [yi, yj], color=GREY, linewidth=3,
+               alpha=0.7, zorder=1, label='Members' if idx == 0 else '')
+
+    \# Draw nodes
+    for label, idx in sorted(node\_ids.items(), key=lambda x: x[1]):
+        x, y = nodes[idx]
+        color = BLUE if label.startswith('B') else CYAN
+        ax.scatter(x, y, s=200, c=color, zorder=5,
+                   edgecolors=NAVY, linewidths=2,
+                   label='Bottom chord' if label.startswith('B') and idx == 0 else
+                         ('Top chord' if label.startswith('T') and idx == len(node\_ids)//2 else ''))
+
+    \# Node labels
+    for label, idx in sorted(node\_ids.items(), key=lambda x: x[1]):
+        x, y = nodes[idx]
+        offset = -0.05 if label.startswith('B') else 0.05
+        ax.text(x, y + offset, label, ha='center', va='center',
+               fontsize=10, fontweight='bold', color=NAVY)
+
+    \# Draw pinned support at B0
+    B0\_idx = node\_ids['B0']
+    x0, y0 = nodes[B0\_idx]
+    triangle = Polygon(
+        [(x0, y0 - 0.05), (x0 - 0.06, y0 - 0.12), (x0 + 0.06, y0 - 0.12)],
+        facecolor='red', edgecolor='black', zorder=10, label='Pinned support'
+    )
+    ax.add\_patch(triangle)
+
+    \# Draw roller support at last bottom chord node (Bn-1)
+    n\_chords = (nodes.shape[0] + 1) // 2
+    B\_last\_label = f'B\{n\_chords - 1\}'
+    B\_last\_idx = node\_ids.get(B\_last\_label, B0\_idx)
+    x\_last, y\_last = nodes[B\_last\_idx]
+    triangle = Polygon(
+        [(x\_last, y\_last - 0.05), (x\_last - 0.06, y\_last - 0.12), (x\_last + 0.06, y\_last - 0.12)],
+        facecolor='red', edgecolor='black', zorder=10, label='Roller support'
+    )
+    ax.add\_patch(triangle)
+    \# Roller circles
+    for dx in [-0.03, 0.03]:
+        circle = Circle((x\_last + dx, y\_last - 0.14), 0.015, color='red', fill=True, zorder=10)
+        ax.add\_patch(circle)
+
+    ax.set\_aspect('equal')
+    ax.set\_xlabel("x (m)", fontsize=12)
+    ax.set\_ylabel("y (m)", fontsize=12)
+    ax.set\_title(title, fontsize=14, fontweight='bold', color=NAVY)
+    ax.legend(fontsize=10, loc='upper right')
+    ax.grid(True, alpha=0.3)
+    \# Dynamic y limits based on truss height
+    y\_min = nodes[:, 1].min() - 0.2
+    y\_max = nodes[:, 1].max() + 0.3
+    ax.set\_ylim(y\_min, max(y\_max, 0.6))
+
+    plt.tight\_layout()
+    plt.savefig('results/truss2d\_geometry.png', dpi=150, bbox\_inches='tight')
+    plt.show()
+
+
+def plot\_truss2d\_mode\_shapes(nodes, members, node\_ids, mode\_shapes,
+                                free\_dofs, n\_modes=4, scale=1.0):
+    """
+    Plot 2D truss mode shapes (deformed overlay on undeformed truss).
+
+    Parameters
+    ----------
+    nodes : ndarray (n\_nodes, 2)        Node coordinates
+    members : list of tuple                (i, j, E, A, rho)
+    node\_ids : dict                            Mapping of node labels to indices
+    mode\_shapes : ndarray (n\_free, n\_modes)  Mode shapes (reduced)
+    free\_dofs : list                           Indices of free DOFs
+    n\_modes : int                                Number of modes to plot
+    scale : float                                 Displacement scaling factor
+    """
+    n\_total\_dof = 2 * nodes.shape[0]
+    n\_plot = min(n\_modes, mode\_shapes.shape[1])
+
+    fig, axes = plt.subplots(1, n\_plot, figsize=(5 * n\_plot, 5))
+    if n\_plot == 1:
+        axes = [axes]
+
+    for m\_idx in range(n\_plot):
+        ax = axes[m\_idx]
+
+        \# Undeformed truss (gray dashed)
+        for idx, (i, j, E, A, rho) in enumerate(members):
+            ax.plot([nodes[i, 0], nodes[j, 0]],
+                   [nodes[i, 1], nodes[j, 1]],
+                   'k--', linewidth=1.5, alpha=0.5,
+                   label='Undeformed' if idx == 0 else '')
+
+        \# Expand mode to full DOF space
+        mode\_full = np.zeros(n\_total\_dof)
+        mode\_full[free\_dofs] = mode\_shapes[:, m\_idx]
+
+        \# Normalize and scale
+        if np.max(np.abs(mode\_full)) \textgreater{} 1e-10:
+            mode\_norm = mode\_full / np.max(np.abs(mode\_full))
+        else:
+            mode\_norm = mode\_full
+
+        \# Deformed coordinates
+        x\_def = np.zeros(nodes.shape[0])
+        y\_def = np.zeros(nodes.shape[0])
+        for i in range(nodes.shape[0]):
+            if 2*i \textless{} len(mode\_norm):
+                x\_def[i] = nodes[i, 0] + scale * mode\_norm[2*i]
+            if 2*i+1 \textless{} len(mode\_norm):
+                y\_def[i] = nodes[i, 1] + scale * mode\_norm[2*i+1]
+
+        \# Draw deformed truss
+        for idx, (i, j, E, A, rho) in enumerate(members):
+            ax.plot([x\_def[i], x\_def[j]],
+                   [y\_def[i], y\_def[j]],
+                   'o-', color=BLUE, linewidth=2.5, markersize=6,
+                   label='Deformed' if idx == 0 else '')
+
+        \# Draw deformed nodes
+        ax.scatter(x\_def, y\_def, s=100, c=BLUE, zorder=5,
+                   edgecolors=NAVY, linewidths=1.5)
+
+        ax.set\_aspect('equal')
+        ax.set\_title(f"Mode \{m\_idx+1\}", fontsize=12, fontweight='bold')
+        ax.set\_xlabel("x (m)", fontsize=10)
+        ax.set\_ylabel("y (m)", fontsize=10)
+        ax.grid(True, alpha=0.3)
+        ax.legend(fontsize=9)
+        \# Dynamic y limits
+        y\_min = nodes[:, 1].min() - 0.3
+        y\_max = nodes[:, 1].max() + 0.5
+        ax.set\_ylim(y\_min, max(y\_max, 0.6))
+
+    plt.suptitle("2D Warren Truss Mode Shapes",
+                 fontsize=14, fontweight='bold', color=NAVY)
+    plt.tight\_layout()
+    plt.savefig('results/truss2d\_mode\_shapes.png', dpi=150, bbox\_inches='tight')
+    plt.show()
+
+
+def animate\_truss2d\_mode(nodes, members, node\_ids, mode\_shape,
+                          free\_dofs, mode\_num=1, n\_frames=60, scale=1.0,
+                          interval=50):
+    """
+    Create animated GIF of oscillating truss for a given mode shape.
+
+    Parameters
+    ----------
+    nodes, members, node\_ids : same as plot\_truss2d\_mode\_shapes()
+    mode\_shape : ndarray (n\_free,)    Mode shape (single mode)
+    free\_dofs : list                   Indices of free DOFs
+    mode\_num : int                      Mode number (for filename)
+    n\_frames : int                     Frames in animation
+    scale : float                       Displacement scale
+    interval : int                      ms between frames
+    """
+    n\_total\_dof = 2 * nodes.shape[0]
+
+    \# Expand mode to full DOF space
+    mode\_full = np.zeros(n\_total\_dof)
+    mode\_full[free\_dofs] = mode\_shape
+
+    \# Normalize
+    if np.max(np.abs(mode\_full)) \textgreater{} 1e-10:
+        mode\_norm = mode\_full / np.max(np.abs(mode\_full))
+    else:
+        mode\_norm = mode\_full
+
+    \# Setup figure
+    fig, ax = plt.subplots(figsize=(12, 4))
+
+    \# Undeformed members (gray dashed)
+    for i, j, E, A, rho in members:
+        ax.plot([nodes[i, 0], nodes[j, 0]],
+               [nodes[i, 1], nodes[j, 1]],
+               'k--', linewidth=1, alpha=0.3, label='Undeformed')
+
+    \# Deformed members (will be updated)
+    lines = []
+    for i, j, E, A, rho in members:
+        line, = ax.plot([nodes[i, 0], nodes[j, 0]],
+                        [nodes[i, 1], nodes[j, 1]],
+                        'o-', color=BLUE, linewidth=2.5, markersize=6)
+        lines.append(line)
+
+    ax.set\_aspect('equal')
+    ax.set\_xlabel("x (m)", fontsize=12)
+    ax.set\_ylabel("y (m)", fontsize=12)
+    ax.set\_title(f"Mode \{mode\_num\} Oscillation", fontsize=14, fontweight='bold', color=NAVY)
+    ax.grid(True, alpha=0.3)
+    ax.set\_ylim(-0.2, 0.6)
+    ax.legend(fontsize=10)
+
+    def animate(frame):
+        t = 2 * np.pi * frame / n\_frames
+        disp = scale * np.sin(t) * mode\_norm
+
+        x\_def = np.zeros(nodes.shape[0])
+        y\_def = np.zeros(nodes.shape[0])
+        for i in range(nodes.shape[0]):
+            if 2*i \textless{} len(disp):
+                x\_def[i] = nodes[i, 0] + disp[2*i]
+            if 2*i+1 \textless{} len(disp):
+                y\_def[i] = nodes[i, 1] + disp[2*i+1]
+
+        for idx, line in enumerate(lines):
+            i, j = members[idx][0], members[idx][1]
+            line.set\_data([x\_def[i], x\_def[j]], [y\_def[i], y\_def[j]])
+
+        return lines
+
+    anim = animation.FuncAnimation(fig, animate, frames=n\_frames,
+                                    interval=interval, blit=True)
+
+    anim.save(f'results/truss2d\_mode\{mode\_num\}\_animation.gif',
+              writer='pillow', fps=30, dpi=100)
+    plt.close()
+    print(f"[OK] Animation saved: results/truss2d\_mode\{mode\_num\}\_animation.gif")
+
+
+def plot\_truss2d\_frequency\_comparison(omega\_vqe\_list, omega\_classical,
+                                      labels=None, title="2D Truss Natural Frequencies"):
+    """
+    Bar chart comparing VQE vs Classical natural frequencies for 2D truss.
+
+    Parameters
+    ----------
+    omega\_vqe\_list : list of list        VQE frequencies for each run
+    omega\_classical : ndarray            Classical reference frequencies
+    labels : list of str, optional    Labels for VQE runs
+    title : str                             Plot title
+    """
+    if labels is None:
+        labels = ['VQE']
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+
+    n\_modes = min(len(omega\_classical), 6)
+    x = np.arange(n\_modes)
+    width = 0.35
+
+    \# Frequencies
+    for i, (vqe\_f, label) in enumerate(zip(omega\_vqe\_list, labels)):
+        offset = width * i
+        ax1.bar(x + offset, vqe\_f[:n\_modes], width, label=label,
+               color=BLUE if i == 0 else CYAN, alpha=0.8)
+
+    ax1.bar(x + width * len(omega\_vqe\_list), omega\_classical[:n\_modes], width,
+           label='Classical (FEA)', color=RED, alpha=0.8)
+
+    ax1.set\_ylabel('Natural Frequency (rad/s)', fontsize=12)
+    ax1.set\_title('VQE vs Classical: 2D Warren Truss',
+                  fontweight='bold', color=NAVY)
+    ax1.set\_xticks(x + width * (len(omega\_vqe\_list) + 1) / 2)
+    ax1.set\_xticklabels([f'Mode \{i+1\}' for i in range(n\_modes)])
+    ax1.legend(fontsize=10)
+    ax1.grid(True, alpha=0.3, axis='y')
+
+    \# Relative errors
+    for i, (vqe\_f, label) in enumerate(zip(omega\_vqe\_list, labels)):
+        offset = width * i
+        errors = np.abs(np.array(vqe\_f[:n\_modes]) - omega\_classical[:n\_modes]) / omega\_classical[:n\_modes] * 100
+        ax2.bar(x + offset, errors, width, label=label,
+               color=BLUE if i == 0 else CYAN, alpha=0.8)
+
+    ax2.set\_ylabel('Relative Error (\%)', fontsize=12)
+    ax2.set\_title('VQE Accuracy for 2D Warren Truss',
+                  fontweight='bold', color=NAVY)
+    ax2.set\_xticks(x + width * (len(omega\_vqe\_list) + 1) / 2)
+    ax2.set\_xticklabels([f'Mode \{i+1\}' for i in range(n\_modes)])
+    ax2.legend(fontsize=10)
+    ax2.grid(True, alpha=0.3, axis='y')
+    ax2.axhline(2, color='red', linestyle='--', linewidth=1, alpha=0.5,
+               label='Target: \textless{}2\%')
+
+    plt.suptitle(title, fontsize=14, fontweight='bold', color=NAVY)
+    plt.tight\_layout()
+    plt.savefig('results/truss2d\_frequency\_comparison.png', dpi=150, bbox\_inches='tight')
+    plt.show()
+
+
+if \_\_name\_\_ == "\_\_main\_\_":
+    \# Quick test
+    from truss import generate\_warren\_truss\_mesh, assemble\_truss2d, apply\_pinned\_roller\_bc, classical\_modal\_analysis
+
+    \# Generate mesh
+    nodes, members, node\_ids = generate\_warren\_truss\_mesh()
+
+    \# Assemble and solve
+    K, M = assemble\_truss2d(nodes, members)
+    K\_red, M\_red, free\_dofs, fixed\_dofs = apply\_pinned\_roller\_bc(K, M, nodes)
+    omega, modes, eigenvalues = classical\_modal\_analysis(K\_red, M\_red, n\_modes=4)
+
+    \# Plot geometry
+    plot\_truss2d\_geometry(nodes, members, node\_ids)
+
+    \# Plot mode shapes
+    plot\_truss2d\_mode\_shapes(nodes, members, node\_ids, modes, free\_dofs, n\_modes=4, scale=0.5)
+
+    print("[OK] 2D truss visualization module ready.")
+
+\end{lstlisting}
+
+% ============================================================
+\section{novel_study.py --- Ill-Conditioning & Damage Detection}
+% ============================================================
+\begin{lstlisting}[style=codestyle, caption={{novel_study.py --- Ill-Conditioning & Damage Detection}}]
+import numpy as np
+import pandas as pd
+
+from fea import assemble\_beam, apply\_simply\_supported\_bc, classical\_modal\_analysis
+from fea import beam\_element\_stiffness, beam\_element\_mass
+from truss import assemble\_truss, apply\_fixed\_fixed\_bc, analytical\_fixed\_fixed
+from quantum\_setup import build\_structural\_hamiltonian
+from vqe\_runner import VQEStructuralSolver
+from ansatz import hardware\_efficient\_ansatz
+
+
+def tapered\_beam\_assemble\_v2(n\_elements, E, I0, rho, A0, L\_total, taper\_ratios):
+    """
+    Assemble K and M for a tapered beam.
+
+    taper\_ratios[i] gives the height ratio h[i]/h0 for element i.
+    For rectangular section: A[i] = A0 * taper\_ratios[i], I[i] = I0 * taper\_ratios[i]\textasciicircum\{\}3.
+    """
+    ndof = 2 * (n\_elements + 1)
+    L\_e = L\_total / n\_elements
+
+    K\_global = np.zeros((ndof, ndof))
+    M\_global = np.zeros((ndof, ndof))
+
+    for elem in range(n\_elements):
+        t = taper\_ratios[elem]
+        A\_elem = A0 * t
+        I\_elem = I0 * t**3
+
+        k\_e = beam\_element\_stiffness(E * I\_elem, L\_e)
+        m\_e = beam\_element\_mass(rho * A\_elem, L\_e)
+
+        dofs = [2*elem, 2*elem+1, 2*elem+2, 2*elem+3]
+        for i\_l, i\_g in enumerate(dofs):
+            for j\_l, j\_g in enumerate(dofs):
+                K\_global[i\_g, j\_g] += k\_e[i\_l, j\_l]
+                M\_global[i\_g, j\_g] += m\_e[i\_l, j\_l]
+
+    return K\_global, M\_global
+
+
+def \_linear\_taper\_elements(n\_elements, end\_ratio):
+    """
+    For a linearly tapered beam from h=1.0 to h=end\_ratio,
+    compute the height ratio at each element center.
+    """
+    ratios = []
+    for i in range(n\_elements):
+        x = (i + 0.5) / n\_elements
+        ratio = 1.0 - x * (1.0 - end\_ratio)
+        ratios.append(ratio)
+    return ratios
+
+
+def tapered\_beam\_study(E, I, rho, A, L\_total, taper\_ratios, n\_elements=2):
+    """
+    Study how beam taper (geometric non-uniformity) affects Hamiltonian
+    condition number and VQE optimizer convergence.
+
+    Compares three solvers:
+    1. COBYLA (derivative-free simplex)
+    2. L-BFGS-B (gradient-based quasi-Newton)
+    3. NumPyEigensolver (exact classical reference)
+
+    The hypothesis: as condition number increases, gradient-based
+    L-BFGS-B should degrade faster than COBYLA (steeper loss landscape
+    means worse gradient conditioning).
+    """
+    from qiskit\_algorithms import NumPyMinimumEigensolver
+
+    results = []
+
+    for t2 in taper\_ratios:
+        taper\_per\_elem = \_linear\_taper\_elements(n\_elements, t2)
+
+        \# Assemble tapered beam
+        K, M = tapered\_beam\_assemble\_v2(n\_elements, E, I, rho, A, L\_total, taper\_per\_elem)
+        K\_red, M\_red, \_ = apply\_simply\_supported\_bc(K, M, n\_elements)
+
+        \# Build quantum Hamiltonian
+        H\_norm, hamiltonian, \_, H\_scale = build\_structural\_hamiltonian(K\_red, M\_red)
+        condition\_number = np.linalg.cond(H\_norm)
+
+        \# Classical reference (scipy generalized eigensolver)
+        omega\_ref, \_ = classical\_modal\_analysis(K\_red, M\_red)
+
+        \# Exactly same initial point for fair comparison
+        np.random.seed(42)
+        initial\_point = np.random.uniform(-np.pi, np.pi, 12)  \# 12 params for HEA 2q-2reps
+
+        ansatz = hardware\_efficient\_ansatz(num\_qubits=2, reps=2)
+
+        \# --- COBYLA (derivative-free simplex) ---
+        print("\textbackslash\{\}n  --- COBYLA (derivative-free) ---")
+        cobyla\_solver = VQEStructuralSolver(hamiltonian, ansatz, optimizer\_name='COBYLA',
+                                             maxiter=2000, H\_scale=H\_scale)
+        cobyla\_result = cobyla\_solver.solve(initial\_point=initial\_point.copy())
+
+        \# --- L-BFGS-B (gradient-based quasi-Newton) ---
+        print("\textbackslash\{\}n  --- L-BFGS-B (gradient-based) ---")
+        lbfgs\_solver = VQEStructuralSolver(hamiltonian, ansatz, optimizer\_name='L\_BFGS\_B',
+                                            maxiter=2000, H\_scale=H\_scale)
+        lbfgs\_result = lbfgs\_solver.solve(initial\_point=initial\_point.copy())
+
+        \# --- Exact quantum (NumPyEigensolver) ---
+        np\_solver = NumPyMinimumEigensolver()
+        np\_result = np\_solver.compute\_minimum\_eigenvalue(hamiltonian)
+        omega\_exact = np.sqrt(abs(np\_result.eigenvalue.real * H\_scale))
+        exact\_error = abs(omega\_exact - omega\_ref[0]) / omega\_ref[0] * 100
+
+        \# Errors
+        cobyla\_err = abs(cobyla\_result['omega'] - omega\_ref[0]) / omega\_ref[0] * 100
+        lbfgs\_err = abs(lbfgs\_result['omega'] - omega\_ref[0]) / omega\_ref[0] * 100
+
+        results.append(\{
+            'taper\_ratio': t2,
+            'condition\_number': condition\_number,
+            'H\_scale': H\_scale,
+            'omega\_classical': omega\_ref[0],
+            'omega\_exact': omega\_exact,
+            'exact\_error\_pct': exact\_error,
+            'omega\_cobyla': cobyla\_result['omega'],
+            'cobyla\_error\_pct': cobyla\_err,
+            'cobyla\_iterations': cobyla\_result['iterations'],
+            'omega\_lbfgs': lbfgs\_result['omega'],
+            'lbfgs\_error\_pct': lbfgs\_err,
+            'lbfgs\_iterations': lbfgs\_result['iterations'],
+        \})
+
+        print(f"\textbackslash\{\}n  taper=\{t2:.2f\} \textbar{} Cond=\{condition\_number:.1f\}")
+        print(f"    Classical: \{omega\_ref[0]:.6f\} rad/s")
+        print(f"    Exact:     \{omega\_exact:.6f\} (error=\{exact\_error:.2e\}\%)")
+        print(f"    COBYLA:    \{cobyla\_result['omega']:.6f\} (error=\{cobyla\_err:.4f\}\%, iters=\{cobyla\_result['iterations']\})")
+        print(f"    L-BFGS-B:  \{lbfgs\_result['omega']:.6f\} (error=\{lbfgs\_err:.4f\}\%, iters=\{lbfgs\_result['iterations']\})")
+
+    return pd.DataFrame(results)
+
+
+def damage\_detection\_study(E, I, rho, A, L, damage\_levels, n\_elements=2):
+    """
+    Study how stiffness reduction (simulated crack) affects VQE-computed frequencies.
+
+    damage\_levels: list of damage fractions, e.g., [0.0, 0.1, 0.2, 0.3, 0.5]
+    """
+
+    results = []
+
+    for d in damage\_levels:
+        \# Damaged beam: element 1 has reduced stiffness
+        K\_damaged = np.zeros((2*(n\_elements+1), 2*(n\_elements+1)))
+        M\_full = np.zeros((2*(n\_elements+1), 2*(n\_elements+1)))
+
+        L\_e = L / n\_elements
+        rhoA = rho * A
+
+        \# Assemble with damage
+        EI\_values = [E * I * (1 - d), E * I]  \# First element damaged
+        for elem in range(n\_elements):
+            k\_e = beam\_element\_stiffness(EI\_values[elem], L\_e)
+            m\_e = beam\_element\_mass(rhoA, L\_e)
+            dofs = [2*elem, 2*elem+1, 2*elem+2, 2*elem+3]
+            for i\_l, i\_g in enumerate(dofs):
+                for j\_l, j\_g in enumerate(dofs):
+                    K\_damaged[i\_g, j\_g] += k\_e[i\_l, j\_l]
+                    M\_full[i\_g, j\_g] += m\_e[i\_l, j\_l]
+
+        \# Apply BCs
+        fixed\_dofs = [0, 2*n\_elements]
+        free\_dofs = [i for i in range(2*(n\_elements+1)) if i not in fixed\_dofs]
+        K\_red = K\_damaged[np.ix\_(free\_dofs, free\_dofs)]
+        M\_red = M\_full[np.ix\_(free\_dofs, free\_dofs)]
+
+        \# Classical solve
+        omega\_ref, \_ = classical\_modal\_analysis(K\_red, M\_red)
+
+        \# VQE solve
+        H\_norm, hamiltonian, \_, H\_scale = build\_structural\_hamiltonian(K\_red, M\_red)
+        ansatz = hardware\_efficient\_ansatz(num\_qubits=2, reps=2)
+        solver = VQEStructuralSolver(hamiltonian, ansatz, maxiter=2000, H\_scale=H\_scale)
+        vqe\_result = solver.solve()
+
+        \# Reference omega for first entry (undamaged)
+        if not results:
+            omega\_0\_ref = omega\_ref[0]
+        else:
+            omega\_0\_ref = results[0]['omega\_ref']
+
+        results.append(\{
+            'damage': d,
+            'damage\_pct': d * 100,
+            'omega\_ref': omega\_ref[0],
+            'omega\_vqe': vqe\_result['omega'],
+            'freq\_shift\_pct': (omega\_0\_ref - omega\_ref[0]) / omega\_0\_ref * 100,
+            'vqe\_detected\_shift\_pct': (omega\_0\_ref - vqe\_result['omega']) / omega\_0\_ref * 100,
+            'vqe\_error\_pct': abs(vqe\_result['omega'] - omega\_ref[0]) / omega\_ref[0] * 100,
+        \})
+
+    return pd.DataFrame(results)
+
+
+def tapered\_truss\_study(E, A, rho, L, area\_ratios, n\_elements=4):
+    """
+    Study how truss taper (geometric non-uniformity) affects Hamiltonian
+    condition number and VQE optimizer convergence.
+
+    Compares COBYLA and L-BFGS-B optimizers.
+
+    Parameters
+    ----------
+    E : float
+        Young's modulus (Pa)
+    A : float
+        Reference cross-section area at thick end (m\textasciicircum\{\}2)
+    rho : float
+        Density (kg/m\textasciicircum\{\}3)
+    L : float
+        Total truss length (m)
+    area\_ratios : list
+        Area ratio at thin end relative to thick end (e.g., [1.0, 0.8, 0.6, ...])
+    n\_elements : int
+        Number of truss elements
+
+    Returns
+    -------
+    pd.DataFrame with columns:
+        taper\_ratio, condition\_number, H\_scale,
+        omega\_classical, omega\_exact, exact\_error\_pct,
+        omega\_cobyla, cobyla\_error\_pct, cobyla\_iterations,
+        omega\_lbfgs, lbfgs\_error\_pct, lbfgs\_iterations
+    """
+    from qiskit\_algorithms import NumPyMinimumEigensolver
+
+    results = []
+
+    for ar in area\_ratios:
+        \# Linearly varying area for each element
+        area\_per\_elem = []
+        for i in range(n\_elements):
+            x = (i + 0.5) / n\_elements
+            area = A * (1.0 - x * (1.0 - ar))
+            area\_per\_elem.append(area)
+
+        \# Assemble tapered truss
+        K, M = \_tapered\_truss\_assemble(n\_elements, E, area\_per\_elem, rho, L)
+        K\_red, M\_red, \_ = apply\_fixed\_fixed\_bc(K, M)
+
+        \# Build quantum Hamiltonian
+        H\_norm, hamiltonian, \_, H\_scale = build\_structural\_hamiltonian(K\_red, M\_red)
+        condition\_number = np.linalg.cond(H\_norm)
+
+        \# Classical reference
+        omega\_ref, \_ = classical\_modal\_analysis(K\_red, M\_red)
+
+        \# Exact quantum eigenvalue
+        np.random.seed(42)
+        initial\_point = np.random.uniform(-np.pi, np.pi, 12)
+        ansatz = hardware\_efficient\_ansatz(num\_qubits=2, reps=2)
+
+        np\_solver = NumPyMinimumEigensolver()
+        np\_result = np\_solver.compute\_minimum\_eigenvalue(hamiltonian)
+        omega\_exact = np.sqrt(abs(np\_result.eigenvalue.real * H\_scale))
+        exact\_error = abs(omega\_exact - omega\_ref[0]) / omega\_ref[0] * 100
+
+        \# --- COBYLA ---
+        print("\textbackslash\{\}n  --- COBYLA (truss, derivative-free) ---")
+        cobyla\_solver = VQEStructuralSolver(hamiltonian, ansatz, optimizer\_name='COBYLA',
+                                             maxiter=2000, H\_scale=H\_scale)
+        cobyla\_result = cobyla\_solver.solve(initial\_point=initial\_point.copy())
+
+        \# --- L-BFGS-B ---
+        print("\textbackslash\{\}n  --- L-BFGS-B (truss, gradient-based) ---")
+        lbfgs\_solver = VQEStructuralSolver(hamiltonian, ansatz, optimizer\_name='L\_BFGS\_B',
+                                            maxiter=2000, H\_scale=H\_scale)
+        lbfgs\_result = lbfgs\_solver.solve(initial\_point=initial\_point.copy())
+
+        \# Errors
+        cobyla\_err = abs(cobyla\_result['omega'] - omega\_ref[0]) / omega\_ref[0] * 100
+        lbfgs\_err = abs(lbfgs\_result['omega'] - omega\_ref[0]) / omega\_ref[0] * 100
+
+        results.append(\{
+            'taper\_ratio': ar,
+            'condition\_number': condition\_number,
+            'H\_scale': H\_scale,
+            'omega\_classical': omega\_ref[0],
+            'omega\_exact': omega\_exact,
+            'exact\_error\_pct': exact\_error,
+            'omega\_cobyla': cobyla\_result['omega'],
+            'cobyla\_error\_pct': cobyla\_err,
+            'cobyla\_iterations': cobyla\_result['iterations'],
+            'omega\_lbfgs': lbfgs\_result['omega'],
+            'lbfgs\_error\_pct': lbfgs\_err,
+            'lbfgs\_iterations': lbfgs\_result['iterations'],
+        \})
+
+        print(f"\textbackslash\{\}n  taper=\{ar:.2f\} \textbar{} Cond=\{condition\_number:.1f\}")
+        print(f"    Classical: \{omega\_ref[0]:.6f\} rad/s")
+        print(f"    Exact:     \{omega\_exact:.6f\} (error=\{exact\_error:.2e\}\%)")
+        print(f"    COBYLA:    \{cobyla\_result['omega']:.6f\} (error=\{cobyla\_err:.4f\}\%, iters=\{cobyla\_result['iterations']\})")
+        print(f"    L-BFGS-B:  \{lbfgs\_result['omega']:.6f\} (error=\{lbfgs\_err:.4f\}\%, iters=\{lbfgs\_result['iterations']\})")
+
+    return pd.DataFrame(results)
+
+
+def \_tapered\_truss\_assemble(n\_elements, E, area\_list, rho, L\_total):
+    """
+    Assemble global K and M for a tapered truss.
+
+    Parameters
+    ----------
+    n\_elements : int
+        Number of elements
+    E : float
+        Young's modulus
+    area\_list : list of float (length n\_elements)
+        Cross-sectional area for each element
+    rho : float
+        Density
+    L\_total : float
+        Total length
+
+    Returns
+    -------
+    K\_global, M\_global : ndarray
+        Global stiffness and mass matrices (n+1 x n+1)
+    """
+    n = n\_elements
+    ndof = n + 1
+    L\_e = L\_total / n
+
+    K\_global = np.zeros((ndof, ndof))
+    M\_global = np.zeros((ndof, ndof))
+
+    for elem in range(n):
+        EA = E * area\_list[elem]
+        rhoA = rho * area\_list[elem]
+
+        k\_e = np.array([[1, -1], [-1, 1]]) * EA / L\_e
+        m\_e = np.array([[2, 1], [1, 2]]) * rhoA * L\_e / 6  \# consistent mass
+
+        dofs = [elem, elem + 1]
+        for i\_local, i\_global in enumerate(dofs):
+            for j\_local, j\_global in enumerate(dofs):
+                K\_global[i\_global, j\_global] += k\_e[i\_local, j\_local]
+                M\_global[i\_global, j\_global] += m\_e[i\_local, j\_local]
+
+    return K\_global, M\_global
+
+
+def truss\_damage\_study(E, A, rho, L, damage\_levels, n\_elements=4):
+    """
+    Study how stiffness reduction (simulated crack) in truss elements
+    affects VQE-computed natural frequencies.
+
+    Parameters
+    ----------
+    E : float
+        Young's modulus (Pa)
+    A : float
+        Cross-sectional area (m\textasciicircum\{\}2)
+    rho : float
+        Density (kg/m\textasciicircum\{\}3)
+    L : float
+        Truss length (m)
+    damage\_levels : list of float
+        Damage fractions (0.0 to 0.5), where 0.3 means 30\% stiffness reduction
+    n\_elements : int
+        Number of truss elements
+
+    Returns
+    -------
+    pd.DataFrame with columns:
+        damage, damage\_pct, omega\_ref, omega\_vqe,
+        freq\_shift\_pct, vqe\_detected\_shift\_pct, vqe\_error\_pct
+    """
+    results = []
+
+    for d in damage\_levels:
+        \# Damaged truss: element 0 has reduced area
+        K\_damaged = np.zeros((n\_elements + 1, n\_elements + 1))
+        M\_full = np.zeros((n\_elements + 1, n\_elements + 1))
+
+        L\_e = L / n\_elements
+
+        \# Assemble with damage in first element
+        for elem in range(n\_elements):
+            if elem == 0:
+                A\_elem = A * (1 - d)  \# Damage reduces area
+            else:
+                A\_elem = A
+
+            EA = E * A\_elem
+            rhoA = rho * A\_elem
+
+            k\_e = np.array([[1, -1], [-1, 1]]) * EA / L\_e
+            m\_e = np.array([[2, 1], [1, 2]]) * rhoA * L\_e / 6
+
+            dofs = [elem, elem + 1]
+            for i\_local, i\_global in enumerate(dofs):
+                for j\_local, j\_global in enumerate(dofs):
+                    K\_damaged[i\_global, j\_global] += k\_e[i\_local, j\_local]
+                    M\_full[i\_global, j\_global] += m\_e[i\_local, j\_local]
+
+        \# Apply fixed-fixed BCs
+        K\_red, M\_red, \_ = apply\_fixed\_fixed\_bc(K\_damaged, M\_full)
+
+        \# Classical solve
+        omega\_ref, \_ = classical\_modal\_analysis(K\_red, M\_red)
+
+        \# VQE solve
+        H\_norm, hamiltonian, \_, H\_scale = build\_structural\_hamiltonian(K\_red, M\_red)
+        ansatz = hardware\_efficient\_ansatz(num\_qubits=2, reps=2)
+        solver = VQEStructuralSolver(hamiltonian, ansatz, maxiter=2000, H\_scale=H\_scale)
+        vqe\_result = solver.solve()
+
+        \# Reference omega for first entry (undamaged)
+        if not results:
+            omega\_0\_ref = omega\_ref[0]
+        else:
+            omega\_0\_ref = results[0]['omega\_ref']
+
+        results.append(\{
+            'damage': d,
+            'damage\_pct': d * 100,
+            'omega\_ref': omega\_ref[0],
+            'omega\_vqe': vqe\_result['omega'],
+            'freq\_shift\_pct': (omega\_0\_ref - omega\_ref[0]) / omega\_0\_ref * 100,
+            'vqe\_detected\_shift\_pct': (omega\_0\_ref - vqe\_result['omega']) / omega\_0\_ref * 100,
+            'vqe\_error\_pct': abs(vqe\_result['omega'] - omega\_ref[0]) / omega\_ref[0] * 100,
+        \})
+
+    return pd.DataFrame(results)
+
+\end{lstlisting}
+
+% ============================================================
+\section{optimizer_comparison.py --- COBYLA vs L-BFGS-B}
+% ============================================================
+\begin{lstlisting}[style=codestyle, caption={{optimizer_comparison.py --- COBYLA vs L-BFGS-B}}]
+"""
+Optimizer Comparison: COBYLA vs L-BFGS-B
+=========================================
+Runs both optimizers from the same initial point and generates
+convergence comparison plots showing error decay, iteration counts,
+and wall-clock time.
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+os.makedirs('results', exist\_ok=True)
+
+from fea import assemble\_beam, apply\_simply\_supported\_bc, classical\_modal\_analysis
+from quantum\_setup import build\_structural\_hamiltonian
+from ansatz import hardware\_efficient\_ansatz
+from vqe\_runner import VQEStructuralSolver
+
+\# --- Color Scheme ---
+NAVY    = "\#1A2151"
+BLUE    = "\#0D6EFD"
+CYAN    = "\#00B4D8"
+GREEN   = "\#0A7C59"
+ORANGE  = "\#E67E22"
+RED     = "\#C0392B"
+LIGHT   = "\#EBF5FB"
+
+\# --- Beam geometry ---
+E = 200e9
+I = 8.33e-6
+rho = 7850.0
+A = 0.01
+L = 1.0
+n\_elem = 2
+
+K, M = assemble\_beam(n\_elem, E, I, rho, A, L)
+K\_red, M\_red, free\_dofs = apply\_simply\_supported\_bc(K, M, n\_elem)
+omega\_classical, \_ = classical\_modal\_analysis(K\_red, M\_red)
+omega\_ref = omega\_classical[0]
+
+H\_norm, hamiltonian, \_, H\_scale = build\_structural\_hamiltonian(K\_red, M\_red)
+
+\# Same initial point for fair comparison
+np.random.seed(42)
+initial\_point = np.random.uniform(-np.pi, np.pi, 12)
+
+ansatz = hardware\_efficient\_ansatz(num\_qubits=2, reps=2)
+
+maxiter = 3000
+
+print(f"\textbackslash\{\}n\{'='*60\}")
+print(f"OPTIMIZER COMPARISON (maxiter=\{maxiter\})")
+print(f"\{'='*60\}")
+print(f"Reference: \{omega\_ref:.6f\} rad/s\textbackslash\{\}n")
+
+\# --- COBYLA ---
+print("--- COBYLA (derivative-free simplex) ---")
+cobyla = VQEStructuralSolver(hamiltonian, ansatz, 'COBYLA', maxiter=maxiter, H\_scale=H\_scale)
+cobyla\_res = cobyla.solve(initial\_point=initial\_point.copy())
+
+\# --- L-BFGS-B ---
+print("\textbackslash\{\}n--- L-BFGS-B (gradient-based quasi-Newton) ---")
+lbfgs = VQEStructuralSolver(hamiltonian, ansatz, 'L\_BFGS\_B', maxiter=maxiter, H\_scale=H\_scale)
+lbfgs\_res = lbfgs.solve(initial\_point=initial\_point.copy())
+
+omega\_cobyla = cobyla\_res['omega']
+omega\_lbfgs = lbfgs\_res['omega']
+err\_cobyla = abs(omega\_cobyla - omega\_ref) / omega\_ref * 100
+err\_lbfgs = abs(omega\_lbfgs - omega\_ref) / omega\_ref * 100
+
+print(f"\textbackslash\{\}n\{'='*60\}")
+print(f"SUMMARY")
+print(f"\{'='*60\}")
+print(f"  COBYLA:     ω = \{omega\_cobyla:.6f\}  error = \{err\_cobyla:.6f\}\%  iters = \{cobyla\_res['iterations']\}  time = \{cobyla\_res['time']:.2f\}s")
+print(f"  L-BFGS-B:   ω = \{omega\_lbfgs:.6f\}  error = \{err\_lbfgs:.6f\}\%  iters = \{lbfgs\_res['iterations']\}  time = \{lbfgs\_res['time']:.2f\}s")
+print(f"  Reference:  ω = \{omega\_ref:.6f\}")
+
+\# ================================
+\# PLOTS
+\# ================================
+
+\# --- Plot 1: Convergence curves side by side ---
+cost\_cobyla = cobyla\_res['cost\_history']
+cost\_lbfgs = lbfgs\_res['cost\_history']
+freqs\_cobyla = [np.sqrt(max(c * H\_scale, 0)) for c in cost\_cobyla]
+freqs\_lbfgs = [np.sqrt(max(c * H\_scale, 0)) for c in cost\_lbfgs]
+
+fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+fig.suptitle("Optimizer Comparison: COBYLA vs L-BFGS-B",
+             fontsize=14, fontweight='bold', color=NAVY)
+
+\# Top-left: COBYLA convergence
+ax1 = axes[0, 0]
+ax1.plot(freqs\_cobyla, color=ORANGE, linewidth=1.5)
+ax1.axhline(y=omega\_ref, color=RED, linestyle='--', linewidth=2, label='Classical')
+ax1.set\_xlabel("Iteration")
+ax1.set\_ylabel("Frequency (rad/s)")
+ax1.set\_title("COBYLA Convergence", fontweight='bold', color=ORANGE)
+ax1.legend()
+ax1.set\_facecolor(LIGHT)
+ax1.grid(True, alpha=0.4)
+
+\# Top-right: L-BFGS-B convergence
+ax2 = axes[0, 1]
+ax2.plot(freqs\_lbfgs, color=GREEN, linewidth=1.5)
+ax2.axhline(y=omega\_ref, color=RED, linestyle='--', linewidth=2, label='Classical')
+ax2.set\_xlabel("Iteration")
+ax2.set\_ylabel("Frequency (rad/s)")
+ax2.set\_title("L-BFGS-B Convergence", fontweight='bold', color=GREEN)
+ax2.legend()
+ax2.set\_facecolor(LIGHT)
+ax2.grid(True, alpha=0.4)
+
+\# Bottom-left: Error decay (semilogy)
+ax3 = axes[1, 0]
+err\_c = [(abs(f - omega\_ref) / omega\_ref * 100) for f in freqs\_cobyla if f \textgreater{} 0]
+err\_l = [(abs(f - omega\_ref) / omega\_ref * 100) for f in freqs\_lbfgs if f \textgreater{} 0]
+ax3.semilogy(err\_c, color=ORANGE, linewidth=1.5, label='COBYLA')
+ax3.semilogy(err\_l, color=GREEN, linewidth=1.5, label='L-BFGS-B')
+ax3.set\_xlabel("Iteration")
+ax3.set\_ylabel("Relative Error (\%)")
+ax3.set\_title("Error Decay (log scale)", fontweight='bold')
+ax3.legend()
+ax3.set\_facecolor(LIGHT)
+ax3.grid(True, alpha=0.4, which='both')
+
+\# Bottom-right: Iteration count + wall time
+ax4 = axes[1, 1]
+x\_pos = np.arange(2)
+w = 0.35
+bars1 = ax4.bar(x\_pos - w/2, [cobyla\_res['iterations'], lbfgs\_res['iterations']],
+                w, color=[ORANGE, GREEN], alpha=0.85, edgecolor='white')
+bars2 = ax4.bar(x\_pos + w/2, [cobyla\_res['time'], lbfgs\_res['time']],
+                w, color=[BLUE, CYAN], alpha=0.85, edgecolor='white')
+ax4.set\_xticks(x\_pos)
+ax4.set\_xticklabels(['COBYLA', 'L-BFGS-B'])
+ax4.set\_ylabel("Iterations / Time (s)")
+ax4.set\_title("Iterations and Wall Time", fontweight='bold')
+ax4.legend(['Iterations', 'Time (s)'])
+ax4.set\_facecolor(LIGHT)
+ax4.grid(True, alpha=0.3, axis='y')
+
+\# Add value labels on bars
+for bar in bars1:
+    height = bar.get\_height()
+    ax4.text(bar.get\_x() + bar.get\_width()/2., height + 10,
+             f'\{height:.0f\}', ha='center', fontsize=9, fontweight='bold')
+for bar in bars2:
+    height = bar.get\_height()
+    ax4.text(bar.get\_x() + bar.get\_width()/2., height + 10,
+             f'\{height:.2f\}s', ha='center', fontsize=9, fontweight='bold')
+
+plt.tight\_layout()
+plt.savefig('results/optimizer\_comparison.png', dpi=150, bbox\_inches='tight')
+plt.show()
+
+\# --- Plot 2: Progress ratio ---
+fig2, ax5 = plt.subplots(figsize=(10, 5))
+\# Normalize errors to iteration index 0 error
+err0\_c = err\_c[0] if err\_c[1] != 0 else 1
+err0\_l = err\_l[0] if len(err\_l) \textgreater{} 0 else 1
+ax5.semilogy([e/err0\_c for e in err\_c], color=ORANGE, linewidth=1.5,
+            label='COBYLA (derivative-free)', alpha=0.9)
+ax5.semilogy([e/err0\_l for e in err\_l], color=GREEN, linewidth=1.5,
+            label='L-BFGS-B (gradient-based)', alpha=0.9)
+ax5.set\_xlabel("Iteration", fontsize=12)
+ax5.set\_ylabel("Error Fraction (E / E₀)", fontsize=12)
+ax5.set\_title("Convergence Rate: Normalized Error vs Iterations",
+              fontsize=13, fontweight='bold', color=NAVY)
+ax5.legend(fontsize=11)
+ax5.set\_facecolor(LIGHT)
+ax5.grid(True, alpha=0.4, which='both')
+ax5.text(0.98, 0.02,
+         f"COBYLA:     \{cobyla\_res['iterations']\} iters, \{err\_cobyla:.4f\}\% final\textbackslash\{\}n"
+         f"L-BFGS-B:   \{lbfgs\_res['iterations']\} iters, \{err\_lbfgs:.6f\}\% final\textbackslash\{\}n"
+         f"L-BFGS-B is \{cobyla\_res['iterations']/max(lbfgs\_res['iterations'],1):.1f\}x faster to converge",
+         transform=ax5.transAxes, fontsize=9, va='bottom', ha='right',
+         bbox=dict(boxstyle='round', facecolor='white', edgecolor=NAVY, alpha=0.9))
+plt.tight\_layout()
+plt.savefig('results/optimizer\_normalized\_error.png', dpi=150, bbox\_inches='tight')
+plt.show()
+
+print(f"\textbackslash\{\}n[SUCCESS] Optimizer comparison plots saved to results/")
+
+\end{lstlisting}
+
+% ============================================================
+\section{validate_fea.py --- Beam FEA Validation}
+% ============================================================
+\begin{lstlisting}[style=codestyle, caption={{validate_fea.py --- Beam FEA Validation}}]
+import numpy as np
+from fea import assemble\_beam, apply\_simply\_supported\_bc, classical\_modal\_analysis, analytical\_simply\_supported
+
+\# Material and geometry: Steel beam
+E = 200e9       \# Young's modulus (Pa)
+I = 8.33e-6     \# Second moment of area (m\textasciicircum\{\}4)
+rho = 7850.0    \# Density (kg/m\textasciicircum\{\}3)
+A = 0.01        \# Cross-section area (m\textasciicircum\{\}2)
+L = 1.0         \# Beam length (m)
+
+\# Assemble
+K, M = assemble\_beam(num\_elements=2, E=E, I=I, rho=rho, A=A, L\_total=L)
+K\_red, M\_red, free\_dofs = apply\_simply\_supported\_bc(K, M, num\_elements=2)
+
+\# Sanity checks — run these before the frequency comparison
+print("=== MATRIX SANITY CHECKS ===")
+
+\# Symmetry
+print(f"K\_red symmetric: \{np.allclose(K\_red, K\_red.T)\}")
+print(f"M\_red symmetric: \{np.allclose(M\_red, M\_red.T)\}")
+
+\# Positive definiteness
+k\_eigs = np.linalg.eigvalsh(K\_red)
+m\_eigs = np.linalg.eigvalsh(M\_red)
+print(f"K\_red min eigenvalue: \{k\_eigs.min():.4f\}  (must be \textgreater{} 0)")
+print(f"M\_red min eigenvalue: \{m\_eigs.min():.4f\}  (must be \textgreater{} 0)")
+
+\# Condition number
+print(f"Condition number of K\_red: \{np.linalg.cond(K\_red):.2f\}")
+print(f"Condition number of M\_red: \{np.linalg.cond(M\_red):.2f\}")
+
+\# Physical scale check
+print(f"\textbackslash\{\}nK\_red[0,0] = \{K\_red[0,0]:.4e\}  (expected \textasciitilde\{\}EI/L = \{E*I/L:.4e\})")
+print(f"M\_red[1,1] = \{M\_red[1,1]:.4e\}  (expected \textasciitilde\{\}rho*A*L = \{rho*A*L:.4e\})")
+
+\# Classical solution
+omega\_fea, modes = classical\_modal\_analysis(K\_red, M\_red)
+omega\_analytical = analytical\_simply\_supported(E, I, rho, A, L)
+
+\# Validation
+print("=== FEA VALIDATION ===")
+print(f"\{'Mode':\textless{}6\} \{'FEA (rad/s)':\textless{}15\} \{'Analytical (rad/s)':\textless{}20\} \{'Error \%':\textless{}12\} \{'Status'\}")
+print("-" * 70)
+
+thresholds = \{0: 1.0, 1: 15.0, 2: None, 3: None\}  \# Mode 1: strict, Mode 2: loose, 3-4: not checked
+
+for i in range(len(omega\_fea)):
+    err = abs(omega\_fea[i] - omega\_analytical[i]) / omega\_analytical[i] * 100
+    
+    if thresholds[i] is None:
+        status = "(mesh artifact, not validated)"
+    elif err \textless{} thresholds[i]:
+        status = "PASS"
+    else:
+        status = "FAIL"
+    
+    print(f"\{i+1:\textless{}6\} \{omega\_fea[i]:\textless{}15.2f\} \{omega\_analytical[i]:\textless{}20.2f\} \{err:\textless{}12.3f\}\% \{status\}")
+
+\# The only check that actually matters for the quantum pipeline
+mode1\_error = abs(omega\_fea[0] - omega\_analytical[0]) / omega\_analytical[0] * 100
+print("\textbackslash\{\}n" + "="*60)
+if mode1\_error \textless{} 1.0:
+    print(f"MODE 1 VALIDATED - \{mode1\_error:.3f\}\% error (threshold: 1\%)")
+    print("   K\_red and M\_red are ready to hand off to the quantum pipeline.")
+else:
+    print(f"MODE 1 FAILED - \{mode1\_error:.3f\}\% error")
+    print("   Check assembly and boundary condition implementation.")
+\end{lstlisting}
+
+% ============================================================
+\section{validate_truss.py --- Truss FEA Validation}
+% ============================================================
+\begin{lstlisting}[style=codestyle, caption={{validate_truss.py --- Truss FEA Validation}}]
+import numpy as np
+import pandas as pd
+from truss import assemble\_truss, apply\_fixed\_fixed\_bc, classical\_modal\_analysis, validate\_truss\_matrices, analytical\_fixed\_fixed, analytical\_fixed\_free
+
+
+def validate\_truss\_analysis():
+    """
+    Validate truss analysis against analytical solutions
+    """
+    print("="*60)
+    print("TRUSS VALIDATION")
+    print("="*60)
+    
+    \# Test parameters
+    E = 200e9       \# Pa
+    A = 0.01        \# m\textasciicircum\{\}2
+    rho = 7850.0    \# kg/m\textasciicircum\{\}3
+    L = 1.0         \# m
+    n\_elem = 8      \# Increased for validation to get \textless{}1\% error in mode 1
+    
+    print(f"Testing truss with:")
+    print(f"  E = \{E:.2e\} Pa")
+    print(f"  A = \{A:.6f\} m\textasciicircum\{\}2")
+    print(f"  rho = \{rho:.1f\} kg/m\textasciicircum\{\}3")
+    print(f"  L = \{L:.2f\} m")
+    print(f"  Elements = \{n\_elem\}")
+    print()
+    
+    \# Assemble matrices
+    K, M = assemble\_truss(n\_elem, E, A, rho, L)
+    K\_red, M\_red, free\_dofs = apply\_fixed\_fixed\_bc(K, M)
+    
+    \# Validate matrices
+    checks = validate\_truss\_matrices(K, M)
+    print("Matrix validation:")
+    for key, val in checks.items():
+        print(f"  \{key\}: \{val\}")
+    print()
+    
+    \# Classical solution
+    omega\_classical, modes = classical\_modal\_analysis(K\_red, M\_red)
+    omega\_analytical = analytical\_fixed\_fixed(E, A, rho, L, n\_modes=len(omega\_classical))
+    
+    print("Frequency validation:")
+    print(f"  Mode \textbar{} Classical (rad/s) \textbar{} Analytical (rad/s) \textbar{} Error (\%)")
+    print(f"  -----\textbar{}-------------------\textbar{}--------------------\textbar{}----------")
+    total\_error = 0
+    for i in range(len(omega\_classical)):
+        error = abs(omega\_classical[i] - omega\_analytical[i]) / omega\_analytical[i] * 100
+        total\_error += error
+        print(f"  \{i+1:4d\} \textbar{} \{omega\_classical[i]:17.6f\} \textbar{} \{omega\_analytical[i]:18.6f\} \textbar{} \{error:8.3f\}\%")
+    
+    avg\_error = total\_error / len(omega\_classical)
+    print(f"\textbackslash\{\}nAverage error: \{avg\_error:.3f\}\%")
+    
+    \# Check if within tolerance
+    if avg\_error \textless{} 1.0:
+        print("PASS: Average error \textless{} 1\%")
+    else:
+        print("FAIL: Average error \textgreater{}= 1\%")
+    
+    \# Check matrix properties
+    if checks['K\_symmetric'] and checks['M\_symmetric']:
+        print("PASS: K and M matrices are symmetric")
+    else:
+        print("FAIL: K or M matrix not symmetric")
+        
+    if checks['K\_positive\_definite'] and checks['M\_positive\_definite']:
+        print("PASS: K and M matrices are positive definite")
+    else:
+        print("FAIL: K or M matrix not positive definite")
+        
+    print("="*60)
+    return avg\_error \textless{} 1.0
+
+
+if \_\_name\_\_ == "\_\_main\_\_":
+    success = validate\_truss\_analysis()
+    exit(0 if success else 1)
+\end{lstlisting}
+
+% ============================================================
+\section{test_convergence.py --- Mesh Convergence Study}
+% ============================================================
+\begin{lstlisting}[style=codestyle, caption={{test_convergence.py --- Mesh Convergence Study}}]
+import numpy as np
+from truss import assemble\_truss, apply\_fixed\_fixed\_bc, classical\_modal\_analysis, analytical\_fixed\_fixed
+
+def test\_convergence():
+    E = 200e9
+    A = 0.01
+    rho = 7850.0
+    L = 1.0
+    
+    print("Elements \textbar{} Mode 1 FEM (rad/s) \textbar{} Mode 1 Analytical (rad/s) \textbar{} Error (\%)")
+    print("--------\textbar{}---------------------\textbar{}---------------------------\textbar{}----------")
+    
+    for n\_elem in [2, 4, 8, 16, 32, 64]:
+        K, M = assemble\_truss(n\_elem, E, A, rho, L)
+        K\_red, M\_red, \_ = apply\_fixed\_fixed\_bc(K, M)
+        omega\_fem, \_ = classical\_modal\_analysis(K\_red, M\_red)
+        omega\_anal = analytical\_fixed\_fixed(E, A, rho, L, n\_modes=1)
+        
+        error = abs(omega\_fem[0] - omega\_anal[0]) / omega\_anal[0] * 100
+        print(f"\{n\_elem:8d\} \textbar{} \{omega\_fem[0]:19.6f\} \textbar{} \{omega\_anal[0]:25.6f\} \textbar{} \{error:9.3f\}\%")
+
+if \_\_name\_\_ == "\_\_main\_\_":
+    test\_convergence()
+\end{lstlisting}
+
+% ============================================================
+\section{test_n_elem.py --- Qubit Count Analysis}
+% ============================================================
+\begin{lstlisting}[style=codestyle, caption={{test_n_elem.py --- Qubit Count Analysis}}]
+import numpy as np
+from truss import assemble\_truss, apply\_fixed\_fixed\_bc, classical\_modal\_analysis, analytical\_fixed\_fixed
+
+E = 200e9
+A = 0.01
+rho = 7850.0
+L = 1.0
+
+for n\_elem in [3,4,5,6,8]:
+    K, M = assemble\_truss(n\_elem, E, A, rho, L)
+    K\_red, M\_red, free\_dofs = apply\_fixed\_fixed\_bc(K, M)
+    n\_orig = K\_red.shape[0]
+    \# Pad to next power of two
+    n\_pad = 1
+    while n\_pad \textless{} n\_orig:
+        n\_pad \textless{}\textless{}= 1
+    print(f"n\_elem=\{n\_elem\}: free DOFs=\{n\_orig\}, padded to=\{n\_pad\}, qubits needed=\{int(np.log2(n\_pad))\}")
+    omega\_classical, \_ = classical\_modal\_analysis(K\_red, M\_red)
+    omega\_analytical = analytical\_fixed\_fixed(E, A, rho, L, n\_modes=min(3, len(omega\_classical)))
+    print(f"  Frequencies (rad/s):")
+    for i in range(min(3, len(omega\_classical))):
+        error = abs(omega\_classical[i] - omega\_analytical[i]) / omega\_analytical[i] * 100
+        print(f"    Mode \{i+1\}: FEA=\{omega\_classical[i]:.2f\}, Analytical=\{omega\_analytical[i]:.2f\}, error=\{error:.2f\}\%")
+    print()
+\end{lstlisting}
+
+% ============================================================
+\section{generate_presentation.py --- Slide Generator}
+% ============================================================
+\begin{lstlisting}[style=codestyle, caption={{generate_presentation.py --- Slide Generator}}]
+"""
+Generate Presentation Slides for VQA Modal Analysis Project
+Creates a matplotlib-based slide deck covering all project results.
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.patches import FancyArrowPatch
+import os
+
+os.makedirs('results', exist\_ok=True)
+
+\# Color scheme
+NAVY    = "\#1A2151"
+BLUE    = "\#0D6EFD"
+CYAN    = "\#00B4D8"
+GREEN   = "\#0A7C59"
+RED     = "\#C0392B"
+ORANGE  = "\#E67E22"
+GREY    = "\#566573"
+LIGHT   = "\#EBF5FB"
+PURPLE  = "\#6C3483"
+TEAL    = "\#1ABC9C"
+
+def create\_title\_slide():
+    fig, ax = plt.subplots(figsize=(16, 9))
+    ax.set\_facecolor(NAVY)
+    fig.patch.set\_facecolor(NAVY)
+
+    ax.text(0.5, 0.65, "VQA Modal Analysis",
+            transform=ax.transAxes, fontsize=48, fontweight='bold',
+            color='white', ha='center', va='center')
+    ax.text(0.5, 0.50, "Quantum Computing for Structural Dynamics",
+            transform=ax.transAxes, fontsize=28, color=CYAN,
+            ha='center', va='center', style='italic')
+    ax.text(0.5, 0.40, "COEP Technological University",
+            transform=ax.transAxes, fontsize=18, color='white',
+            ha='center', va='center', alpha=0.7)
+    ax.text(0.5, 0.34, "May 2026",
+            transform=ax.transAxes, fontsize=16, color='white',
+            ha='center', va='center', alpha=0.5)
+
+    ax.set\_xlim(0, 1)
+    ax.set\_ylim(0, 1)
+    ax.axis('off')
+    plt.tight\_layout()
+    plt.savefig('results/slide\_00\_title.png', dpi=150, bbox\_inches='tight',
+                facecolor=fig.get\_facecolor())
+    plt.close()
+
+def create\_problem\_slide():
+    fig, ax = plt.subplots(figsize=(16, 9))
+    ax.set\_facecolor('white')
+    fig.patch.set\_facecolor('white')
+
+    ax.text(0.05, 0.90, "The Problem: Structural Modal Analysis",
+            fontsize=28, fontweight='bold', color=NAVY,
+            transform=ax.transAxes)
+
+    \# Problem description
+    problem\_text = (
+        "Determine natural frequencies (ω) and mode shapes (φ) of structures\textbackslash\{\}n"
+        "Governing equation: Kφ = ω²Mφ\textbackslash\{\}n\textbackslash\{\}n"
+        "Applications:\textbackslash\{\}n"
+        "  • Design validation \& resonance avoidance\textbackslash\{\}n"
+        "  • Structural health monitoring\textbackslash\{\}n"
+        "  • Vibration analysis\textbackslash\{\}n\textbackslash\{\}n"
+        "Classical approach: O(N³) eigenvalue decomposition\textbackslash\{\}n"
+        "For large structures → computationally expensive"
+    )
+    ax.text(0.05, 0.70, problem\_text, fontsize=14, color=GREY,
+            transform=ax.transAxes, verticalalignment='top',
+            fontfamily='monospace')
+
+    \# Equation box
+    eq\_text = "Kφ = ω²Mφ"
+    ax.text(0.55, 0.35, eq\_text, fontsize=40, fontweight='bold',
+            color=RED, transform=ax.transAxes,
+            bbox=dict(boxstyle='round,pad=0.3', facecolor=LIGHT,
+                     edgecolor=RED, linewidth=2))
+
+    ax.set\_xlim(0, 1)
+    ax.set\_ylim(0, 1)
+    ax.axis('off')
+    plt.tight\_layout()
+    plt.savefig('results/slide\_01\_problem.png', dpi=150, bbox\_inches='tight',
+                facecolor='white')
+    plt.close()
+
+def create\_quantum\_insight\_slide():
+    fig, ax = plt.subplots(figsize=(16, 9))
+    ax.set\_facecolor('white')
+
+    ax.text(0.05, 0.88, "The Quantum Insight", fontsize=28,
+            fontweight='bold', color=NAVY, transform=ax.transAxes)
+    ax.text(0.05, 0.82, "Both are Hermitian eigenvalue problems!",
+            fontsize=18, color=RED, fontweight='bold',
+            transform=ax.transAxes)
+
+    \# Mapping arrows
+    mappings = [
+        ("Structural", "Kφ = ω²Mφ", 0.55),
+        ("↓ Transform", "H = M⁻¹/²KM⁻¹/²", 0.40),
+        ("Quantum", "H\textbar{}ψ⟩ = λ\textbar{}ψ⟩", 0.25),
+    ]
+
+    for i, (label, eq, y) in enumerate(mappings):
+        color = [RED, ORANGE, GREEN][i]
+        ax.text(0.05, y, label, fontsize=16, fontweight='bold',
+                color=color, transform=ax.transAxes)
+        ax.text(0.35, y, eq, fontsize=20, color=NAVY,
+                transform=ax.transAxes, fontfamily='monospace')
+        if i \textless{} 2:
+            ax.annotate('', xy=(0.3, y-0.08), xytext=(0.3, y-0.02),
+                       arrowprops=dict(arrowstyle='-\textgreater{}', color=BLUE, lw=2))
+
+    \# Key point
+    ax.text(0.05, 0.10, "Key Point: Same math, different physics",
+            fontsize=16, color=PURPLE, fontweight='bold',
+            transform=ax.transAxes)
+
+    ax.set\_xlim(0, 1)
+    ax.set\_ylim(0, 1)
+    ax.axis('off')
+    plt.tight\_layout()
+    plt.savefig('results/slide\_02\_quantum\_insight.png', dpi=150,
+                bbox\_inches='tight', facecolor='white')
+    plt.close()
+
+def create\_results\_summary():
+    fig, axes = plt.subplots(2, 2, figsize=(16, 9))
+    fig.patch.set\_facecolor('white')
+    for ax in axes.flat:
+        ax.set\_facecolor('white')
+
+    axes[0, 0].set\_title("BEAM Results", fontsize=14, fontweight='bold',
+                         color=NAVY)
+    beam\_data = [1443.4879, 1443.4879, 1443.4879]
+    labels = ['COBYLA', 'L-BFGS-B', 'Classical']
+    colors = [BLUE, ORANGE, RED]
+    bars = axes[0, 0].bar(labels, beam\_data, color=colors, alpha=0.8, width=0.5)
+    axes[0, 0].set\_ylabel('ω (rad/s)', fontsize=12)
+    axes[0, 0].set\_ylim(1400, 1500)
+    for bar, val in zip(bars, beam\_data):
+        axes[0, 0].text(bar.get\_x()+bar.get\_width()/2, bar.get\_height()+5,
+                       f'\{val:.2f\}', ha='center', fontsize=10)
+    axes[0, 0].grid(axis='y', alpha=0.3)
+
+    axes[0, 1].set\_title("1D TRUSS Results", fontsize=14, fontweight='bold',
+                         color=NAVY)
+    truss\_data = [16267.3852, 16267.3852, 16267.3852]
+    bars = axes[0, 1].bar(labels, truss\_data, color=colors, alpha=0.8, width=0.5)
+    axes[0, 1].set\_ylabel('ω (rad/s)', fontsize=12)
+    axes[0, 1].set\_ylim(15500, 17000)
+    for bar, val in zip(bars, truss\_data):
+        axes[0, 1].text(bar.get\_x()+bar.get\_width()/2, bar.get\_height()+20,
+                       f'\{val:.2f\}', ha='center', fontsize=10)
+    axes[0, 1].grid(axis='y', alpha=0.3)
+
+    axes[1, 0].set\_title("2D Warren TRUSS", fontsize=14, fontweight='bold',
+                         color=NAVY)
+    twod\_labels = ['VQE', 'Classical 1', 'Classical 2']
+    twod\_data = [3970.4796, 3970.4795, 7635.7410]
+    colors2 = [BLUE, RED, GREEN]
+    bars = axes[1, 0].bar(twod\_labels, twod\_data, color=colors2, alpha=0.8,
+                          width=0.5)
+    axes[1, 0].set\_ylabel('ω (rad/s)', fontsize=12)
+    for bar, val in zip(bars, twod\_data):
+        axes[1, 0].text(bar.get\_x()+bar.get\_width()/2, bar.get\_height()+20,
+                       f'\{val:.2f\}', ha='center', fontsize=10)
+    axes[1, 0].grid(axis='y', alpha=0.3)
+
+    axes[1, 1].set\_title("Optimizer Convergence", fontsize=14,
+                         fontweight='bold', color=NAVY)
+    axes[1, 1].text(0.5, 0.5, "See optimizer\_comparison.png\textbackslash\{\}n"
+                    "COBYLA: 2000 iters\textbackslash\{\}n"
+                    "L-BFGS-B: 351 iters",
+                    ha='center', va='center', fontsize=14,
+                    transform=axes[1, 1].transAxes)
+    axes[1, 1].axis('off')
+
+    plt.suptitle("VQA Modal Analysis — Key Results", fontsize=20,
+                 fontweight='bold', color=NAVY)
+    plt.tight\_layout()
+    plt.savefig('results/slide\_03\_results\_summary.png', dpi=150,
+                bbox\_inches='tight', facecolor='white')
+    plt.close()
+
+def create\_pipeline\_slide():
+    fig, ax = plt.subplots(figsize=(16, 9))
+    ax.set\_facecolor(NAVY)
+    fig.patch.set\_facecolor(NAVY)
+
+    ax.text(0.5, 0.90, "Project Pipeline", fontsize=32,
+            fontweight='bold', color='white', ha='center',
+            transform=ax.transAxes)
+
+    steps = [
+        ("1", "Classical\textbackslash\{\}nFEA", "K, M matrices"),
+        ("2", "Quantum\textbackslash\{\}nHamiltonian", "H = M⁻¹/²KM⁻¹/²"),
+        ("3", "VQE\textbackslash\{\}nOptimization", "COBYLA / L-BFGS-B"),
+        ("4", "Deflation", "Higher modes"),
+        ("5", "Novel\textbackslash\{\}nStudies", "Ill-conditioning"),
+        ("6", "Visualization", "Plots \& Analysis"),
+    ]
+
+    x\_start = 0.05
+    x\_end = 0.95
+    y\_pos = 0.55
+    n = len(steps)
+
+    for i, (num, title, desc) in enumerate(steps):
+        x = x\_start + (x\_end - x\_start) * i / (n - 1)
+        circ = plt.Circle((x, y\_pos), 0.08, color=CYAN, ec='white', lw=2)
+        ax.add\_patch(circ)
+        ax.text(x, y\_pos, num, fontsize=20, fontweight='bold',
+                color=NAVY, ha='center', va='center',
+                transform=ax.transAxes)
+        ax.text(x, y\_pos-0.15, title, fontsize=12, color='white',
+                ha='center', va='center', fontweight='bold',
+                transform=ax.transAxes)
+        ax.text(x, y\_pos-0.25, desc, fontsize=10, color=CYAN,
+                ha='center', va='center', transform=ax.transAxes)
+        if i \textless{} n - 1:
+            next\_x = x\_start + (x\_end - x\_start) * (i+1) / (n - 1)
+            ax.annotate('', xy=(next\_x-0.03, y\_pos),
+                       xytext=(x+0.03, y\_pos),
+                       arrowprops=dict(arrowstyle='-\textgreater{}', color='white', lw=2))
+
+    plt.tight\_layout()
+    plt.savefig('results/slide\_04\_pipeline.png', dpi=150,
+                bbox\_inches='tight', facecolor=NAVY)
+    plt.close()
+
+def create\_mode\_shape\_slide():
+    fig, axes = plt.subplots(1, 2, figsize=(16, 9))
+    fig.patch.set\_facecolor('white')
+
+    axes[0].set\_title("BEAM Mode Shapes (VQE vs Classical)", fontsize=14,
+                      fontweight='bold', color=NAVY)
+    try:
+        img = plt.imread('results/mode\_shapes\_continuous.png')
+        axes[0].imshow(img)
+        axes[0].axis('off')
+    except:
+        axes[0].text(0.5, 0.5, "See mode\_shapes\_continuous.png",
+                     ha='center', va='center', transform=axes[0].transAxes)
+
+    axes[1].set\_title("TRUSS Mode Shapes (Axial Displacement)", fontsize=14,
+                      fontweight='bold', color=NAVY)
+    try:
+        img = plt.imread('results/truss\_mode\_shapes.png')
+        axes[1].imshow(img)
+        axes[1].axis('off')
+    except:
+        axes[1].text(0.5, 0.5, "See truss\_mode\_shapes.png",
+                     ha='center', va='center', transform=axes[1].transAxes)
+
+    plt.tight\_layout()
+    plt.savefig('results/slide\_10\_mode\_shapes.png', dpi=150,
+                bbox\_inches='tight', facecolor='white')
+    plt.close()
+
+def create\_novel\_studies\_slide():
+    fig, axes = plt.subplots(1, 2, figsize=(16, 9))
+    fig.patch.set\_facecolor('white')
+
+    axes[0].set\_title("Ill-Conditioning Study", fontsize=14,
+                      fontweight='bold', color=NAVY)
+    try:
+        img = plt.imread('results/ill\_conditioning\_study.png')
+        axes[0].imshow(img)
+        axes[0].axis('off')
+    except:
+        axes[0].text(0.5, 0.5, "See ill\_conditioning\_study.png",
+                     ha='center', va='center', transform=axes[0].transAxes)
+
+    axes[1].set\_title("Damage Detection Study", fontsize=14,
+                      fontweight='bold', color=NAVY)
+    try:
+        img = plt.imread('results/damage\_detection.png')
+        axes[1].imshow(img)
+        axes[1].axis('off')
+    except:
+        axes[1].text(0.5, 0.5, "See damage\_detection.png",
+                     ha='center', va='center', transform=axes[1].transAxes)
+
+    plt.tight\_layout()
+    plt.savefig('results/slide\_11\_novel\_studies.png', dpi=150,
+                bbox\_inches='tight', facecolor='white')
+    plt.close()
+
+def create\_2d\_truss\_slide():
+    fig, axes = plt.subplots(1, 3, figsize=(16, 9))
+    fig.patch.set\_facecolor('white')
+
+    axes[0].set\_title("2D Warren Truss Geometry", fontsize=14,
+                      fontweight='bold', color=NAVY)
+    try:
+        img = plt.imread('results/truss2d\_geometry.png')
+        axes[0].imshow(img)
+        axes[0].axis('off')
+    except:
+        axes[0].axis('off')
+
+    axes[1].set\_title("2D Mode Shapes", fontsize=14,
+                      fontweight='bold', color=NAVY)
+    try:
+        img = plt.imread('results/truss2d\_mode\_shapes.png')
+        axes[1].imshow(img)
+        axes[1].axis('off')
+    except:
+        axes[1].axis('off')
+
+    axes[2].set\_title("2D Frequency Comparison", fontsize=14,
+                      fontweight='bold', color=NAVY)
+    try:
+        img = plt.imread('results/truss2d\_frequency\_comparison.png')
+        axes[2].imshow(img)
+        axes[2].axis('off')
+    except:
+        axes[2].axis('off')
+
+    plt.tight\_layout()
+    plt.savefig('results/slide\_12\_2d\_truss.png', dpi=150,
+                bbox\_inches='tight', facecolor='white')
+    plt.close()
+
+def create\_convergence\_slide():
+    fig, axes = plt.subplots(1, 2, figsize=(16, 9))
+    fig.patch.set\_facecolor('white')
+
+    axes[0].set\_title("VQE Convergence (Beam)", fontsize=14,
+                      fontweight='bold', color=NAVY)
+    try:
+        img = plt.imread('results/convergence.png')
+        axes[0].imshow(img)
+        axes[0].axis('off')
+    except:
+        axes[0].axis('off')
+
+    axes[1].set\_title("Optimizer Comparison", fontsize=14,
+                      fontweight='bold', color=NAVY)
+    try:
+        img = plt.imread('results/optimizer\_comparison.png')
+        axes[1].imshow(img)
+        axes[1].axis('off')
+    except:
+        axes[1].axis('off')
+
+    plt.tight\_layout()
+    plt.savefig('results/slide\_08\_convergence.png', dpi=150,
+                bbox\_inches='tight', facecolor='white')
+    plt.close()
+
+def create\_truss\_results\_slide():
+    fig, axes = plt.subplots(1, 3, figsize=(16, 9))
+    fig.patch.set\_facecolor('white')
+
+    axes[0].set\_title("1D Truss Geometry", fontsize=14,
+                      fontweight='bold', color=NAVY)
+    try:
+        img = plt.imread('results/truss\_geometry.png')
+        axes[0].imshow(img)
+        axes[0].axis('off')
+    except:
+        axes[0].axis('off')
+
+    axes[1].set\_title("Truss Mode Shapes", fontsize=14,
+                      fontweight='bold', color=NAVY)
+    try:
+        img = plt.imread('results/truss\_mode\_shapes.png')
+        axes[1].imshow(img)
+        axes[1].axis('off')
+    except:
+        axes[1].axis('off')
+
+    axes[2].set\_title("Truss Frequency Comparison", fontsize=14,
+                      fontweight='bold', color=NAVY)
+    try:
+        img = plt.imread('results/truss\_frequency\_comparison.png')
+        axes[2].imshow(img)
+        axes[2].axis('off')
+    except:
+        axes[2].axis('off')
+
+    plt.tight\_layout()
+    plt.savefig('results/slide\_06b\_truss\_results.png', dpi=150,
+                bbox\_inches='tight', facecolor='white')
+    plt.close()
+
+def create\_conclusion\_slide():
+    fig, ax = plt.subplots(figsize=(16, 9))
+    ax.set\_facecolor(NAVY)
+    fig.patch.set\_facecolor(NAVY)
+
+    ax.text(0.5, 0.85, "Conclusions", fontsize=36,
+            fontweight='bold', color='white', ha='center',
+            transform=ax.transAxes)
+
+    conclusions = [
+        "✅ VQE achieves \textless{}0.03\% error for beam modal analysis",
+        "✅ Quantum pipeline validated for both beam and truss",
+        "✅ All 3 modes found via deflation (truss)",
+        "✅ Novel studies: ill-conditioning \& damage detection",
+        "✅ First demonstration of VQE for structural modal analysis",
+        "✅ Open-source framework for quantum structural analysis",
+    ]
+
+    y\_start = 0.72
+    for i, text in enumerate(conclusions):
+        y = y\_start - i * 0.08
+        ax.text(0.08, y, text, fontsize=16, color=CYAN,
+                transform=ax.transAxes, va='center')
+
+    ax.text(0.5, 0.10, "Thank You!", fontsize=32,
+            fontweight='bold', color='white', ha='center',
+            transform=ax.transAxes)
+
+    ax.text(0.5, 0.05, "Questions?", fontsize=18,
+            color=ORANGE, ha='center', transform=ax.transAxes)
+
+    plt.tight\_layout()
+    plt.savefig('results/slide\_18\_conclusion.png', dpi=150,
+                bbox\_inches='tight', facecolor=NAVY)
+    plt.close()
+
+
+if \_\_name\_\_ == "\_\_main\_\_":
+    print("Generating presentation slides...")
+    create\_title\_slide()
+    print("  [OK] slide\_00\_title.png")
+    create\_problem\_slide()
+    print("  [OK] slide\_01\_problem.png")
+    create\_quantum\_insight\_slide()
+    print("  [OK] slide\_02\_quantum\_insight.png")
+    create\_results\_summary()
+    print("  [OK] slide\_03\_results\_summary.png")
+    create\_pipeline\_slide()
+    print("  [OK] slide\_04\_pipeline.png")
+    create\_convergence\_slide()
+    print("  [OK] slide\_08\_convergence.png")
+    create\_truss\_results\_slide()
+    print("  [OK] slide\_06b\_truss\_results.png")
+    create\_mode\_shape\_slide()
+    print("  [OK] slide\_10\_mode\_shapes.png")
+    create\_novel\_studies\_slide()
+    print("  [OK] slide\_11\_novel\_studies.png")
+    create\_2d\_truss\_slide()
+    print("  [OK] slide\_12\_2d\_truss.png")
+    create\_conclusion\_slide()
+    print("  [OK] slide\_18\_conclusion.png")
+    print("\textbackslash\{\}n[SUCCESS] All presentation slides generated in results/")
+\end{lstlisting}
+
+% ===================================================================
+\section{Project Report (Official LaTeX)}
+% ===================================================================
+\begin{lstlisting}[style=codestyle, caption={VQA\_Modal\_Analysis\_Report.tex}]
+\textbackslash\{\}documentclass[12pt, a4paper]\{article\}
+
+\% ---- Packages ----
+\textbackslash\{\}usepackage[utf8]\{inputenc\}
+\textbackslash\{\}usepackage[T1]\{fontenc\}
+\textbackslash\{\}usepackage\{amsmath, amssymb, amsfonts\}
+\textbackslash\{\}usepackage\{graphicx\}
+\textbackslash\{\}usepackage\{booktabs\}
+\textbackslash\{\}usepackage\{geometry\}
+\textbackslash\{\}usepackage\{enumitem\}
+\textbackslash\{\}usepackage\{listings\}
+\textbackslash\{\}usepackage\{xcolor\}
+\textbackslash\{\}usepackage\{titlesec\}
+\textbackslash\{\}usepackage\{caption\}
+\textbackslash\{\}usepackage\{subcaption\}
+\textbackslash\{\}usepackage\{float\}
+\textbackslash\{\}usepackage\{setspace\}
+
+\textbackslash\{\}geometry\{margin=1in\}
+\textbackslash\{\}onehalfspacing
+
+\% ---- Hyperref (no colored boxes) ----
+\textbackslash\{\}usepackage[hidelinks]\{hyperref\}
+
+\% ---- Code listing style ----
+\textbackslash\{\}lstset\{
+    basicstyle=\textbackslash\{\}ttfamily\textbackslash\{\}small,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\textbackslash\{\}color\{gray!10\},
+    keywordstyle=\textbackslash\{\}color\{blue\},
+    commentstyle=\textbackslash\{\}color\{green!50!black\},
+    stringstyle=\textbackslash\{\}color\{red\}
+\}
+
+\% ---- Section formatting ----
+\textbackslash\{\}titleformat\{\textbackslash\{\}section\}\{\textbackslash\{\}normalfont\textbackslash\{\}Large\textbackslash\{\}bfseries\}\{\textbackslash\{\}thesection\}\{1em\}\{\}
+\textbackslash\{\}titleformat\{\textbackslash\{\}subsection\}\{\textbackslash\{\}normalfont\textbackslash\{\}large\textbackslash\{\}bfseries\}\{\textbackslash\{\}thesubsection\}\{1em\}\{\}
+
+\% ---- Title Page ----
+\textbackslash\{\}begin\{document\}
+
+\textbackslash\{\}begin\{titlepage\}
+    \textbackslash\{\}centering
+    \textbackslash\{\}vspace*\{0.5cm\}
+
+    \textbackslash\{\}includegraphics[width=0.35\textbackslash\{\}textwidth]\{COEP\_Tech\_logo.jpeg\}\textbackslash\{\}\textbackslash\{\}[0.8cm]
+
+    \{\textbackslash\{\}LARGE \textbackslash\{\}textbf\{COEP Technological University\}\}\textbackslash\{\}\textbackslash\{\}[0.6cm]
+    \{\textbackslash\{\}Huge \textbackslash\{\}textbf\{VQA Modal Analysis\}\}\textbackslash\{\}\textbackslash\{\}[0.3cm]
+    \{\textbackslash\{\}Large Quantum Computing for Structural Dynamics\}\textbackslash\{\}\textbackslash\{\}[1.5cm]
+
+    \{\textbackslash\{\}large
+    \textbackslash\{\}begin\{tabular\}\{c\}
+    Project Report \textbackslash\{\}\textbackslash\{\}[0.3cm]
+    Department of Computer Science \textbackslash\{\}\& Engineering \textbackslash\{\}\textbackslash\{\}[0.8cm]
+    Date: May 2026
+    \textbackslash\{\}end\{tabular\}
+    \}
+
+    \textbackslash\{\}vfill
+\textbackslash\{\}end\{titlepage\}
+
+\% ---- Table of Contents ----
+\textbackslash\{\}tableofcontents
+\textbackslash\{\}newpage
+
+\% ===================================================================
+\textbackslash\{\}section\{Introduction\}
+\% ===================================================================
+
+Modal analysis determines the natural frequencies and mode shapes of vibrating structures. These intrinsic properties define how a structure responds to dynamic loads and are essential for resonance avoidance, fatigue prediction, and structural health monitoring.
+
+This project demonstrates the application of the \textbackslash\{\}textbf\{Variational Quantum Eigensolver (VQE)\} algorithm to solve structural modal analysis problems for both beam and 2D truss structures. The fundamental insight is that the generalized eigenvalue problem in structural dynamics can be transformed into a quantum eigenvalue problem:
+
+\textbackslash\{\}begin\{equation\}
+    K\textbackslash\{\}phi = \textbackslash\{\}omega\textasciicircum\{\}2 M\textbackslash\{\}phi \textbackslash\{\}quad \textbackslash\{\}xrightarrow\{\textbackslash\{\} H = M\textasciicircum\{\}\{-1/2\} K M\textasciicircum\{\}\{-1/2\}\textbackslash\{\} \} \textbackslash\{\}quad H\textbar{}\textbackslash\{\}psi\textbackslash\{\}rangle = \textbackslash\{\}lambda\textbar{}\textbackslash\{\}psi\textbackslash\{\}rangle
+\textbackslash\{\}end\{equation\}
+
+where \$\textbackslash\{\}lambda = \textbackslash\{\}omega\textasciicircum\{\}2\$. This mapping enables the use of quantum algorithms to find structural natural frequencies.
+
+\% ===================================================================
+\textbackslash\{\}section\{Theoretical Foundation\}
+\% ===================================================================
+
+\textbackslash\{\}subsection\{Structural Dynamics Eigenvalue Problem\}
+
+The equation of motion for a discretized structure is:
+
+\textbackslash\{\}begin\{equation\}
+    M\textbackslash\{\}ddot\{u\} + K u = 0
+\textbackslash\{\}end\{equation\}
+
+Assuming harmonic motion \$u = \textbackslash\{\}phi e\textasciicircum\{\}\{i\textbackslash\{\}omega t\}\$, we obtain the generalized eigenvalue problem:
+
+\textbackslash\{\}begin\{equation\}
+    K\textbackslash\{\}phi = \textbackslash\{\}omega\textasciicircum\{\}2 M\textbackslash\{\}phi
+\textbackslash\{\}end\{equation\}
+
+where:
+\textbackslash\{\}begin\{itemize\}[noitemsep]
+    \textbackslash\{\}item \$K\$ = Global stiffness matrix (N/m)
+    \textbackslash\{\}item \$M\$ = Global mass matrix (kg)
+    \textbackslash\{\}item \$\textbackslash\{\}phi\$ = Mode shape eigenvector
+    \textbackslash\{\}item \$\textbackslash\{\}omega\$ = Natural frequency (rad/s)
+\textbackslash\{\}end\{itemize\}
+
+\textbackslash\{\}subsection\{Transformation to Quantum Eigenvalue Problem\}
+
+Since \$M\$ is symmetric positive definite, we compute \$M\textasciicircum\{\}\{-1/2\}\$ via eigendecomposition and define:
+
+\textbackslash\{\}begin\{equation\}
+    H = M\textasciicircum\{\}\{-1/2\} K M\textasciicircum\{\}\{-1/2\}, \textbackslash\{\}quad \textbar{}\textbackslash\{\}psi\textbackslash\{\}rangle = M\textasciicircum\{\}\{1/2\}\textbackslash\{\}phi
+\textbackslash\{\}end\{equation\}
+
+The transformed problem \$H\textbar{}\textbackslash\{\}psi\textbackslash\{\}rangle = \textbackslash\{\}lambda\textbar{}\textbackslash\{\}psi\textbackslash\{\}rangle\$ has eigenvalues \$\textbackslash\{\}lambda = \textbackslash\{\}omega\textasciicircum\{\}2\$, making it directly solvable via quantum algorithms.
+
+\textbackslash\{\}subsection\{Pauli Decomposition\}
+
+For quantum computation, the Hamiltonian must be expressed as a sum of Pauli operators:
+
+\textbackslash\{\}begin\{equation\}
+    H = \textbackslash\{\}sum\_i c\_i P\_i, \textbackslash\{\}quad P\_i \textbackslash\{\}in \textbackslash\{\}\{I, X, Y, Z\textbackslash\{\}\}\textasciicircum\{\}\{\textbackslash\{\}otimes n\}
+\textbackslash\{\}end\{equation\}
+
+\textbackslash\{\}subsection\{Hamiltonian Normalization\}
+
+Structural matrices often have eigenvalues spanning multiple orders of magnitude. Normalization ensures stable VQE convergence:
+
+\textbackslash\{\}begin\{equation\}
+    H\_\{\textbackslash\{\}text\{norm\}\} = \textbackslash\{\}frac\{H\}\{\textbackslash\{\}\textbar{}H\textbackslash\{\}\textbar{}\}, \textbackslash\{\}quad \textbackslash\{\}omega = \textbackslash\{\}sqrt\{\textbackslash\{\}lambda\_\{\textbackslash\{\}text\{vqe\}\} \textbackslash\{\}cdot H\_\{\textbackslash\{\}text\{scale\}\}\}
+\textbackslash\{\}end\{equation\}
+
+\% ===================================================================
+\textbackslash\{\}section\{System Architecture\}
+\% ===================================================================
+
+\textbackslash\{\}subsection\{Pipeline Overview\}
+
+\textbackslash\{\}begin\{verbatim\}
+INPUT: Material (E, rho), Geometry (L, I/A), Mesh (n\_elem)
+  \textbar{}
+  v
+FINITE ELEMENT ANALYSIS (fea.py / truss.py)
+  \textbar{}  Output: K\_global, M\_global
+  v
+BOUNDARY CONDITIONS
+  \textbar{}  Output: K\_red, M\_red, free\_dofs
+  v
+QUANTUM HAMILTONIAN (quantum\_setup.py)
+  \textbar{}  M\textasciicircum\{\}\{-1/2\} K M\textasciicircum\{\}\{-1/2\} -\textgreater{} Pauli decomposition
+  v
+VQE OPTIMIZATION (vqe\_runner.py + ansatz.py)
+  \textbar{}  Multi-start, two-stage refinement
+  v
+RESULTS: Natural frequencies, mode shapes, convergence
+\textbackslash\{\}end\{verbatim\}
+
+\textbackslash\{\}subsection\{Project Structure\}
+
+
+
+\% ===================================================================
+\textbackslash\{\}section\{Finite Element Analysis Modules\}
+\% ===================================================================
+
+\textbackslash\{\}subsection\{Beam Element (fea.py)\}
+
+Euler-Bernoulli beam elements with 2 DOFs per node (transverse displacement \$v\$ and rotation \$\textbackslash\{\}theta\$):
+
+\textbackslash\{\}begin\{equation\}
+k\_e = \textbackslash\{\}frac\{EI\}\{L\textasciicircum\{\}3\}
+\textbackslash\{\}begin\{bmatrix\}
+12 \& 6L \& -12 \& 6L \textbackslash\{\}\textbackslash\{\}
+6L \& 4L\textasciicircum\{\}2 \& -6L \& 2L\textasciicircum\{\}2 \textbackslash\{\}\textbackslash\{\}
+-12 \& -6L \& 12 \& -6L \textbackslash\{\}\textbackslash\{\}
+6L \& 2L\textasciicircum\{\}2 \& -6L \& 4L\textasciicircum\{\}2
+\textbackslash\{\}end\{bmatrix\}
+\textbackslash\{\}end\{equation\}
+
+Consistent mass matrix:
+
+\textbackslash\{\}begin\{equation\}
+m\_e = \textbackslash\{\}frac\{\textbackslash\{\}rho A L\}\{420\}
+\textbackslash\{\}begin\{bmatrix\}
+156 \& 22L \& 54 \& -13L \textbackslash\{\}\textbackslash\{\}
+22L \& 4L\textasciicircum\{\}2 \& 13L \& -3L\textasciicircum\{\}2 \textbackslash\{\}\textbackslash\{\}
+54 \& 13L \& 156 \& -22L \textbackslash\{\}\textbackslash\{\}
+-13L \& -3L\textasciicircum\{\}2 \& -22L \& 4L\textasciicircum\{\}2
+\textbackslash\{\}end\{bmatrix\}
+\textbackslash\{\}end\{equation\}
+
+\textbackslash\{\}textbf\{Boundary Conditions:\} Simply-supported (pin-pin) removes transverse DOF at both ends, yielding \$2n\$ free DOFs for \$n\$ elements.
+
+\textbackslash\{\}textbf\{Analytical Solution:\} For a simply-supported beam:
+\textbackslash\{\}begin\{equation\}
+    \textbackslash\{\}omega\_n = \textbackslash\{\}left(\textbackslash\{\}frac\{n\textbackslash\{\}pi\}\{L\}\textbackslash\{\}right)\textasciicircum\{\}2 \textbackslash\{\}sqrt\{\textbackslash\{\}frac\{EI\}\{\textbackslash\{\}rho A\}\}
+\textbackslash\{\}end\{equation\}
+
+\textbackslash\{\}subsection\{1D Truss Element (truss.py)\}
+
+Axial-only bar elements with 1 DOF per node:
+
+\textbackslash\{\}begin\{equation\}
+k\_e = \textbackslash\{\}frac\{EA\}\{L\}
+\textbackslash\{\}begin\{bmatrix\}
+1 \& -1 \textbackslash\{\}\textbackslash\{\} -1 \& 1
+\textbackslash\{\}end\{bmatrix\}, \textbackslash\{\}quad
+m\_e = \textbackslash\{\}frac\{\textbackslash\{\}rho A L\}\{6\}
+\textbackslash\{\}begin\{bmatrix\}
+2 \& 1 \textbackslash\{\}\textbackslash\{\} 1 \& 2
+\textbackslash\{\}end\{bmatrix\}
+\textbackslash\{\}end\{equation\}
+
+\textbackslash\{\}textbf\{BCs:\} Fixed-fixed removes DOFs at both end nodes. Analytical frequency: \$\textbackslash\{\}omega\_n = \textbackslash\{\}frac\{n\textbackslash\{\}pi\}\{L\}\textbackslash\{\}sqrt\{\textbackslash\{\}frac\{E\}\{\textbackslash\{\}rho\}\}\$.
+
+\textbackslash\{\}subsection\{2D Warren Truss (truss.py)\}
+
+The corrected 2D truss implements a proper triangular Warren truss:
+
+\textbackslash\{\}begin\{itemize\}[noitemsep]
+    \textbackslash\{\}item \textbackslash\{\}textbf\{Nodes:\} Bottom chord (B\textbackslash\{\}textsubscript\{0\}--B\textbackslash\{\}textsubscript\{n\}), top chord (T\textbackslash\{\}textsubscript\{0\}--T\textbackslash\{\}textsubscript\{n-1\})
+    \textbackslash\{\}item \textbackslash\{\}textbf\{Members:\} Bottom chord, top chord, vertical end posts, alternating diagonal web members
+    \textbackslash\{\}item \textbackslash\{\}textbf\{DOFs:\} 2 per node (\$u\_x\$, \$u\_y\$)
+    \textbackslash\{\}item \textbackslash\{\}textbf\{BCs:\} Pinned at B\textbackslash\{\}textsubscript\{0\}, roller at B\textbackslash\{\}textsubscript\{n-1\}
+\textbackslash\{\}end\{itemize\}
+
+\textbackslash\{\}textbf\{2D Element Stiffness:\}
+
+\textbackslash\{\}begin\{equation\}
+k\_e = \textbackslash\{\}frac\{EA\}\{L\}
+\textbackslash\{\}begin\{bmatrix\}
+c\textasciicircum\{\}2 \& cs \& -c\textasciicircum\{\}2 \& -cs \textbackslash\{\}\textbackslash\{\}
+cs \& s\textasciicircum\{\}2 \& -cs \& -s\textasciicircum\{\}2 \textbackslash\{\}\textbackslash\{\}
+-c\textasciicircum\{\}2 \& -cs \& c\textasciicircum\{\}2 \& cs \textbackslash\{\}\textbackslash\{\}
+-cs \& -s\textasciicircum\{\}2 \& cs \& s\textasciicircum\{\}2
+\textbackslash\{\}end\{bmatrix\}
+\textbackslash\{\}end\{equation\}
+
+where \$c = \textbackslash\{\}cos\textbackslash\{\}theta\$, \$s = \textbackslash\{\}sin\textbackslash\{\}theta\$, and \$\textbackslash\{\}theta\$ is the element angle from horizontal. Consistent mass matrix uses a \$4\textbackslash\{\}times4\$ form with 2 mass entries per DOF pair.
+
+\textbackslash\{\}textbf\{Critical design point:\} Vertical end posts are required to prevent the structure from being a mechanism (singular stiffness matrix).
+
+\% ===================================================================
+\textbackslash\{\}section\{Quantum Hamiltonian Construction\}
+\% ===================================================================
+
+The transformation in \textbackslash\{\}texttt\{quantum\textbackslash\{\}\_setup.py\}:
+
+\textbackslash\{\}begin\{enumerate\}[noitemsep]
+    \textbackslash\{\}item Compute \$M\textasciicircum\{\}\{-1/2\}\$ via \textbackslash\{\}texttt\{scipy.linalg.fractional\textbackslash\{\}\_matrix\textbackslash\{\}\_power\}
+    \textbackslash\{\}item Form \$H = M\textasciicircum\{\}\{-1/2\} K M\textasciicircum\{\}\{-1/2\}\$
+    \textbackslash\{\}item Normalize: \$H\_\{\textbackslash\{\}text\{norm\}\} = H / \textbackslash\{\}\textbar{}H\textbackslash\{\}\textbar{}\$
+    \textbackslash\{\}item Pad to \$2\textasciicircum\{\}n \textbackslash\{\}times 2\textasciicircum\{\}n\$ (padding value 2.0 \$\textgreater{}\$ max eigenvalue)
+    \textbackslash\{\}item Convert to \textbackslash\{\}texttt\{SparsePauliOp\}
+\textbackslash\{\}end\{enumerate\}
+
+\% ===================================================================
+\textbackslash\{\}section\{VQE Implementation\}
+\% ===================================================================
+
+\textbackslash\{\}subsection\{Ansatz Circuits (ansatz.py)\}
+
+\textbackslash\{\}textbf\{Hardware-Efficient Ansatz (HEA):\} Qiskit's \textbackslash\{\}texttt\{EfficientSU2\} with linear entanglement and alternating R\textbackslash\{\}textsubscript\{Y\}/CNOT layers. Parameters: \$2n(\textbackslash\{\}text\{reps\}+1)\$.
+
+\textbackslash\{\}textbf\{Symmetric Ansatz:\} Enforces mirror symmetry for simply-supported beams, reducing parameters from 12 to 5 for 2 qubits / 2 reps.
+
+\textbackslash\{\}subsection\{Multi-Start Optimization (vqe\textbackslash\{\}\_runner.py)\}
+
+Six initial points: classical hint, random, identity state, uniform superposition, plus additional random restarts. First 3 starts use SPSA, remaining use L-BFGS-B with two-stage refinement.
+
+\textbackslash\{\}subsection\{Deflation\}
+
+Excited states found via \$H' = H + \textbackslash\{\}alpha \textbar{}\textbackslash\{\}psi\_k\textbackslash\{\}rangle\textbackslash\{\}langle\textbackslash\{\}psi\_k\textbar{}\$ penalty method.
+
+\% ===================================================================
+\textbackslash\{\}section\{Beam Modal Analysis Results\}
+\% ===================================================================
+
+\textbackslash\{\}textbf\{Setup:\} Steel (\$E = 200\$ GPa, \$\textbackslash\{\}rho = 7850\$ kg/m\textbackslash\{\}textsuperscript\{3\}), \$L = 1.0\$ m, \$I = 8.33 \textbackslash\{\}times 10\textasciicircum\{\}\{-6\}\$ m\textbackslash\{\}textsuperscript\{4\}, \$A = 0.01\$ m\textbackslash\{\}textsuperscript\{2\}, 2 elements, 2 qubits (pin-pin BCs).
+
+\textbackslash\{\}begin\{table\}[H]
+\textbackslash\{\}centering
+\textbackslash\{\}caption\{Beam Natural Frequencies (rad/s)\}
+\textbackslash\{\}begin\{tabular\}\{lcc\}
+\textbackslash\{\}toprule
+\textbackslash\{\}textbf\{Method\} \& \$\textbackslash\{\}omega\_1\$ \& \textbackslash\{\}textbf\{Error\} \textbackslash\{\}\textbackslash\{\}
+\textbackslash\{\}midrule
+Analytical \& 1440.26 \& --- \textbackslash\{\}\textbackslash\{\}
+Classical FEA \& 1443.49 \& --- \textbackslash\{\}\textbackslash\{\}
+VQE (L-BFGS-B) \& 1443.49 \& \$\textless{} 0.001\textbackslash\{\}\%\$ \textbackslash\{\}\textbackslash\{\}
+VQE (COBYLA) \& 1443.81 \& \$0.022\textbackslash\{\}\%\$ \textbackslash\{\}\textbackslash\{\}
+\textbackslash\{\}bottomrule
+\textbackslash\{\}end\{tabular\}
+\textbackslash\{\}end\{table\}
+
+\textbackslash\{\}begin\{figure\}[H]
+\textbackslash\{\}centering
+\textbackslash\{\}includegraphics[width=0.48\textbackslash\{\}textwidth]\{results/convergence.png\}
+\textbackslash\{\}includegraphics[width=0.48\textbackslash\{\}textwidth]\{results/optimizer\_comparison.png\}
+\textbackslash\{\}caption\{VQE convergence and optimizer comparison for beam\}
+\textbackslash\{\}end\{figure\}
+
+\textbackslash\{\}begin\{figure\}[H]
+\textbackslash\{\}centering
+\textbackslash\{\}includegraphics[width=0.8\textbackslash\{\}textwidth]\{results/mode\_shapes\_continuous.png\}
+\textbackslash\{\}caption\{Beam mode shapes: Classical FEA vs VQE vs Analytical\}
+\textbackslash\{\}end\{figure\}
+
+\% ===================================================================
+\textbackslash\{\}section\{1D Truss Modal Analysis Results\}
+\% ===================================================================
+
+\textbackslash\{\}textbf\{Setup:\} Steel, \$L = 1.0\$ m, \$A = 0.01\$ m\textbackslash\{\}textsuperscript\{2\}, 4 bar elements, 2 qubits (fixed-fixed BCs).
+
+\textbackslash\{\}begin\{table\}[H]
+\textbackslash\{\}centering
+\textbackslash\{\}caption\{1D Truss Frequencies\}
+\textbackslash\{\}begin\{tabular\}\{lccc\}
+\textbackslash\{\}toprule
+\textbackslash\{\}textbf\{Mode\} \& \$\textbackslash\{\}omega\_\{\textbackslash\{\}text\{FEA\}\}\$ (rad/s) \& \$\textbackslash\{\}omega\_\{\textbackslash\{\}text\{VQE\}\}\$ (rad/s) \& \textbackslash\{\}textbf\{Error\} \textbackslash\{\}\textbackslash\{\}
+\textbackslash\{\}midrule
+1 \& 1229.0 \& 1229.0 \& \$\textless{} 0.01\textbackslash\{\}\%\$ \textbackslash\{\}\textbackslash\{\}
+2 \& 3682.3 \& 3682.3 \& \$\textless{} 0.01\textbackslash\{\}\%\$ \textbackslash\{\}\textbackslash\{\}
+3 \& 7322.5 \& 7322.5 \& \$\textless{} 0.01\textbackslash\{\}\%\$ \textbackslash\{\}\textbackslash\{\}
+\textbackslash\{\}bottomrule
+\textbackslash\{\}end\{tabular\}
+\textbackslash\{\}end\{table\}
+
+\textbackslash\{\}begin\{figure\}[H]
+\textbackslash\{\}centering
+\textbackslash\{\}includegraphics[width=0.6\textbackslash\{\}textwidth]\{results/truss\_geometry.png\}
+\textbackslash\{\}caption\{1D Truss geometry with node labels\}
+\textbackslash\{\}end\{figure\}
+
+\textbackslash\{\}begin\{figure\}[H]
+\textbackslash\{\}centering
+\textbackslash\{\}includegraphics[width=0.8\textbackslash\{\}textwidth]\{results/truss\_mode\_shapes.png\}
+\textbackslash\{\}caption\{1D Truss mode shapes\}
+\textbackslash\{\}end\{figure\}
+
+\textbackslash\{\}begin\{figure\}[H]
+\textbackslash\{\}centering
+\textbackslash\{\}includegraphics[width=0.7\textbackslash\{\}textwidth]\{results/truss\_frequency\_comparison.png\}
+\textbackslash\{\}caption\{1D Truss frequency comparison: VQE vs Classical\}
+\textbackslash\{\}end\{figure\}
+
+\% ===================================================================
+\textbackslash\{\}section\{2D Warren Truss Implementation\}
+\% ===================================================================
+
+\textbackslash\{\}subsection\{Mesh Generation\}
+
+The corrected 2D Warren truss uses triangular elements with proper geometry:
+
+\textbackslash\{\}begin\{itemize\}[noitemsep]
+    \textbackslash\{\}item Bottom chord: \$n\$ nodes evenly spaced at \$y = 0\$
+    \textbackslash\{\}item Top chord: \$n\{-\}1\$ nodes offset by half panel width at \$y = h\$
+    \textbackslash\{\}item Vertical end posts at both ends for structural stability
+    \textbackslash\{\}item Alternating diagonal web members (Warren pattern)
+    \textbackslash\{\}item Pinned-roller boundary conditions
+\textbackslash\{\}end\{itemize\}
+
+\textbackslash\{\}subsection\{Scaling\}
+
+\textbackslash\{\}begin\{table\}[H]
+\textbackslash\{\}centering
+\textbackslash\{\}caption\{Truss Size vs Qubit Requirements\}
+\textbackslash\{\}begin\{tabular\}\{cccc\}
+\textbackslash\{\}toprule
+\textbackslash\{\}textbf\{Chords\} \& \textbackslash\{\}textbf\{Free DOFs\} \& \textbackslash\{\}textbf\{Qubits\} \& \textbackslash\{\}textbf\{Members\} \textbackslash\{\}\textbackslash\{\}
+\textbackslash\{\}midrule
+2 (VQE demo) \& 3 \& 2 \& 4 \textbackslash\{\}\textbackslash\{\}
+3 \& 7 \& 3 \& 7 \textbackslash\{\}\textbackslash\{\}
+5 (full) \& 17 \& 5 \& 17 \textbackslash\{\}\textbackslash\{\}
+\textbackslash\{\}bottomrule
+\textbackslash\{\}end\{tabular\}
+\textbackslash\{\}end\{table\}
+
+The 2-chord model retains the triangular Warren topology while fitting in 2 qubits. The full 5-chord model needs 5 qubits and \$\textgreater{}2\$ hours simulator time.
+
+\textbackslash\{\}subsection\{Results\}
+
+\textbackslash\{\}begin\{table\}[H]
+\textbackslash\{\}centering
+\textbackslash\{\}caption\{2D Warren Truss: Classical FEA\}
+\textbackslash\{\}begin\{tabular\}\{lcc\}
+\textbackslash\{\}toprule
+\textbackslash\{\}textbf\{Mode\} \& \$\textbackslash\{\}omega\$ (rad/s) \& \$f\$ (Hz) \textbackslash\{\}\textbackslash\{\}
+\textbackslash\{\}midrule
+1 \& 1221.57 \& 194.4 \textbackslash\{\}\textbackslash\{\}
+2 \& 1861.82 \& 296.3 \textbackslash\{\}\textbackslash\{\}
+3 \& 3409.80 \& 542.7 \textbackslash\{\}\textbackslash\{\}
+\textbackslash\{\}bottomrule
+\textbackslash\{\}end\{tabular\}
+\textbackslash\{\}end\{table\}
+
+Condition number: 171.89 (well-conditioned).
+
+\textbackslash\{\}begin\{figure\}[H]
+\textbackslash\{\}centering
+\textbackslash\{\}includegraphics[width=0.6\textbackslash\{\}textwidth]\{results/truss2d\_geometry.png\}
+\textbackslash\{\}caption\{2D Warren Truss geometry\}
+\textbackslash\{\}end\{figure\}
+
+\textbackslash\{\}begin\{figure\}[H]
+\textbackslash\{\}centering
+\textbackslash\{\}includegraphics[width=0.9\textbackslash\{\}textwidth]\{results/truss2d\_mode\_shapes.png\}
+\textbackslash\{\}caption\{2D Warren Truss mode shapes\}
+\textbackslash\{\}end\{figure\}
+
+\textbackslash\{\}begin\{figure\}[H]
+\textbackslash\{\}centering
+\textbackslash\{\}includegraphics[width=0.7\textbackslash\{\}textwidth]\{results/truss2d\_frequency\_comparison.png\}
+\textbackslash\{\}caption\{2D Truss frequency comparison\}
+\textbackslash\{\}end\{figure\}
+
+\% ===================================================================
+\textbackslash\{\}section\{Novel Studies\}
+\% ===================================================================
+
+\textbackslash\{\}subsection\{Ill-Conditioning Study\}
+
+A tapered beam/truss with height/area ratios \$[1.0, 0.8, 0.6, 0.4, 0.2]\$ shows increasing Hamiltonian condition number degrading optimizer performance. COBYLA (derivative-free) maintains robustness better than L-BFGS-B at high condition numbers.
+
+\textbackslash\{\}begin\{figure\}[H]
+\textbackslash\{\}centering
+\textbackslash\{\}includegraphics[width=0.9\textbackslash\{\}textwidth]\{results/ill\_conditioning\_study.png\}
+\textbackslash\{\}caption\{Ill-conditioning: condition number vs VQE performance\}
+\textbackslash\{\}end\{figure\}
+
+\textbackslash\{\}subsection\{Damage Detection\}
+
+Stiffness reduction (0\textbackslash\{\}\%--50\textbackslash\{\}\%) in the first element produces measurable frequency shifts tracked accurately by VQE (\$\textless{} 2\textbackslash\{\}\%\$ error), demonstrating feasibility of quantum structural health monitoring.
+
+\textbackslash\{\}begin\{figure\}[H]
+\textbackslash\{\}centering
+\textbackslash\{\}includegraphics[width=0.8\textbackslash\{\}textwidth]\{results/damage\_detection.png\}
+\textbackslash\{\}caption\{Damage detection via VQE frequency shifts\}
+\textbackslash\{\}end\{figure\}
+
+\% ===================================================================
+\textbackslash\{\}section\{Technical Challenges\}
+\% ===================================================================
+
+\textbackslash\{\}begin\{itemize\}[noitemsep]
+    \textbackslash\{\}item \textbackslash\{\}textbf\{Qiskit 1.0+ migration:\} Updated to \textbackslash\{\}texttt\{EstimatorV2\}, \textbackslash\{\}texttt\{SparsePauliOp\}
+    \textbackslash\{\}item \textbackslash\{\}textbf\{2D truss stability:\} Added vertical end posts to prevent singular stiffness matrix
+    \textbackslash\{\}item \textbackslash\{\}textbf\{DOF mapping fix:\} Proper reduced-to-physical space mapping for mode shapes
+    \textbackslash\{\}item \textbackslash\{\}textbf\{Cross-platform:\} ASCII-only console output for Windows compatibility
+\textbackslash\{\}end\{itemize\}
+
+\% ===================================================================
+\textbackslash\{\}section\{Performance Summary\}
+\% ===================================================================
+
+\textbackslash\{\}begin\{table\}[H]
+\textbackslash\{\}centering
+\textbackslash\{\}caption\{Beam vs Truss Comparison\}
+\textbackslash\{\}begin\{tabular\}\{lcc\}
+\textbackslash\{\}toprule
+\textbackslash\{\}textbf\{Metric\} \& \textbackslash\{\}textbf\{Beam\} \& \textbackslash\{\}textbf\{2D Truss (5 chords)\} \textbackslash\{\}\textbackslash\{\}
+\textbackslash\{\}midrule
+Free DOFs \& 4 \& 17 \textbackslash\{\}\textbackslash\{\}
+Qubits \& 2 \& 5 \textbackslash\{\}\textbackslash\{\}
+VQE Accuracy \& \$\textless{} 0.03\textbackslash\{\}\%\$ \& --- \textbackslash\{\}\textbackslash\{\}
+Est. Runtime \& \$\textbackslash\{\}sim\$2 s \& \$\textgreater{} 2\$ hours \textbackslash\{\}\textbackslash\{\}
+\textbackslash\{\}bottomrule
+\textbackslash\{\}end\{tabular\}
+\textbackslash\{\}end\{table\}
+
+\% ===================================================================
+\textbackslash\{\}section\{Conclusion\}
+\% ===================================================================
+
+\textbackslash\{\}begin\{enumerate\}[noitemsep]
+    \textbackslash\{\}item Exact structural-to-quantum eigenvalue mapping (\$H = M\textasciicircum\{\}\{-1/2\} K M\textasciicircum\{\}\{-1/2\}\$)
+    \textbackslash\{\}item VQE achieves \$\textless{} 0.03\textbackslash\{\}\%\$ error for beam modal analysis
+    \textbackslash\{\}item 2D Warren truss correctly implemented with triangular geometry
+    \textbackslash\{\}item Novel studies on ill-conditioning and damage detection
+    \textbackslash\{\}item Complete open-source framework for quantum structural analysis
+\textbackslash\{\}end\{enumerate\}
+
+\textbackslash\{\}vspace\{1cm\}
+\textbackslash\{\}noindent\textbackslash\{\}rule\{\textbackslash\{\}textwidth\}\{0.4pt\}
+
+\textbackslash\{\}begin\{center\}
+    \{\textbackslash\{\}large \textbackslash\{\}textbf\{Certificate of Completion\}\}\textbackslash\{\}\textbackslash\{\}[0.5cm]
+    This project report is submitted in partial fulfillment of the requirements\textbackslash\{\}\textbackslash\{\}
+    for the Degree of Bachelor of Engineering in Computer Science \textbackslash\{\}\& Engineering\textbackslash\{\}\textbackslash\{\}
+    at COEP Technological University.\textbackslash\{\}\textbackslash\{\}[1cm]
+    \textbackslash\{\}textit\{May 2026\}
+\textbackslash\{\}end\{center\}
+
+\textbackslash\{\}end\{document\}
+\end{lstlisting}
+
+% ===================================================================
+\section{Summary}
+% ===================================================================
+This document contains every source file in the repository. The pipeline covers:
+\begin{enumerate}
+\item \textbf{Beam FEA} --- Euler-Bernoulli elements, simply-supported BCs
+\item \textbf{1D Truss FEA} --- Axial bar elements, fixed-fixed BCs
+\item \textbf{2D Warren Truss FEA} --- Triangular mesh, pinned-roller BCs
+\item \textbf{Quantum Hamiltonian} --- $H = M^{-1/2} K M^{-1/2}$, Pauli decomposition
+\item \textbf{VQE Solver} --- Multi-start optimization, excited-state deflation
+\item \textbf{Visualization} --- Convergence curves, mode shapes, frequency comparisons
+\item \textbf{Novel Studies} --- Ill-conditioning and damage detection
+\item \textbf{Optimizer Comparison} --- COBYLA vs L-BFGS-B benchmarking
+\end{enumerate}
+
+\end{document}

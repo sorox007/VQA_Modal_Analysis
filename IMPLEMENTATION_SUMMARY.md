@@ -8,7 +8,7 @@
 
 ## Overview
 
-Successfully extended the VQA Modal Analysis project to support **truss (bar element)** analysis alongside the existing beam analysis. The implementation adds ~500 lines of new code while reusing ~700+ lines of existing quantum infrastructure unchanged.
+Successfully extended the VQA Modal Analysis project to support **2D Warren Truss** analysis alongside the existing beam analysis. The implementation adds ~500 lines of new code while reusing ~700+ lines of existing quantum infrastructure unchanged.
 
 ---
 

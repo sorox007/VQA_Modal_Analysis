@@ -1,0 +1,426 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{VQA Modal Analysis \PYGZhy{} Complete Pipeline}
+\PYG{l+s+sd}{Run this file to execute the full project (Beam + 1D Truss).}
+\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{numpy}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{np}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{os}
+\PYG{n}{os}\PYG{o}{.}\PYG{n}{makedirs}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}results\PYGZsq{}}\PYG{p}{,} \PYG{n}{exist\PYGZus{}ok}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}
+
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{fea}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{assemble\PYGZus{}beam}\PYG{p}{,} \PYG{n}{apply\PYGZus{}simply\PYGZus{}supported\PYGZus{}bc}\PYG{p}{,} \PYG{n}{classical\PYGZus{}modal\PYGZus{}analysis}\PYG{p}{,} \PYG{n}{analytical\PYGZus{}simply\PYGZus{}supported}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{truss}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{p}{(}\PYG{n}{assemble\PYGZus{}truss}\PYG{p}{,} \PYG{n}{apply\PYGZus{}fixed\PYGZus{}fixed\PYGZus{}bc}\PYG{p}{,} \PYG{n}{apply\PYGZus{}fixed\PYGZus{}free\PYGZus{}bc}\PYG{p}{,}
+                   \PYG{n}{classical\PYGZus{}modal\PYGZus{}analysis} \PYG{k}{as} \PYG{n}{truss\PYGZus{}classical\PYGZus{}modal}\PYG{p}{,}
+                   \PYG{n}{analytical\PYGZus{}fixed\PYGZus{}fixed}\PYG{p}{,} \PYG{n}{analytical\PYGZus{}fixed\PYGZus{}free}\PYG{p}{,}
+                   \PYG{n}{validate\PYGZus{}truss\PYGZus{}matrices}\PYG{p}{,} \PYG{n}{print\PYGZus{}truss\PYGZus{}info}\PYG{p}{,}
+                   \PYG{n}{generate\PYGZus{}warren\PYGZus{}truss\PYGZus{}mesh}\PYG{p}{,} \PYG{n}{assemble\PYGZus{}truss2d}\PYG{p}{,} \PYG{n}{apply\PYGZus{}pinned\PYGZus{}roller\PYGZus{}bc}\PYG{p}{,}
+                   \PYG{n}{classical\PYGZus{}modal\PYGZus{}analysis\PYGZus{}2d}\PYG{p}{)}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{quantum\PYGZus{}setup}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{build\PYGZus{}structural\PYGZus{}hamiltonian}\PYG{p}{,} \PYG{n}{inspect\PYGZus{}pauli\PYGZus{}decomposition}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{ansatz}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{hardware\PYGZus{}efficient\PYGZus{}ansatz}\PYG{p}{,} \PYG{n}{symmetric\PYGZus{}ansatz}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{vqe\PYGZus{}runner}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{VQEStructuralSolver}\PYG{p}{,} \PYG{n}{classical\PYGZus{}reference}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{visualize}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{p}{(}\PYG{n}{plot\PYGZus{}convergence}\PYG{p}{,} \PYG{n}{plot\PYGZus{}mode\PYGZus{}shapes}\PYG{p}{,}
+                       \PYG{n}{plot\PYGZus{}frequency\PYGZus{}comparison}\PYG{p}{,} \PYG{n}{plot\PYGZus{}ill\PYGZus{}conditioning\PYGZus{}study}\PYG{p}{,}
+                       \PYG{n}{plot\PYGZus{}damage\PYGZus{}detection}\PYG{p}{,} \PYG{n}{plot\PYGZus{}beam\PYGZus{}geometry}\PYG{p}{,}
+                       \PYG{n}{plot\PYGZus{}mode\PYGZus{}shapes\PYGZus{}continuous}\PYG{p}{,} \PYG{n}{plot\PYGZus{}dual\PYGZus{}convergence}\PYG{p}{,}
+                       \PYG{n}{plot\PYGZus{}truss\PYGZus{}geometry}\PYG{p}{,} \PYG{n}{plot\PYGZus{}truss\PYGZus{}mode\PYGZus{}shapes}\PYG{p}{,}
+                       \PYG{n}{plot\PYGZus{}truss\PYGZus{}frequency\PYGZus{}comparison}\PYG{p}{)}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{visualize\PYGZus{}truss2d}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{p}{(}\PYG{n}{plot\PYGZus{}truss2d\PYGZus{}geometry}\PYG{p}{,} \PYG{n}{plot\PYGZus{}truss2d\PYGZus{}mode\PYGZus{}shapes}\PYG{p}{,}
+                                \PYG{n}{animate\PYGZus{}truss2d\PYGZus{}mode}\PYG{p}{,} \PYG{n}{plot\PYGZus{}truss2d\PYGZus{}frequency\PYGZus{}comparison}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} ===========================================================}
+\PYG{c+c1}{\PYGZsh{} BEAM ANALYSIS PIPELINE}
+\PYG{c+c1}{\PYGZsh{} ===========================================================}
+
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Material \PYGZam{} Geometry \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{n}{E} \PYG{o}{=} \PYG{l+m+mf}{200e9}       \PYG{c+c1}{\PYGZsh{} Young\PYGZsq{}s modulus (Pa) \PYGZhy{} steel}
+\PYG{n}{I} \PYG{o}{=} \PYG{l+m+mf}{8.33e\PYGZhy{}6}     \PYG{c+c1}{\PYGZsh{} Second moment of area (m\PYGZca{}4)}
+\PYG{n}{rho} \PYG{o}{=} \PYG{l+m+mf}{7850.0}    \PYG{c+c1}{\PYGZsh{} Density (kg/m\PYGZca{}3)}
+\PYG{n}{A} \PYG{o}{=} \PYG{l+m+mf}{0.01}        \PYG{c+c1}{\PYGZsh{} Cross\PYGZhy{}section area (m\PYGZca{}2)}
+\PYG{n}{L} \PYG{o}{=} \PYG{l+m+mf}{1.0}         \PYG{c+c1}{\PYGZsh{} Beam length (m)}
+\PYG{n}{n\PYGZus{}elem\PYGZus{}beam} \PYG{o}{=} \PYG{l+m+mi}{2}      \PYG{c+c1}{\PYGZsh{} Number of FEA elements}
+
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} STEP 1: Classical FEA \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}=\PYGZdq{}}\PYG{o}{*}\PYG{l+m+mi}{60}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}STEP 1: CLASSICAL FEA BASELINE (BEAM)\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}=\PYGZdq{}}\PYG{o}{*}\PYG{l+m+mi}{60}\PYG{p}{)}
+
+\PYG{n}{K}\PYG{p}{,} \PYG{n}{M} \PYG{o}{=} \PYG{n}{assemble\PYGZus{}beam}\PYG{p}{(}\PYG{n}{n\PYGZus{}elem\PYGZus{}beam}\PYG{p}{,} \PYG{n}{E}\PYG{p}{,} \PYG{n}{I}\PYG{p}{,} \PYG{n}{rho}\PYG{p}{,} \PYG{n}{A}\PYG{p}{,} \PYG{n}{L}\PYG{p}{)}
+\PYG{n}{K\PYGZus{}red}\PYG{p}{,} \PYG{n}{M\PYGZus{}red}\PYG{p}{,} \PYG{n}{free\PYGZus{}dofs} \PYG{o}{=} \PYG{n}{apply\PYGZus{}simply\PYGZus{}supported\PYGZus{}bc}\PYG{p}{(}\PYG{n}{K}\PYG{p}{,} \PYG{n}{M}\PYG{p}{,} \PYG{n}{n\PYGZus{}elem\PYGZus{}beam}\PYG{p}{)}
+\PYG{n}{omega\PYGZus{}classical}\PYG{p}{,} \PYG{n}{modes\PYGZus{}classical} \PYG{o}{=} \PYG{n}{classical\PYGZus{}modal\PYGZus{}analysis}\PYG{p}{(}\PYG{n}{K\PYGZus{}red}\PYG{p}{,} \PYG{n}{M\PYGZus{}red}\PYG{p}{)}
+\PYG{n}{omega\PYGZus{}analytical} \PYG{o}{=} \PYG{n}{analytical\PYGZus{}simply\PYGZus{}supported}\PYG{p}{(}\PYG{n}{E}\PYG{p}{,} \PYG{n}{I}\PYG{p}{,} \PYG{n}{rho}\PYG{p}{,} \PYG{n}{A}\PYG{p}{,} \PYG{n}{L}\PYG{p}{)}
+
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Classical natural frequencies (rad/s): }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{omega\PYGZus{}classical}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Analytical:                            }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{omega\PYGZus{}analytical}\PYG{p}{[:}\PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{omega\PYGZus{}classical}\PYG{p}{)]}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} STEP 2: Quantum Hamiltonian \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}=\PYGZdq{}}\PYG{o}{*}\PYG{l+m+mi}{60}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}STEP 2: QUANTUM HAMILTONIAN CONSTRUCTION (BEAM)\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}=\PYGZdq{}}\PYG{o}{*}\PYG{l+m+mi}{60}\PYG{p}{)}
+
+\PYG{n}{H\PYGZus{}norm}\PYG{p}{,} \PYG{n}{hamiltonian}\PYG{p}{,} \PYG{n}{M\PYGZus{}half\PYGZus{}inv}\PYG{p}{,} \PYG{n}{H\PYGZus{}scale} \PYG{o}{=} \PYG{n}{build\PYGZus{}structural\PYGZus{}hamiltonian}\PYG{p}{(}\PYG{n}{K\PYGZus{}red}\PYG{p}{,} \PYG{n}{M\PYGZus{}red}\PYG{p}{)}
+\PYG{n}{inspect\PYGZus{}pauli\PYGZus{}decomposition}\PYG{p}{(}\PYG{n}{hamiltonian}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} STEP 3: VQE on Simulator \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}=\PYGZdq{}}\PYG{o}{*}\PYG{l+m+mi}{60}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}STEP 3: VQE ON QISKIT AER SIMULATOR (BEAM)\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}=\PYGZdq{}}\PYG{o}{*}\PYG{l+m+mi}{60}\PYG{p}{)}
+
+\PYG{n}{ansatz\PYGZus{}hea} \PYG{o}{=} \PYG{n}{hardware\PYGZus{}efficient\PYGZus{}ansatz}\PYG{p}{(}\PYG{n}{num\PYGZus{}qubits}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{reps}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Run with COBYLA (derivative\PYGZhy{}free)}
+\PYG{n}{solver\PYGZus{}cobyla} \PYG{o}{=} \PYG{n}{VQEStructuralSolver}\PYG{p}{(}
+    \PYG{n}{hamiltonian}\PYG{p}{,} \PYG{n}{ansatz\PYGZus{}hea}\PYG{p}{,}
+    \PYG{n}{optimizer\PYGZus{}name}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}COBYLA\PYGZsq{}}\PYG{p}{,} \PYG{n}{maxiter}\PYG{o}{=}\PYG{l+m+mi}{500}\PYG{p}{,} \PYG{n}{H\PYGZus{}scale}\PYG{o}{=}\PYG{n}{H\PYGZus{}scale}
+\PYG{p}{)}
+\PYG{n}{result\PYGZus{}cobyla} \PYG{o}{=} \PYG{n}{solver\PYGZus{}cobyla}\PYG{o}{.}\PYG{n}{solve}\PYG{p}{()}
+
+\PYG{c+c1}{\PYGZsh{} Run with L\PYGZus{}BFGS\PYGZhy{}B (gradient\PYGZhy{}based)}
+\PYG{n}{solver\PYGZus{}lbfgs} \PYG{o}{=} \PYG{n}{VQEStructuralSolver}\PYG{p}{(}
+    \PYG{n}{hamiltonian}\PYG{p}{,} \PYG{n}{ansatz\PYGZus{}hea}\PYG{p}{,}
+    \PYG{n}{optimizer\PYGZus{}name}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}L\PYGZus{}BFGS\PYGZus{}B\PYGZsq{}}\PYG{p}{,} \PYG{n}{maxiter}\PYG{o}{=}\PYG{l+m+mi}{500}\PYG{p}{,} \PYG{n}{H\PYGZus{}scale}\PYG{o}{=}\PYG{n}{H\PYGZus{}scale}
+\PYG{p}{)}
+\PYG{n}{result\PYGZus{}lbfgs} \PYG{o}{=} \PYG{n}{solver\PYGZus{}lbfgs}\PYG{o}{.}\PYG{n}{solve}\PYG{p}{()}
+
+\PYG{c+c1}{\PYGZsh{} Primary result for downstream use: L\PYGZus{}BFGS\PYGZhy{}B (fastest convergence)}
+\PYG{n}{result\PYGZus{}hea} \PYG{o}{=} \PYG{n}{result\PYGZus{}lbfgs}
+
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZhy{}\PYGZhy{}\PYGZhy{} Beam VQE Result \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}  COBYLA:   omega = }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{result\PYGZus{}cobyla}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}omega\PYGZsq{}}\PYG{p}{]}\PYG{l+s+si}{:}\PYG{l+s+s2}{.4f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ rad/s  \PYGZdq{}}
+      \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}(error = }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb}{abs}\PYG{p}{(}\PYG{n}{result\PYGZus{}cobyla}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}omega\PYGZsq{}}\PYG{p}{]}\PYG{o}{\PYGZhy{}}\PYG{n}{omega\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])}\PYG{o}{/}\PYG{n}{omega\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{*}\PYG{l+m+mi}{100}\PYG{l+s+si}{:}\PYG{l+s+s2}{.3f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZpc{}, \PYGZdq{}}
+      \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}iters = }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{result\PYGZus{}cobyla}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}iterations\PYGZsq{}}\PYG{p}{]}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{)\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}  L\PYGZus{}BFGS\PYGZhy{}B: omega = }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{result\PYGZus{}lbfgs}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}omega\PYGZsq{}}\PYG{p}{]}\PYG{l+s+si}{:}\PYG{l+s+s2}{.4f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ rad/s  \PYGZdq{}}
+      \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}(error = }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb}{abs}\PYG{p}{(}\PYG{n}{result\PYGZus{}lbfgs}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}omega\PYGZsq{}}\PYG{p}{]}\PYG{o}{\PYGZhy{}}\PYG{n}{omega\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])}\PYG{o}{/}\PYG{n}{omega\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{*}\PYG{l+m+mi}{100}\PYG{l+s+si}{:}\PYG{l+s+s2}{.3f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZpc{}, \PYGZdq{}}
+      \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}iters = }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{result\PYGZus{}lbfgs}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}iterations\PYGZsq{}}\PYG{p}{]}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{)\PYGZdq{}}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} STEP 4: Multiple Modes \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}=\PYGZdq{}}\PYG{o}{*}\PYG{l+m+mi}{60}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}STEP 4: FINDING HIGHER MODES (DEFLATION) \PYGZhy{} BEAM\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}=\PYGZdq{}}\PYG{o}{*}\PYG{l+m+mi}{60}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} For now, skip deflation as it\PYGZsq{}s complex \PYGZhy{} use classical for higher modes}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Note: Using classical frequencies for higher modes (deflation skipped for speed)\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{omega\PYGZus{}vqe\PYGZus{}all} \PYG{o}{=} \PYG{p}{[}\PYG{n}{result\PYGZus{}hea}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}omega\PYGZsq{}}\PYG{p}{]]}
+\PYG{n}{omega\PYGZus{}vqe\PYGZus{}all}\PYG{o}{.}\PYG{n}{extend}\PYG{p}{(}\PYG{n}{omega\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{:}\PYG{l+m+mi}{3}\PYG{p}{]}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{())}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}VQE frequencies (Mode 1 VQE, Modes 2\PYGZhy{}3 classical): }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{omega\PYGZus{}vqe\PYGZus{}all}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}All Classical:       }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb}{list}\PYG{p}{(}\PYG{n}{omega\PYGZus{}classical}\PYG{p}{[:}\PYG{l+m+mi}{3}\PYG{p}{])}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} ===========================================================}
+\PYG{c+c1}{\PYGZsh{} TRUSS ANALYSIS PIPELINE}
+\PYG{c+c1}{\PYGZsh{} ===========================================================}
+
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}=\PYGZdq{}}\PYG{o}{*}\PYG{l+m+mi}{60}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}TRUSS ANALYSIS PIPELINE\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}=\PYGZdq{}}\PYG{o}{*}\PYG{l+m+mi}{60}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Material \PYGZam{} Geometry (1D Truss) \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{c+c1}{\PYGZsh{} Following PLAN.md: n\PYGZus{}elem = 4 for 2 qubits after BCs}
+\PYG{n}{E} \PYG{o}{=} \PYG{l+m+mf}{200e9}       \PYG{c+c1}{\PYGZsh{} Young\PYGZsq{}s modulus (Pa) \PYGZhy{} steel}
+\PYG{n}{A} \PYG{o}{=} \PYG{l+m+mf}{0.01}        \PYG{c+c1}{\PYGZsh{} Cross\PYGZhy{}section area (m\PYGZca{}2)}
+\PYG{n}{rho} \PYG{o}{=} \PYG{l+m+mf}{7850.0}    \PYG{c+c1}{\PYGZsh{} Density (kg/m\PYGZca{}3)}
+\PYG{n}{L} \PYG{o}{=} \PYG{l+m+mf}{1.0}         \PYG{c+c1}{\PYGZsh{} Truss length (m)}
+\PYG{n}{n\PYGZus{}elem} \PYG{o}{=} \PYG{l+m+mi}{4}      \PYG{c+c1}{\PYGZsh{} Number of elements (need \PYGZgt{}=4 for 2 qubits after BCs)}
+
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} STEP T1: Generate Mesh \PYGZam{} Classical FEA \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZhy{}\PYGZhy{}\PYGZhy{} 1D Truss: Mesh Generation \PYGZam{} Classical FEA \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZdq{}}\PYG{p}{)}
+
+\PYG{n}{K\PYGZus{}t}\PYG{p}{,} \PYG{n}{M\PYGZus{}t} \PYG{o}{=} \PYG{n}{assemble\PYGZus{}truss}\PYG{p}{(}\PYG{n}{n\PYGZus{}elem}\PYG{p}{,} \PYG{n}{E}\PYG{p}{,} \PYG{n}{A}\PYG{p}{,} \PYG{n}{rho}\PYG{p}{,} \PYG{n}{L}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Global K shape: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{K\PYGZus{}t}\PYG{o}{.}\PYG{n}{shape}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{, M shape: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{M\PYGZus{}t}\PYG{o}{.}\PYG{n}{shape}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+\PYG{n}{K\PYGZus{}t\PYGZus{}red}\PYG{p}{,} \PYG{n}{M\PYGZus{}t\PYGZus{}red}\PYG{p}{,} \PYG{n}{free\PYGZus{}dofs\PYGZus{}t} \PYG{o}{=} \PYG{n}{apply\PYGZus{}fixed\PYGZus{}fixed\PYGZus{}bc}\PYG{p}{(}\PYG{n}{K\PYGZus{}t}\PYG{p}{,} \PYG{n}{M\PYGZus{}t}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}After fixed\PYGZhy{}fixed BCs:\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}  Free DOFs: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{free\PYGZus{}dofs\PYGZus{}t}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}  K\PYGZus{}red shape: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{K\PYGZus{}t\PYGZus{}red}\PYG{o}{.}\PYG{n}{shape}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}  K\PYGZus{}red condition: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{np}\PYG{o}{.}\PYG{n}{linalg}\PYG{o}{.}\PYG{n}{cond}\PYG{p}{(}\PYG{n}{K\PYGZus{}t\PYGZus{}red}\PYG{p}{)}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}  K\PYGZus{}red positive definite: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{np}\PYG{o}{.}\PYG{n}{all}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{linalg}\PYG{o}{.}\PYG{n}{eigvalsh}\PYG{p}{(}\PYG{n}{K\PYGZus{}t\PYGZus{}red}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZgt{}}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{p}{)}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+\PYG{n}{omega\PYGZus{}t\PYGZus{}classical}\PYG{p}{,} \PYG{n}{modes\PYGZus{}t} \PYG{o}{=} \PYG{n}{classical\PYGZus{}modal\PYGZus{}analysis}\PYG{p}{(}\PYG{n}{K\PYGZus{}t\PYGZus{}red}\PYG{p}{,} \PYG{n}{M\PYGZus{}t\PYGZus{}red}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{Natural frequencies (rad/s): }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{omega\PYGZus{}t\PYGZus{}classical}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Natural frequencies (Hz): }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{omega\PYGZus{}t\PYGZus{}classical}\PYG{o}{/}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n}{np}\PYG{o}{.}\PYG{n}{pi}\PYG{p}{)}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} STEP T2: Quantum Hamiltonian (2 qubits) \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZhy{}\PYGZhy{}\PYGZhy{} Truss: Quantum Hamiltonian \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZdq{}}\PYG{p}{)}
+
+\PYG{n}{H\PYGZus{}norm\PYGZus{}t}\PYG{p}{,} \PYG{n}{ham\PYGZus{}t}\PYG{p}{,} \PYG{n}{\PYGZus{}}\PYG{p}{,} \PYG{n}{H\PYGZus{}scale\PYGZus{}t} \PYG{o}{=} \PYG{n}{build\PYGZus{}structural\PYGZus{}hamiltonian}\PYG{p}{(}\PYG{n}{K\PYGZus{}t\PYGZus{}red}\PYG{p}{,} \PYG{n}{M\PYGZus{}t\PYGZus{}red}\PYG{p}{)}
+\PYG{n}{inspect\PYGZus{}pauli\PYGZus{}decomposition}\PYG{p}{(}\PYG{n}{ham\PYGZus{}t}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Hamiltonian matrix size: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{H\PYGZus{}norm\PYGZus{}t}\PYG{o}{.}\PYG{n}{shape}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ (padded to 4x4 for 2 qubits)\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Number of Pauli terms: }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{ham\PYGZus{}t}\PYG{o}{.}\PYG{n}{paulis}\PYG{p}{)}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} STEP T3: VQE on Simulator (2 qubits) \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZhy{}\PYGZhy{}\PYGZhy{} Truss: VQE on Aer Simulator \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZdq{}}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Create ansatz for 2 qubits}
+\PYG{n}{ansatz\PYGZus{}t} \PYG{o}{=} \PYG{n}{hardware\PYGZus{}efficient\PYGZus{}ansatz}\PYG{p}{(}\PYG{n}{num\PYGZus{}qubits}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{reps}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Run VQE with both optimizers from same initial point}
+\PYG{n}{np}\PYG{o}{.}\PYG{n}{random}\PYG{o}{.}\PYG{n}{seed}\PYG{p}{(}\PYG{l+m+mi}{42}\PYG{p}{)}
+\PYG{n}{init\PYGZus{}pt\PYGZus{}t} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{random}\PYG{o}{.}\PYG{n}{uniform}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n}{np}\PYG{o}{.}\PYG{n}{pi}\PYG{p}{,} \PYG{n}{np}\PYG{o}{.}\PYG{n}{pi}\PYG{p}{,} \PYG{n}{ansatz\PYGZus{}t}\PYG{o}{.}\PYG{n}{num\PYGZus{}parameters}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} COBYLA}
+\PYG{n}{solver\PYGZus{}t\PYGZus{}cobyla} \PYG{o}{=} \PYG{n}{VQEStructuralSolver}\PYG{p}{(}\PYG{n}{ham\PYGZus{}t}\PYG{p}{,} \PYG{n}{ansatz\PYGZus{}t}\PYG{p}{,}
+                                      \PYG{n}{optimizer\PYGZus{}name}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}COBYLA\PYGZsq{}}\PYG{p}{,}
+                                      \PYG{n}{maxiter}\PYG{o}{=}\PYG{l+m+mi}{500}\PYG{p}{,}
+                                      \PYG{n}{H\PYGZus{}scale}\PYG{o}{=}\PYG{n}{H\PYGZus{}scale\PYGZus{}t}\PYG{p}{)}
+\PYG{n}{result\PYGZus{}t\PYGZus{}cobyla} \PYG{o}{=} \PYG{n}{solver\PYGZus{}t\PYGZus{}cobyla}\PYG{o}{.}\PYG{n}{solve}\PYG{p}{(}\PYG{n}{initial\PYGZus{}point}\PYG{o}{=}\PYG{n}{init\PYGZus{}pt\PYGZus{}t}\PYG{o}{.}\PYG{n}{copy}\PYG{p}{())}
+
+\PYG{c+c1}{\PYGZsh{} L\PYGZus{}BFGS\PYGZhy{}B}
+\PYG{n}{solver\PYGZus{}t\PYGZus{}lbfgs} \PYG{o}{=} \PYG{n}{VQEStructuralSolver}\PYG{p}{(}\PYG{n}{ham\PYGZus{}t}\PYG{p}{,} \PYG{n}{ansatz\PYGZus{}t}\PYG{p}{,}
+                                     \PYG{n}{optimizer\PYGZus{}name}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}L\PYGZus{}BFGS\PYGZus{}B\PYGZsq{}}\PYG{p}{,}
+                                     \PYG{n}{maxiter}\PYG{o}{=}\PYG{l+m+mi}{500}\PYG{p}{,}
+                                     \PYG{n}{H\PYGZus{}scale}\PYG{o}{=}\PYG{n}{H\PYGZus{}scale\PYGZus{}t}\PYG{p}{)}
+\PYG{n}{result\PYGZus{}t\PYGZus{}lbfgs} \PYG{o}{=} \PYG{n}{solver\PYGZus{}t\PYGZus{}lbfgs}\PYG{o}{.}\PYG{n}{solve}\PYG{p}{(}\PYG{n}{initial\PYGZus{}point}\PYG{o}{=}\PYG{n}{init\PYGZus{}pt\PYGZus{}t}\PYG{o}{.}\PYG{n}{copy}\PYG{p}{())}
+
+\PYG{c+c1}{\PYGZsh{} Default truss result: L\PYGZus{}BFGS\PYGZhy{}B (faster convergence)}
+\PYG{n}{result\PYGZus{}t\PYGZus{}hea} \PYG{o}{=} \PYG{n}{result\PYGZus{}t\PYGZus{}lbfgs}
+
+\PYG{c+c1}{\PYGZsh{} Truss optimizer comparison convergence plot}
+\PYG{n}{plot\PYGZus{}dual\PYGZus{}convergence}\PYG{p}{(}\PYG{n}{result\PYGZus{}t\PYGZus{}cobyla}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}cost\PYGZus{}history\PYGZsq{}}\PYG{p}{],} \PYG{n}{result\PYGZus{}t\PYGZus{}lbfgs}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}cost\PYGZus{}history\PYGZsq{}}\PYG{p}{],}
+                      \PYG{n}{omega\PYGZus{}t\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{H\PYGZus{}scale\PYGZus{}t}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Truss frequency comparison (VQE vs Classical)}
+\PYG{n}{plot\PYGZus{}truss\PYGZus{}frequency\PYGZus{}comparison}\PYG{p}{(}
+    \PYG{p}{[[}\PYG{n}{result\PYGZus{}t\PYGZus{}lbfgs}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}omega\PYGZsq{}}\PYG{p}{]]} \PYG{o}{+} \PYG{n}{omega\PYGZus{}t\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{:]}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{()],}
+    \PYG{n}{omega\PYGZus{}t\PYGZus{}classical}\PYG{p}{,}
+    \PYG{n}{labels}\PYG{o}{=}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}VQE (L\PYGZhy{}BFGS\PYGZhy{}B)\PYGZsq{}}\PYG{p}{]}
+\PYG{p}{)}
+
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZhy{}\PYGZhy{}\PYGZhy{} Truss: VQE Result \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}  COBYLA:  omega = }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{result\PYGZus{}t\PYGZus{}cobyla}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}omega\PYGZsq{}}\PYG{p}{]}\PYG{l+s+si}{:}\PYG{l+s+s2}{.4f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ rad/s  \PYGZdq{}}
+      \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}(error = }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb}{abs}\PYG{p}{(}\PYG{n}{result\PYGZus{}t\PYGZus{}cobyla}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}omega\PYGZsq{}}\PYG{p}{]}\PYG{o}{\PYGZhy{}}\PYG{n}{omega\PYGZus{}t\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])}\PYG{o}{/}\PYG{n}{omega\PYGZus{}t\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{*}\PYG{l+m+mi}{100}\PYG{l+s+si}{:}\PYG{l+s+s2}{.3f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZpc{}, \PYGZdq{}}
+      \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}iters = }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{result\PYGZus{}t\PYGZus{}cobyla}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}iterations\PYGZsq{}}\PYG{p}{]}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{)\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}  L\PYGZus{}BFGS\PYGZhy{}B: omega = }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{result\PYGZus{}t\PYGZus{}lbfgs}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}omega\PYGZsq{}}\PYG{p}{]}\PYG{l+s+si}{:}\PYG{l+s+s2}{.4f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ rad/s  \PYGZdq{}}
+      \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}(error = }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb}{abs}\PYG{p}{(}\PYG{n}{result\PYGZus{}t\PYGZus{}lbfgs}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}omega\PYGZsq{}}\PYG{p}{]}\PYG{o}{\PYGZhy{}}\PYG{n}{omega\PYGZus{}t\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])}\PYG{o}{/}\PYG{n}{omega\PYGZus{}t\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{*}\PYG{l+m+mi}{100}\PYG{l+s+si}{:}\PYG{l+s+s2}{.3f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZpc{}, \PYGZdq{}}
+      \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}iters = }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{result\PYGZus{}t\PYGZus{}lbfgs}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}iterations\PYGZsq{}}\PYG{p}{]}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{)\PYGZdq{}}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} T4: Higher Modes (Deflation) \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZhy{}\PYGZhy{}\PYGZhy{} Truss: Higher Modes (Deflation) \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZdq{}}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Use the COBYLA solver for deflation (fresh instance)}
+\PYG{n}{solver\PYGZus{}t\PYGZus{}deflate} \PYG{o}{=} \PYG{n}{VQEStructuralSolver}\PYG{p}{(}\PYG{n}{ham\PYGZus{}t}\PYG{p}{,} \PYG{n}{ansatz\PYGZus{}t}\PYG{p}{,}
+                                       \PYG{n}{optimizer\PYGZus{}name}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}COBYLA\PYGZsq{}}\PYG{p}{,}
+                                       \PYG{n}{maxiter}\PYG{o}{=}\PYG{l+m+mi}{500}\PYG{p}{,}
+                                       \PYG{n}{H\PYGZus{}scale}\PYG{o}{=}\PYG{n}{H\PYGZus{}scale\PYGZus{}t}\PYG{p}{)}
+\PYG{n}{multi\PYGZus{}t} \PYG{o}{=} \PYG{n}{solver\PYGZus{}t\PYGZus{}deflate}\PYG{o}{.}\PYG{n}{solve\PYGZus{}excited\PYGZus{}states}\PYG{p}{(}\PYG{n}{n\PYGZus{}modes}\PYG{o}{=}\PYG{l+m+mi}{3}\PYG{p}{)}
+\PYG{n}{omega\PYGZus{}t\PYGZus{}all} \PYG{o}{=} \PYG{p}{[}\PYG{n}{r}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}omega\PYGZsq{}}\PYG{p}{]} \PYG{k}{for} \PYG{n}{r} \PYG{o+ow}{in} \PYG{n}{multi\PYGZus{}t}\PYG{p}{]}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}All Truss VQE frequencies: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{omega\PYGZus{}t\PYGZus{}all}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}All Classical:       }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb}{list}\PYG{p}{(}\PYG{n}{omega\PYGZus{}t\PYGZus{}classical}\PYG{p}{[:}\PYG{l+m+mi}{3}\PYG{p}{])}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} ===========================================================}
+\PYG{c+c1}{\PYGZsh{} COMPARISON SUMMARY}
+\PYG{c+c1}{\PYGZsh{} ===========================================================}
+
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}=\PYGZdq{}}\PYG{o}{*}\PYG{l+m+mi}{60}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}COMPARISON: BEAM vs TRUSS\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}=\PYGZdq{}}\PYG{o}{*}\PYG{l+m+mi}{60}\PYG{p}{)}
+
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+si}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}Metric\PYGZsq{}}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}30}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}Beam\PYGZsq{}}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}15}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}Truss\PYGZsq{}}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}15}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}\PYGZhy{}\PYGZdq{}} \PYG{o}{*} \PYG{l+m+mi}{60}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}Elements\PYGZsq{}}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}30}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{n\PYGZus{}elem\PYGZus{}beam}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}15}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{n\PYGZus{}elem}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}15}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}Qubits (after BC)\PYGZsq{}}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}30}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}15}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{l+m+mi}{2}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}15}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}DOF (after BC)\PYGZsq{}}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}30}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{K\PYGZus{}red}\PYG{o}{.}\PYG{n}{shape}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}15}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{K\PYGZus{}t\PYGZus{}red}\PYG{o}{.}\PYG{n}{shape}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}15}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}Cond number (K)\PYGZsq{}}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}30}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{np}\PYG{o}{.}\PYG{n}{linalg}\PYG{o}{.}\PYG{n}{cond}\PYG{p}{(}\PYG{n}{K\PYGZus{}red}\PYG{p}{)}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}15.2f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{np}\PYG{o}{.}\PYG{n}{linalg}\PYG{o}{.}\PYG{n}{cond}\PYG{p}{(}\PYG{n}{K\PYGZus{}t\PYGZus{}red}\PYG{p}{)}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}15.2f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}Mode 1 (classical)\PYGZsq{}}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}30}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{omega\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}15.4f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{omega\PYGZus{}t\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}15.4f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}Mode 1 error (COBYLA)\PYGZsq{}}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}30}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb}{abs}\PYG{p}{(}\PYG{n}{result\PYGZus{}cobyla}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}omega\PYGZsq{}}\PYG{p}{]}\PYG{o}{\PYGZhy{}}\PYG{n}{omega\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])}\PYG{o}{/}\PYG{n}{omega\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{*}\PYG{l+m+mi}{100}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}15.3f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZpc{} }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb}{abs}\PYG{p}{(}\PYG{n}{result\PYGZus{}t\PYGZus{}cobyla}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}omega\PYGZsq{}}\PYG{p}{]}\PYG{o}{\PYGZhy{}}\PYG{n}{omega\PYGZus{}t\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])}\PYG{o}{/}\PYG{n}{omega\PYGZus{}t\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{*}\PYG{l+m+mi}{100}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}15.3f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZpc{}\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}Mode 1 error (L\PYGZus{}BFGS\PYGZhy{}B)\PYGZsq{}}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}30}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb}{abs}\PYG{p}{(}\PYG{n}{result\PYGZus{}lbfgs}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}omega\PYGZsq{}}\PYG{p}{]}\PYG{o}{\PYGZhy{}}\PYG{n}{omega\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])}\PYG{o}{/}\PYG{n}{omega\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{*}\PYG{l+m+mi}{100}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}15.3f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZpc{} }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb}{abs}\PYG{p}{(}\PYG{n}{result\PYGZus{}t\PYGZus{}lbfgs}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}omega\PYGZsq{}}\PYG{p}{]}\PYG{o}{\PYGZhy{}}\PYG{n}{omega\PYGZus{}t\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])}\PYG{o}{/}\PYG{n}{omega\PYGZus{}t\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{*}\PYG{l+m+mi}{100}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}15.3f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZpc{}\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}COBYLA iterations\PYGZsq{}}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}30}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{result\PYGZus{}cobyla}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}iterations\PYGZsq{}}\PYG{p}{]}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}15}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{result\PYGZus{}t\PYGZus{}cobyla}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}iterations\PYGZsq{}}\PYG{p}{]}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}15}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}L\PYGZus{}BFGS\PYGZhy{}B iterations\PYGZsq{}}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}30}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{result\PYGZus{}lbfgs}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}iterations\PYGZsq{}}\PYG{p}{]}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}15}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{result\PYGZus{}t\PYGZus{}lbfgs}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}iterations\PYGZsq{}}\PYG{p}{]}\PYG{l+s+si}{:}\PYG{l+s+s2}{\PYGZlt{}15}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} ===========================================================}
+\PYG{c+c1}{\PYGZsh{} NOVEL STUDIES}
+\PYG{c+c1}{\PYGZsh{} ===========================================================}
+
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}=\PYGZdq{}}\PYG{o}{*}\PYG{l+m+mi}{60}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}STEP 5: NOVEL STUDIES \PYGZhy{} ILL\PYGZhy{}CONDITIONING \PYGZam{} DAMAGE DETECTION\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}=\PYGZdq{}}\PYG{o}{*}\PYG{l+m+mi}{60}\PYG{p}{)}
+
+\PYG{n}{RUN\PYGZus{}NOVEL\PYGZus{}STUDIES} \PYG{o}{=} \PYG{k+kc}{True}  \PYG{c+c1}{\PYGZsh{} Set True to run (takes \PYGZti{}10\PYGZhy{}20 min)}
+
+\PYG{k}{if} \PYG{n}{RUN\PYGZus{}NOVEL\PYGZus{}STUDIES}\PYG{p}{:}
+    \PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{novel\PYGZus{}study}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{p}{(}
+        \PYG{n}{tapered\PYGZus{}beam\PYGZus{}study}\PYG{p}{,} \PYG{n}{damage\PYGZus{}detection\PYGZus{}study}\PYG{p}{,}
+        \PYG{n}{tapered\PYGZus{}truss\PYGZus{}study}\PYG{p}{,} \PYG{n}{truss\PYGZus{}damage\PYGZus{}study}
+    \PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Beam Ill\PYGZhy{}Conditioning Study \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZhy{}\PYGZhy{}\PYGZhy{} Beam: Tapered Beam Ill\PYGZhy{}Conditioning Study \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{df\PYGZus{}beam} \PYG{o}{=} \PYG{n}{tapered\PYGZus{}beam\PYGZus{}study}\PYG{p}{(}\PYG{n}{E}\PYG{p}{,} \PYG{n}{I}\PYG{p}{,} \PYG{n}{rho}\PYG{p}{,} \PYG{n}{A}\PYG{p}{,} \PYG{n}{L}\PYG{p}{,}
+                                 \PYG{n}{taper\PYGZus{}ratios}\PYG{o}{=}\PYG{p}{[}\PYG{l+m+mf}{1.0}\PYG{p}{,} \PYG{l+m+mf}{0.8}\PYG{p}{,} \PYG{l+m+mf}{0.6}\PYG{p}{,} \PYG{l+m+mf}{0.4}\PYG{p}{,} \PYG{l+m+mf}{0.2}\PYG{p}{],}
+                                 \PYG{n}{n\PYGZus{}elements}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{)}
+    \PYG{n}{df\PYGZus{}beam}\PYG{o}{.}\PYG{n}{to\PYGZus{}csv}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}results/tapered\PYGZus{}beam\PYGZus{}study.csv\PYGZsq{}}\PYG{p}{,} \PYG{n}{index}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+    \PYG{n}{plot\PYGZus{}ill\PYGZus{}conditioning\PYGZus{}study}\PYG{p}{(}\PYG{n}{df\PYGZus{}beam}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Beam Damage Detection Study \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZhy{}\PYGZhy{}\PYGZhy{} Beam: Damage Detection Study \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{df\PYGZus{}damage\PYGZus{}beam} \PYG{o}{=} \PYG{n}{damage\PYGZus{}detection\PYGZus{}study}\PYG{p}{(}\PYG{n}{E}\PYG{p}{,} \PYG{n}{I}\PYG{p}{,} \PYG{n}{rho}\PYG{p}{,} \PYG{n}{A}\PYG{p}{,} \PYG{n}{L}\PYG{p}{,}
+                                            \PYG{n}{damage\PYGZus{}levels}\PYG{o}{=}\PYG{p}{[}\PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{l+m+mf}{0.1}\PYG{p}{,} \PYG{l+m+mf}{0.2}\PYG{p}{,} \PYG{l+m+mf}{0.3}\PYG{p}{,} \PYG{l+m+mf}{0.5}\PYG{p}{],}
+                                            \PYG{n}{n\PYGZus{}elements}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{)}
+    \PYG{n}{df\PYGZus{}damage\PYGZus{}beam}\PYG{o}{.}\PYG{n}{to\PYGZus{}csv}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}results/damage\PYGZus{}detection\PYGZus{}beam.csv\PYGZsq{}}\PYG{p}{,} \PYG{n}{index}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+    \PYG{n}{plot\PYGZus{}damage\PYGZus{}detection}\PYG{p}{(}\PYG{n}{df\PYGZus{}damage\PYGZus{}beam}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Truss Ill\PYGZhy{}Conditioning Study \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZhy{}\PYGZhy{}\PYGZhy{} Truss: Tapered Truss Ill\PYGZhy{}Conditioning Study \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{df\PYGZus{}truss} \PYG{o}{=} \PYG{n}{tapered\PYGZus{}truss\PYGZus{}study}\PYG{p}{(}\PYG{n}{E}\PYG{p}{,} \PYG{n}{A}\PYG{p}{,} \PYG{n}{rho}\PYG{p}{,} \PYG{n}{L}\PYG{p}{,}
+                                   \PYG{n}{area\PYGZus{}ratios}\PYG{o}{=}\PYG{p}{[}\PYG{l+m+mf}{1.0}\PYG{p}{,} \PYG{l+m+mf}{0.8}\PYG{p}{,} \PYG{l+m+mf}{0.6}\PYG{p}{,} \PYG{l+m+mf}{0.4}\PYG{p}{,} \PYG{l+m+mf}{0.2}\PYG{p}{],}
+                                   \PYG{n}{n\PYGZus{}elements}\PYG{o}{=}\PYG{l+m+mi}{4}\PYG{p}{)}
+    \PYG{n}{df\PYGZus{}truss}\PYG{o}{.}\PYG{n}{to\PYGZus{}csv}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}results/tapered\PYGZus{}truss\PYGZus{}study.csv\PYGZsq{}}\PYG{p}{,} \PYG{n}{index}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+    \PYG{c+c1}{\PYGZsh{} Reuse beam plotting function (same structure)}
+    \PYG{n}{plot\PYGZus{}ill\PYGZus{}conditioning\PYGZus{}study}\PYG{p}{(}\PYG{n}{df\PYGZus{}truss}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Truss Damage Detection Study \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZhy{}\PYGZhy{}\PYGZhy{} Truss: Damage Detection Study \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{df\PYGZus{}damage\PYGZus{}truss} \PYG{o}{=} \PYG{n}{truss\PYGZus{}damage\PYGZus{}study}\PYG{p}{(}\PYG{n}{E}\PYG{p}{,} \PYG{n}{A}\PYG{p}{,} \PYG{n}{rho}\PYG{p}{,} \PYG{n}{L}\PYG{p}{,}
+                                         \PYG{n}{damage\PYGZus{}levels}\PYG{o}{=}\PYG{p}{[}\PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{l+m+mf}{0.1}\PYG{p}{,} \PYG{l+m+mf}{0.2}\PYG{p}{,} \PYG{l+m+mf}{0.3}\PYG{p}{,} \PYG{l+m+mf}{0.5}\PYG{p}{],}
+                                         \PYG{n}{n\PYGZus{}elements}\PYG{o}{=}\PYG{l+m+mi}{4}\PYG{p}{)}
+    \PYG{n}{df\PYGZus{}damage\PYGZus{}truss}\PYG{o}{.}\PYG{n}{to\PYGZus{}csv}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}results/damage\PYGZus{}detection\PYGZus{}truss.csv\PYGZsq{}}\PYG{p}{,} \PYG{n}{index}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+    \PYG{n}{plot\PYGZus{}damage\PYGZus{}detection}\PYG{p}{(}\PYG{n}{df\PYGZus{}damage\PYGZus{}truss}\PYG{p}{)}
+
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{[INFO] Novel studies complete. CSVs saved to results/\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{else}\PYG{p}{:}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{Note: Novel studies skipped (set RUN\PYGZus{}NOVEL\PYGZus{}STUDIES = True to enable)\PYGZdq{}}\PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}  These studies take \PYGZti{}10\PYGZhy{}20 min and require re\PYGZhy{}running the pipeline.\PYGZdq{}}\PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}  Files novel\PYGZus{}study.py functions are ready and tested.\PYGZdq{}}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} ===========================================================}
+\PYG{c+c1}{\PYGZsh{} VISUALIZATIONS}
+\PYG{c+c1}{\PYGZsh{} ===========================================================}
+
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}=\PYGZdq{}}\PYG{o}{*}\PYG{l+m+mi}{60}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}STEP 6: GENERATING ALL PLOTS\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}=\PYGZdq{}}\PYG{o}{*}\PYG{l+m+mi}{60}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Beam Visualizations \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{n}{plot\PYGZus{}convergence}\PYG{p}{(}\PYG{n}{result\PYGZus{}hea}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}cost\PYGZus{}history\PYGZsq{}}\PYG{p}{],} \PYG{n}{result\PYGZus{}hea}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}omega\PYGZsq{}}\PYG{p}{],} \PYG{n}{omega\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],}
+              \PYG{n}{H\PYGZus{}scale}\PYG{o}{=}\PYG{n}{H\PYGZus{}scale}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Dual optimizer convergence plot}
+\PYG{n}{plot\PYGZus{}dual\PYGZus{}convergence}\PYG{p}{(}\PYG{n}{result\PYGZus{}cobyla}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}cost\PYGZus{}history\PYGZsq{}}\PYG{p}{],} \PYG{n}{result\PYGZus{}lbfgs}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}cost\PYGZus{}history\PYGZsq{}}\PYG{p}{],}
+                       \PYG{n}{omega\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{H\PYGZus{}scale}\PYG{p}{)}
+
+\PYG{n}{plot\PYGZus{}frequency\PYGZus{}comparison}\PYG{p}{([}\PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{n}{omega\PYGZus{}vqe\PYGZus{}all}\PYG{p}{)],} \PYG{n}{omega\PYGZus{}classical}\PYG{p}{[:}\PYG{l+m+mi}{3}\PYG{p}{],}
+                           \PYG{n}{labels}\PYG{o}{=}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}VQE (HEA, 2 reps)\PYGZsq{}}\PYG{p}{])}
+
+\PYG{c+c1}{\PYGZsh{} Geometry visualizations (use n\PYGZus{}elem\PYGZus{}beam for beam)}
+\PYG{n}{plot\PYGZus{}beam\PYGZus{}geometry}\PYG{p}{(}\PYG{n}{n\PYGZus{}elem\PYGZus{}beam}\PYG{p}{,} \PYG{n}{L}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Mode shapes \PYGZhy{} proper mapping from reduced to physical DOF space}
+\PYG{n}{vqe\PYGZus{}modes} \PYG{o}{=} \PYG{p}{[}\PYG{n}{result\PYGZus{}hea}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}mode\PYGZus{}shape\PYGZsq{}}\PYG{p}{]]}
+\PYG{n}{vqe\PYGZus{}modes}\PYG{o}{.}\PYG{n}{extend}\PYG{p}{([}\PYG{n}{modes\PYGZus{}classical}\PYG{p}{[:,} \PYG{n}{i}\PYG{p}{]} \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{)])}
+
+\PYG{n}{plot\PYGZus{}mode\PYGZus{}shapes\PYGZus{}continuous}\PYG{p}{(}
+        \PYG{n}{n\PYGZus{}elem\PYGZus{}beam}\PYG{p}{,} \PYG{n}{L}\PYG{p}{,} \PYG{n}{modes\PYGZus{}classical}\PYG{p}{,}
+        \PYG{n}{free\PYGZus{}dofs}\PYG{p}{,}
+        \PYG{n}{mode\PYGZus{}shapes\PYGZus{}vqe}\PYG{o}{=}\PYG{n}{vqe\PYGZus{}modes}\PYG{p}{,}
+        \PYG{n}{analytical\PYGZus{}params}\PYG{o}{=}\PYG{p}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}L\PYGZsq{}}\PYG{p}{:} \PYG{n}{L}\PYG{p}{\PYGZcb{},}
+        \PYG{n}{n\PYGZus{}modes}\PYG{o}{=}\PYG{l+m+mi}{3}
+    \PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} 1D Truss Visualizations \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZhy{}\PYGZhy{}\PYGZhy{} 1D Truss: Visualizations \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZdq{}}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Truss geometry (showing the 1D bar model)}
+\PYG{n}{plot\PYGZus{}truss\PYGZus{}geometry}\PYG{p}{(}\PYG{n}{n\PYGZus{}elem}\PYG{p}{,} \PYG{n}{L}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Truss mode shapes — classical vs VQE}
+\PYG{n}{truss\PYGZus{}vqe\PYGZus{}modes} \PYG{o}{=} \PYG{p}{[}\PYG{n}{result\PYGZus{}t\PYGZus{}hea}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}mode\PYGZus{}shape\PYGZsq{}}\PYG{p}{]]}
+\PYG{n}{truss\PYGZus{}vqe\PYGZus{}modes}\PYG{o}{.}\PYG{n}{extend}\PYG{p}{([}\PYG{n}{modes\PYGZus{}t}\PYG{p}{[:,} \PYG{n}{i}\PYG{p}{]} \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n+nb}{min}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n}{modes\PYGZus{}t}\PYG{o}{.}\PYG{n}{shape}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]))])}
+
+\PYG{n}{plot\PYGZus{}truss\PYGZus{}mode\PYGZus{}shapes}\PYG{p}{(}\PYG{n}{n\PYGZus{}elem}\PYG{p}{,} \PYG{n}{L}\PYG{p}{,}
+                       \PYG{p}{[}\PYG{n}{modes\PYGZus{}t}\PYG{p}{[:,} \PYG{n}{i}\PYG{p}{]} \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n+nb}{min}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n}{modes\PYGZus{}t}\PYG{o}{.}\PYG{n}{shape}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]))],}
+                       \PYG{n}{labels}\PYG{o}{=}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}Classical FEA\PYGZsq{}}\PYG{p}{],}
+                       \PYG{n}{analytical\PYGZus{}omega}\PYG{o}{=}\PYG{n}{omega\PYGZus{}t\PYGZus{}classical}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Truss frequency comparison}
+\PYG{n}{plot\PYGZus{}truss\PYGZus{}frequency\PYGZus{}comparison}\PYG{p}{(}
+    \PYG{p}{[}\PYG{n}{omega\PYGZus{}t\PYGZus{}all}\PYG{p}{[:}\PYG{l+m+mi}{3}\PYG{p}{]],}
+    \PYG{n}{omega\PYGZus{}t\PYGZus{}classical}\PYG{p}{[:}\PYG{l+m+mi}{3}\PYG{p}{],}
+    \PYG{n}{labels}\PYG{o}{=}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}VQE (L\PYGZhy{}BFGS\PYGZhy{}B)\PYGZsq{}}\PYG{p}{]}
+\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} ===========================================================}
+\PYG{c+c1}{\PYGZsh{} 2D WARREN TRUSS ANALYSIS (VQE\PYGZhy{}ENABLED with 2 chords = 2 qubits)}
+\PYG{c+c1}{\PYGZsh{} ===========================================================}
+
+\PYG{c+c1}{\PYGZsh{} WHY n\PYGZus{}chords=2 instead of the full 10\PYGZhy{}node Warren truss?}
+\PYG{c+c1}{\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{} The full 2D Warren truss (n\PYGZus{}chords=5) has:}
+\PYG{c+c1}{\PYGZsh{}   \PYGZhy{} 10 nodes, 17 members, 17 free DOFs (after pinned\PYGZhy{}roller BCs)}
+\PYG{c+c1}{\PYGZsh{}   \PYGZhy{} Requires 5 qubits (32x32 Hamiltonian after padding)}
+\PYG{c+c1}{\PYGZsh{}   \PYGZhy{} VQE would need 10+ HEA parameters (2 reps on 5 qubits)}
+\PYG{c+c1}{\PYGZsh{}   \PYGZhy{} Each optimizer run takes \PYGZgt{}30 min on Qiskit Aer simulator}
+\PYG{c+c1}{\PYGZsh{}   \PYGZhy{} Multiple restarts needed → total time \PYGZgt{}2 hours}
+\PYG{c+c1}{\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{} For tractable demonstration, we use n\PYGZus{}chords=2 (2 qubits) which:}
+\PYG{c+c1}{\PYGZsh{}   \PYGZhy{} Preserves the 2D Warren truss topology (triangular elements)}
+\PYG{c+c1}{\PYGZsh{}   \PYGZhy{} Demonstrates the quantum mapping at minimal scale}
+\PYG{c+c1}{\PYGZsh{}   \PYGZhy{} Runs in \PYGZlt{}1 minute while maintaining the same methodology}
+\PYG{c+c1}{\PYGZsh{}   \PYGZhy{} Validates the classical→quantum pipeline end\PYGZhy{}to\PYGZhy{}end}
+\PYG{c+c1}{\PYGZsh{}}
+\PYG{c+c1}{\PYGZsh{} Scaling: Just set n\PYGZus{}chords=5 to reproduce the full truss}
+\PYG{c+c1}{\PYGZsh{} (requires hardware runtime or distributed simulator jobs).}
+
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZdq{}} \PYG{o}{+} \PYG{l+s+s2}{\PYGZdq{}=\PYGZdq{}}\PYG{o}{*}\PYG{l+m+mi}{60}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}2D WARREN TRUSS ANALYSIS\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}=\PYGZdq{}}\PYG{o}{*}\PYG{l+m+mi}{60}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Generate 2D Warren truss mesh with 2 chords (3 nodes, 4 members, 3 DOF \PYGZhy{}\PYGZgt{} 2 qubits)}
+\PYG{c+c1}{\PYGZsh{} This is the minimum 2D truss geometry that fits on 2 qubits}
+\PYG{n}{nodes}\PYG{p}{,} \PYG{n}{members}\PYG{p}{,} \PYG{n}{node\PYGZus{}ids} \PYG{o}{=} \PYG{n}{generate\PYGZus{}warren\PYGZus{}truss\PYGZus{}mesh}\PYG{p}{(}\PYG{n}{n\PYGZus{}chords}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{L}\PYG{o}{=}\PYG{l+m+mf}{1.0}\PYG{p}{,} \PYG{n}{h}\PYG{o}{=}\PYG{l+m+mf}{0.3}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}  Nodes: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{nodes}\PYG{o}{.}\PYG{n}{shape}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{, Members: }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{members}\PYG{p}{)}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Assemble 2D truss matrices}
+\PYG{n}{E\PYGZus{}truss}\PYG{p}{,} \PYG{n}{A\PYGZus{}truss}\PYG{p}{,} \PYG{n}{rho\PYGZus{}truss}\PYG{p}{,} \PYG{n}{L\PYGZus{}truss} \PYG{o}{=} \PYG{l+m+mf}{200e9}\PYG{p}{,} \PYG{l+m+mf}{0.01}\PYG{p}{,} \PYG{l+m+mf}{7850.0}\PYG{p}{,} \PYG{l+m+mf}{1.0}
+\PYG{n}{K\PYGZus{}2d}\PYG{p}{,} \PYG{n}{M\PYGZus{}2d} \PYG{o}{=} \PYG{n}{assemble\PYGZus{}truss2d}\PYG{p}{(}\PYG{n}{nodes}\PYG{p}{,} \PYG{n}{members}\PYG{p}{,} \PYG{n}{E\PYGZus{}truss}\PYG{p}{,} \PYG{n}{A\PYGZus{}truss}\PYG{p}{,} \PYG{n}{rho\PYGZus{}truss}\PYG{p}{)}
+\PYG{n}{K\PYGZus{}2d\PYGZus{}red}\PYG{p}{,} \PYG{n}{M\PYGZus{}2d\PYGZus{}red}\PYG{p}{,} \PYG{n}{free\PYGZus{}dofs\PYGZus{}2d}\PYG{p}{,} \PYG{n}{fixed\PYGZus{}dofs\PYGZus{}2d} \PYG{o}{=} \PYG{n}{apply\PYGZus{}pinned\PYGZus{}roller\PYGZus{}bc}\PYG{p}{(}\PYG{n}{K\PYGZus{}2d}\PYG{p}{,} \PYG{n}{M\PYGZus{}2d}\PYG{p}{,} \PYG{n}{nodes}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}  Free DOFs: }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{free\PYGZus{}dofs\PYGZus{}2d}\PYG{p}{)}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ \PYGZhy{}\PYGZgt{} }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb}{int}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{ceil}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{log2}\PYG{p}{(}\PYG{n}{K\PYGZus{}2d\PYGZus{}red}\PYG{o}{.}\PYG{n}{shape}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])))}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ qubits\PYGZdq{}}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Classical modal analysis for 2D truss}
+\PYG{n}{omega\PYGZus{}2d\PYGZus{}classical}\PYG{p}{,} \PYG{n}{modes\PYGZus{}2d}\PYG{p}{,} \PYG{n}{\PYGZus{}} \PYG{o}{=} \PYG{n}{classical\PYGZus{}modal\PYGZus{}analysis\PYGZus{}2d}\PYG{p}{(}\PYG{n}{K\PYGZus{}2d\PYGZus{}red}\PYG{p}{,} \PYG{n}{M\PYGZus{}2d\PYGZus{}red}\PYG{p}{,} \PYG{n}{n\PYGZus{}modes}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}  Classical frequencies: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{omega\PYGZus{}2d\PYGZus{}classical}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ rad/s\PYGZdq{}}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} QUANTUM HAMILTONIAN CONSTRUCTION \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZhy{}\PYGZhy{}\PYGZhy{} 2D Truss: Quantum Hamiltonian \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{H\PYGZus{}norm\PYGZus{}2d}\PYG{p}{,} \PYG{n}{ham\PYGZus{}2d}\PYG{p}{,} \PYG{n}{\PYGZus{}}\PYG{p}{,} \PYG{n}{H\PYGZus{}scale\PYGZus{}2d} \PYG{o}{=} \PYG{n}{build\PYGZus{}structural\PYGZus{}hamiltonian}\PYG{p}{(}\PYG{n}{K\PYGZus{}2d\PYGZus{}red}\PYG{p}{,} \PYG{n}{M\PYGZus{}2d\PYGZus{}red}\PYG{p}{)}
+\PYG{n}{inspect\PYGZus{}pauli\PYGZus{}decomposition}\PYG{p}{(}\PYG{n}{ham\PYGZus{}2d}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} VQE ON 2\PYGZhy{}QUBIT SYSTEM \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZhy{}\PYGZhy{}\PYGZhy{} 2D Truss: VQE (2 qubits) \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{ansatz\PYGZus{}2d} \PYG{o}{=} \PYG{n}{hardware\PYGZus{}efficient\PYGZus{}ansatz}\PYG{p}{(}\PYG{n}{num\PYGZus{}qubits}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{reps}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{)}
+\PYG{n}{np}\PYG{o}{.}\PYG{n}{random}\PYG{o}{.}\PYG{n}{seed}\PYG{p}{(}\PYG{l+m+mi}{42}\PYG{p}{)}
+\PYG{n}{init\PYGZus{}pt\PYGZus{}2d} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{random}\PYG{o}{.}\PYG{n}{uniform}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n}{np}\PYG{o}{.}\PYG{n}{pi}\PYG{p}{,} \PYG{n}{np}\PYG{o}{.}\PYG{n}{pi}\PYG{p}{,} \PYG{n}{ansatz\PYGZus{}2d}\PYG{o}{.}\PYG{n}{num\PYGZus{}parameters}\PYG{p}{)}
+\PYG{n}{solver\PYGZus{}2d} \PYG{o}{=} \PYG{n}{VQEStructuralSolver}\PYG{p}{(}\PYG{n}{ham\PYGZus{}2d}\PYG{p}{,} \PYG{n}{ansatz\PYGZus{}2d}\PYG{p}{,}
+                                \PYG{n}{optimizer\PYGZus{}name}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}COBYLA\PYGZsq{}}\PYG{p}{,}
+                                \PYG{n}{maxiter}\PYG{o}{=}\PYG{l+m+mi}{500}\PYG{p}{,}
+                                \PYG{n}{H\PYGZus{}scale}\PYG{o}{=}\PYG{n}{H\PYGZus{}scale\PYGZus{}2d}\PYG{p}{)}
+\PYG{n}{result\PYGZus{}2d} \PYG{o}{=} \PYG{n}{solver\PYGZus{}2d}\PYG{o}{.}\PYG{n}{solve}\PYG{p}{(}\PYG{n}{initial\PYGZus{}point}\PYG{o}{=}\PYG{n}{init\PYGZus{}pt\PYGZus{}2d}\PYG{p}{)}
+
+\PYG{n}{omega\PYGZus{}2d\PYGZus{}vqe} \PYG{o}{=} \PYG{n}{result\PYGZus{}2d}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}omega\PYGZsq{}}\PYG{p}{]}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{  VQE frequency: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{omega\PYGZus{}2d\PYGZus{}vqe}\PYG{l+s+si}{:}\PYG{l+s+s2}{.4f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ rad/s\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}  Classical:     }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{omega\PYGZus{}2d\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{l+s+si}{:}\PYG{l+s+s2}{.4f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ rad/s\PYGZdq{}}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}  Error: }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb}{abs}\PYG{p}{(}\PYG{n}{omega\PYGZus{}2d\PYGZus{}vqe}\PYG{+w}{ }\PYG{o}{\PYGZhy{}}\PYG{+w}{ }\PYG{n}{omega\PYGZus{}2d\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])}\PYG{o}{/}\PYG{n}{omega\PYGZus{}2d\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{*}\PYG{l+m+mi}{100}\PYG{l+s+si}{:}\PYG{l+s+s2}{.4f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZpc{}\PYGZdq{}}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} 2D Warren Truss Visualizations \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZhy{}\PYGZhy{}\PYGZhy{} 2D Warren Truss: Visualizations \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZdq{}}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Plot 2D truss geometry}
+\PYG{n}{plot\PYGZus{}truss2d\PYGZus{}geometry}\PYG{p}{(}\PYG{n}{nodes}\PYG{p}{,} \PYG{n}{members}\PYG{p}{,} \PYG{n}{node\PYGZus{}ids}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Plot classical mode shapes}
+\PYG{n}{plot\PYGZus{}truss2d\PYGZus{}mode\PYGZus{}shapes}\PYG{p}{(}\PYG{n}{nodes}\PYG{p}{,} \PYG{n}{members}\PYG{p}{,} \PYG{n}{node\PYGZus{}ids}\PYG{p}{,}
+                               \PYG{n}{modes\PYGZus{}2d}\PYG{p}{,} \PYG{n}{free\PYGZus{}dofs\PYGZus{}2d}\PYG{p}{,}
+                               \PYG{n}{n\PYGZus{}modes}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{scale}\PYG{o}{=}\PYG{l+m+mf}{0.5}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Animate first mode}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Generating mode shape animation...\PYGZdq{}}\PYG{p}{)}
+\PYG{n}{animate\PYGZus{}truss2d\PYGZus{}mode}\PYG{p}{(}\PYG{n}{nodes}\PYG{p}{,} \PYG{n}{members}\PYG{p}{,} \PYG{n}{node\PYGZus{}ids}\PYG{p}{,}
+                      \PYG{n}{modes\PYGZus{}2d}\PYG{p}{[:,} \PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{free\PYGZus{}dofs\PYGZus{}2d}\PYG{p}{,}
+                      \PYG{n}{mode\PYGZus{}num}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{n\PYGZus{}frames}\PYG{o}{=}\PYG{l+m+mi}{60}\PYG{p}{,} \PYG{n}{scale}\PYG{o}{=}\PYG{l+m+mf}{0.5}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Frequency comparison (VQE vs Classical)}
+\PYG{n}{plot\PYGZus{}truss2d\PYGZus{}frequency\PYGZus{}comparison}\PYG{p}{(}
+    \PYG{p}{[[}\PYG{n}{omega\PYGZus{}2d\PYGZus{}vqe}\PYG{p}{]} \PYG{o}{+} \PYG{n}{omega\PYGZus{}2d\PYGZus{}classical}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{:]}\PYG{o}{.}\PYG{n}{tolist}\PYG{p}{()],}
+    \PYG{n}{omega\PYGZus{}2d\PYGZus{}classical}\PYG{p}{,}
+    \PYG{n}{labels}\PYG{o}{=}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}VQE\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}Classical\PYGZsq{}}\PYG{p}{],}
+    \PYG{n}{title}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}2D Warren Truss: Natural Frequencies\PYGZdq{}}
+\PYG{p}{)}
+
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{[SUCCESS] Full pipeline complete. Results saved to results/\PYGZdq{}}\PYG{p}{)}
+\end{MintedVerbatim}

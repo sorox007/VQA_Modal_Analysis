@@ -1,0 +1,16 @@
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Impact of structural condition number on VQE optimizer iterations and error margins.}}{7}{figure.caption.1}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Frequency shift detection under simulated structural damage utilizing the VQE solver.}}{7}{figure.caption.2}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {6.1}{\ignorespaces Node and element discretization of the 1D continuous beam.}}{9}{figure.caption.3}%
+\contentsline {figure}{\numberline {6.2}{\ignorespaces Cost function convergence over VQE iterations for beam modal analysis.}}{9}{figure.caption.4}%
+\contentsline {figure}{\numberline {6.3}{\ignorespaces Comparison of COBYLA vs.\ L-BFGS-B optimizers on the beam Hamiltonian.}}{9}{figure.caption.5}%
+\contentsline {figure}{\numberline {6.4}{\ignorespaces Reconstruction of beam mode shapes from the optimized quantum state vector.}}{10}{figure.caption.6}%
+\contentsline {figure}{\numberline {6.5}{\ignorespaces Generated 2D Warren Truss geometry with applied boundary conditions.}}{11}{figure.caption.7}%
+\contentsline {figure}{\numberline {6.6}{\ignorespaces Classical vs.\ VQE fundamental frequency comparison for the 2D Warren truss.}}{11}{figure.caption.8}%
+\contentsline {figure}{\numberline {6.7}{\ignorespaces VQE-extracted 2D truss mode shapes showing axial displacement distributions.}}{12}{figure.caption.9}%
+\addvspace {10\p@ }

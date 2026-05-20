@@ -107,8 +107,9 @@ A structure with `N` DOF (degrees of freedom) has exactly `N` natural frequencie
 
 When we discretize a continuous structure into finite elements, each node has a set of **degrees of freedom** — independent displacement components.
 
-- 1D bar: 1 DOF per node (axial displacement `u`)
+- 1D bar (truss): 1 DOF per node (axial displacement `u`)
 - 2D beam: 2 DOF per node (transverse displacement `v`, rotation `θ`)
+- 2D truss (Warren): 2 DOF per node (axial `ux`, transverse `uy`)
 - 2D frame: 3 DOF per node (`u`, `v`, `θ`)
 
 A beam modeled with 2 elements has 3 nodes × 2 DOF = 6 DOF total (4 after applying boundary conditions at supports).
